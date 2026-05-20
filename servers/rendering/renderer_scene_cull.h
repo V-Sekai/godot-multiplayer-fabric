@@ -30,7 +30,7 @@
 
 #pragma once
 
-#include "core/math/dynamic_bvh.h"
+#include "core/math/predictive_bvh_adapter.h"
 #include "core/math/transform_interpolator.h"
 #include "core/templates/bin_sorted_array.h"
 #include "core/templates/local_vector.h"
@@ -331,7 +331,7 @@ public:
 			INDEXER_MAX
 		};
 
-		DynamicBVH indexers[INDEXER_MAX];
+		PredictiveBVH indexers[INDEXER_MAX];
 
 		RID self;
 
@@ -446,7 +446,7 @@ public:
 
 		RID self;
 		//scenario stuff
-		DynamicBVH::ID indexer_id;
+		PredictiveBVH::ID indexer_id;
 		int32_t array_index = -1;
 		int32_t visibility_index = -1;
 		float visibility_range_begin = 0.0f;
@@ -821,8 +821,8 @@ public:
 		Instance *instance = nullptr;
 		PagedAllocator<InstancePair> *pair_allocator = nullptr;
 		SelfList<InstancePair>::List pairs_found;
-		DynamicBVH *bvh = nullptr;
-		DynamicBVH *bvh2 = nullptr; //some may need to cull in two
+		PredictiveBVH *bvh = nullptr;
+		PredictiveBVH *bvh2 = nullptr; //some may need to cull in two
 		uint32_t pair_mask;
 		uint64_t pair_pass;
 
