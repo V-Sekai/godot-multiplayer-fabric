@@ -34,6 +34,7 @@
 
 #include "core/crypto/crypto.h"
 #include "core/os/mutex.h"
+#include "core/templates/hash_set.h"
 #include "core/templates/list.h"
 #include "core/templates/vector.h"
 #include "scene/main/multiplayer_peer.h"
@@ -92,8 +93,18 @@ public:
 	// target <= 0 broadcasts to every session; > 0 routes to that peer id.
 	static Error (*server_send_datagram_func)(int target, const uint8_t *bytes, size_t len);
 	static Error (*server_send_stream_func)(int target, const uint8_t *bytes, size_t len);
-	// Set/cleared by the backend on WT session connect/disconnect.
-	bool server_session_active = false;
+
+	// Called by the backend when a WT session opens or ends, from the picoquic network
+	// thread. They record the peer and leave the announcement to poll(): a signal emitted
+	// off the main thread reaches script and the SceneTree from the wrong one, and the
+	// crash it causes lands nowhere near the network code that caused it.
+	void _server_peer_joined(int p_peer_id);
+	void _server_peer_left(int p_peer_id);
+
+	// Whether any session is open. Derived from the roster rather than assigned, because a
+	// bool cannot count: with two clients, the first to leave used to clear it while the
+	// second was still connected, and the server stopped sending to a peer that was there.
+	bool has_sessions() const;
 
 	// WT-session backend contract (meshoptimizer pattern). Populated by
 	// the picoquic module on initialize; null on platforms without picoquic.
@@ -181,6 +192,24 @@ private:
 	TransferMode current_mode = TRANSFER_MODE_UNRELIABLE;
 	int current_channel = 0;
 	int current_peer = 1;
+
+	// Who is connected, and who changed since the last poll.
+	//
+	// `connected_peers` is the roster a server answers from. `pending_*` are written on the
+	// network thread and drained on the main one, which is the only place a signal may be
+	// emitted from. Both are guarded: `has_sessions()` is called from put_packet on the main
+	// thread while the backend is adding sessions on its own.
+	mutable Mutex roster_mutex;
+	HashSet<int> connected_peers;
+	Vector<int> pending_joins;
+	Vector<int> pending_leaves;
+
+	// A client has exactly one peer to announce — the server, which is always id 1 — and it
+	// must be announced once. Without this, `MultiplayerAPI` never learns the server exists
+	// and every RPC to it is dropped with no error at either end.
+	bool announced_server = false;
+
+	void _emit_roster_changes();
 
 	void _ingest_datagrams();
 	void _ingest_peer_streams();
