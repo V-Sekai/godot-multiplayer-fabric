@@ -1243,7 +1243,10 @@ static int _server_path_callback(picoquic_cnx_t *p_cnx, uint8_t *p_bytes, size_t
 				ctx->peer_id = _wt_server->next_peer_id++;
 				_wt_server->sessions.push_back(ctx);
 				if (_wt_server->peer) {
-					_wt_server->peer->server_session_active = true;
+					// Record the peer; the announcement is poll()'s, on the main thread. This
+					// is the picoquic network thread and a signal emitted from here reaches
+					// script from the wrong one.
+					_wt_server->peer->_server_peer_joined(ctx->peer_id);
 				}
 			}
 			return 0;
@@ -1273,16 +1276,28 @@ static int _server_path_callback(picoquic_cnx_t *p_cnx, uint8_t *p_bytes, size_t
 		case picohttp_callback_free:
 			if (sctx) {
 				bool owned = false;
+				WebTransportPeer *leaving_peer = nullptr;
+				int leaving_id = 0;
 				if (_wt_server) {
 					MutexLock lock(_wt_server->sessions_mutex);
 					int64_t idx = _wt_server->sessions.find(sctx);
 					if (idx >= 0) {
 						_wt_server->sessions.remove_at(idx);
 						owned = true;
+						leaving_peer = _wt_server->peer;
+						leaving_id = sctx->peer_id;
 					}
-					if (_wt_server->peer) {
-						_wt_server->peer->server_session_active = _wt_server->sessions.size() > 0;
-					}
+				}
+				// Outside the sessions lock. The peer takes its own roster lock, and the send
+				// path takes them the other way round — roster first, then sessions — so
+				// nesting them here would be the one ordering that can deadlock.
+				//
+				// Only the session actually removed above is reported gone. The line this
+				// replaces recomputed a single bool from the session count, so with two
+				// clients the first to leave cleared it while the second was still connected,
+				// and the server stopped sending to a peer that was there.
+				if (owned && leaving_peer) {
+					leaving_peer->_server_peer_left(leaving_id);
 				}
 				if (owned) {
 					delete sctx; // erase-then-delete: a second deregister/free finds nothing

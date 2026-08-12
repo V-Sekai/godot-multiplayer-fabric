@@ -167,7 +167,7 @@ void WebTransportPeer::_push_wt_incoming_stream(const uint8_t *p_bytes, size_t p
 Error WebTransportPeer::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
 	// Server mode: route through server send funcs.
 	if (mode == MODE_SERVER) {
-		if (!server_session_active) {
+		if (!has_sessions()) {
 			return ERR_UNCONFIGURED;
 		}
 		TransferMode m = get_transfer_mode();
@@ -315,9 +315,71 @@ void WebTransportPeer::_ingest_peer_streams() {
 	}
 }
 
+void WebTransportPeer::_server_peer_joined(int p_peer_id) {
+	MutexLock lock(roster_mutex);
+	if (connected_peers.has(p_peer_id)) {
+		return;
+	}
+	connected_peers.insert(p_peer_id);
+	pending_joins.push_back(p_peer_id);
+}
+
+void WebTransportPeer::_server_peer_left(int p_peer_id) {
+	MutexLock lock(roster_mutex);
+	if (!connected_peers.has(p_peer_id)) {
+		return; // a second deregister for the same session, which picoquic does send
+	}
+	connected_peers.erase(p_peer_id);
+	pending_leaves.push_back(p_peer_id);
+}
+
+bool WebTransportPeer::has_sessions() const {
+	MutexLock lock(roster_mutex);
+	return !connected_peers.is_empty();
+}
+
+// Announce, on the main thread, what the network thread recorded.
+//
+// The lists are taken under the lock and emitted outside it. A signal handler is script: it
+// can send a packet, disconnect a peer, or free this object, and every one of those wants the
+// same mutex. Emitting while holding it deadlocks on the first handler that answers.
+void WebTransportPeer::_emit_roster_changes() {
+	Vector<int> joins;
+	Vector<int> leaves;
+	{
+		MutexLock lock(roster_mutex);
+		joins = pending_joins;
+		leaves = pending_leaves;
+		pending_joins.clear();
+		pending_leaves.clear();
+	}
+	for (int id : joins) {
+		emit_signal(SNAME("peer_connected"), id);
+	}
+	for (int id : leaves) {
+		emit_signal(SNAME("peer_disconnected"), id);
+	}
+}
+
 void WebTransportPeer::poll() {
 	if (mode == MODE_SERVER) {
-		// Server: picoquic runs on its own thread; nothing to drive here.
+		// picoquic runs the server on its own thread, so there is no I/O to drive here — but
+		// there is still the roster to announce, and this is the main thread.
+		_emit_roster_changes();
+		return;
+	}
+	if (session_ctx) {
+		// A client has one peer, and it is the server. `MultiplayerAPI` will not route an RPC
+		// to a peer it was never told about, so without this the session opens, packets flow,
+		// and every RPC is dropped in silence at both ends.
+		const bool open = get_session_state() == SESSION_OPEN;
+		if (open && !announced_server) {
+			announced_server = true;
+			emit_signal(SNAME("peer_connected"), 1);
+		} else if (!open && announced_server) {
+			announced_server = false;
+			emit_signal(SNAME("peer_disconnected"), 1);
+		}
 		return;
 	}
 	if (quic.is_null()) {
@@ -341,7 +403,16 @@ void WebTransportPeer::close() {
 		quic.unref();
 	}
 	mode = MODE_NONE;
-	server_session_active = false;
+	announced_server = false;
+	{
+		// Closing is not a disconnection to announce. Whoever called `close()` already knows,
+		// and a peer_disconnected storm during teardown reaches handlers that are being torn
+		// down themselves. The roster is dropped, not walked.
+		MutexLock lock(roster_mutex);
+		connected_peers.clear();
+		pending_joins.clear();
+		pending_leaves.clear();
+	}
 	{
 		MutexLock lock(incoming_mutex);
 		incoming.clear();
@@ -373,7 +444,7 @@ WebTransportPeer::SessionState WebTransportPeer::get_session_state() const {
 
 MultiplayerPeer::ConnectionStatus WebTransportPeer::get_connection_status() const {
 	if (mode == MODE_SERVER) {
-		return server_session_active ? CONNECTION_CONNECTED : CONNECTION_CONNECTING;
+		return has_sessions() ? CONNECTION_CONNECTED : CONNECTION_CONNECTING;
 	}
 	if (session_ctx) {
 		SessionState ss = get_session_state();
