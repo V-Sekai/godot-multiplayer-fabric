@@ -93,6 +93,10 @@ public:
 	// target <= 0 broadcasts to every session; > 0 routes to that peer id.
 	static Error (*server_send_datagram_func)(int target, const uint8_t *bytes, size_t len);
 	static Error (*server_send_stream_func)(int target, const uint8_t *bytes, size_t len);
+	// Drops one session. There is deliberately no broadcast form: closing everybody is
+	// `close()`, and a `disconnect_peer(0)` that stopped the listener is the bug this exists
+	// to remove.
+	static Error (*server_disconnect_peer_func)(int target);
 
 	// Called by the backend when a WT session opens or ends, from the picoquic network
 	// thread. They record the peer and leave the announcement to poll(): a signal emitted

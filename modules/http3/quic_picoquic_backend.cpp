@@ -135,6 +135,7 @@ enum WorkKind {
 	WORK_SEND_STREAM, // picoquic_add_to_stream on an existing stream id
 	WORK_SEND_DATAGRAM, // picoquic_queue_datagram_frame
 	WORK_OPEN_WT_STREAM, // picowt_create_local_stream + add_to_stream + FIN
+	WORK_CLOSE_SESSION, // picowt_send_close_session_message + picoquic_close, one session
 };
 
 struct WTServerSessionCtx;
@@ -1344,6 +1345,21 @@ static int _server_loop_cb(picoquic_quic_t *p_quic, picoquic_packet_loop_cb_enum
 				case WORK_SEND_DATAGRAM: {
 					picoquic_queue_datagram_frame(target->cnx, item.bytes.size(), item.bytes.ptr());
 				} break;
+				case WORK_CLOSE_SESSION: {
+					// Close the WebTransport session first, then the QUIC connection under it.
+					// Dropping the connection alone leaves the client waiting out an idle
+					// timeout to discover it was disconnected, because nothing told it.
+					//
+					// The session is not removed from `sessions` here. picoquic answers the
+					// close with a deregister callback, and that path is the one that erases
+					// and deletes — doing it twice is a double free, and doing it here would
+					// leave the callback holding a pointer to freed memory.
+					if (target->control_stream_ctx) {
+						picowt_send_close_session_message(target->cnx, target->control_stream_ctx,
+								0, nullptr);
+					}
+					picoquic_close(target->cnx, 0);
+				} break;
 				case WORK_OPEN_WT_STREAM: {
 					// Open the session's persistent reliable stream once, then append
 					// framed bytes to it (no FIN). A fresh stream per message exhausts
@@ -1532,6 +1548,43 @@ static Error _wt_server_send_datagram(int p_target, const uint8_t *p_bytes, size
 	return err;
 }
 
+// Drop one client without closing the server.
+//
+// `disconnect_peer` used to call `close()`, which stops the listener: one client leaving, or
+// being kicked, took every other client with it and the server too.
+static Error _wt_server_disconnect_peer(int p_target) {
+	if (!_wt_server) {
+		return ERR_UNCONFIGURED;
+	}
+	if (p_target <= 0) {
+		return ERR_INVALID_PARAMETER; // there is no "disconnect everybody"; that is close()
+	}
+	bool found = false;
+	{
+		MutexLock lock(_wt_server->sessions_mutex);
+		for (WTServerSessionCtx *session : _wt_server->sessions) {
+			if (session->peer_id != p_target) {
+				continue;
+			}
+			// Queued rather than closed here: this is the main thread and picoquic owns the
+			// connection from its own. The network thread drains the queue and does the close.
+			WorkItem w;
+			w.kind = WORK_CLOSE_SESSION;
+			w.session = session;
+			_wt_server->wq.push(std::move(w));
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		return ERR_DOES_NOT_EXIST;
+	}
+	if (_wt_server->thread_ctx) {
+		picoquic_wake_up_network_thread(_wt_server->thread_ctx);
+	}
+	return OK;
+}
+
 static Error _wt_server_send_stream(int p_target, const uint8_t *p_bytes, size_t p_len) {
 	if (!_wt_server) {
 		return ERR_UNCONFIGURED;
@@ -1590,6 +1643,7 @@ void register_quic_picoquic_backend() {
 	WebTransportPeer::server_close_func = &_wt_server_close;
 	WebTransportPeer::server_send_datagram_func = &_wt_server_send_datagram;
 	WebTransportPeer::server_send_stream_func = &_wt_server_send_stream;
+	WebTransportPeer::server_disconnect_peer_func = &_wt_server_disconnect_peer;
 }
 
 void unregister_quic_picoquic_backend() {
@@ -1611,6 +1665,7 @@ void unregister_quic_picoquic_backend() {
 	WebTransportPeer::server_close_func = nullptr;
 	WebTransportPeer::server_send_datagram_func = nullptr;
 	WebTransportPeer::server_send_stream_func = nullptr;
+	WebTransportPeer::server_disconnect_peer_func = nullptr;
 }
 
 #else // !GODOT_QUIC_NATIVE_BACKEND

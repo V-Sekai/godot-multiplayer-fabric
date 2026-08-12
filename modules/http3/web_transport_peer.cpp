@@ -46,6 +46,7 @@ Error (*WebTransportPeer::server_listen_func)(WebTransportPeer *, int, const Str
 void (*WebTransportPeer::server_close_func)() = nullptr;
 Error (*WebTransportPeer::server_send_datagram_func)(int, const uint8_t *, size_t) = nullptr;
 Error (*WebTransportPeer::server_send_stream_func)(int, const uint8_t *, size_t) = nullptr;
+Error (*WebTransportPeer::server_disconnect_peer_func)(int) = nullptr;
 
 WebTransportPeer::WebTransportPeer() {
 	unique_id = generate_unique_id();
@@ -421,10 +422,27 @@ void WebTransportPeer::close() {
 	current_packet_bytes.clear();
 }
 
+// Drop one client. This used to call `close()`, which stops the listener — so kicking one
+// player, or one player leaving, took every other player with them and the server too.
+//
+// `p_force` is not honoured yet and says so rather than being silently ignored: a graceful
+// close still sends the WebTransport close message first, which is what tells the client it was
+// disconnected instead of leaving it to time out.
 void WebTransportPeer::disconnect_peer(int p_peer, bool p_force) {
-	(void)p_peer;
 	(void)p_force;
-	close();
+	if (mode != MODE_SERVER) {
+		// A client has one peer and it is the server, so disconnecting it is closing.
+		close();
+		return;
+	}
+	ERR_FAIL_COND_MSG(!server_disconnect_peer_func,
+			"WebTransportPeer: no server backend registered");
+	ERR_FAIL_COND_MSG(p_peer <= 0,
+			"WebTransportPeer: disconnect_peer needs a peer id; use close() to stop the server");
+	// The roster entry is not removed here. picoquic answers the close with a deregister
+	// callback and that path reports the peer gone, so removing it now would announce the
+	// disconnection twice — once optimistically and once when it actually happened.
+	server_disconnect_peer_func(p_peer);
 }
 
 bool WebTransportPeer::is_server() const {
