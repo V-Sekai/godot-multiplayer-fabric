@@ -252,6 +252,72 @@ inline R128 r128_half(R128 v) {
 	return r;
 }
 
+/* ── Morton (Z-order) code ────────────────────────────────────────────────────
+   The tree is ordered by a space-filling code: every node stores one, and
+   pbvh_tree_build radix-sorts over it. Until now PredictiveBVH::insert supplied
+   0u for every node, so the sort ordered a constant and the tree fell back to
+   insertion order — a spatial index with no spatial key. These give it one.
+
+   Morton and not the hilbert3d below, deliberately. That function has been
+   written wrong twice — here and in Lean — with the same two mistakes, scoring
+   3583 of 4095 consecutive codes NOT face-adjacent (87.5%), which is worse
+   locality than Morton at five times the cost. Both versions round-trip, both
+   are bijections, and the CRASH_COND witness in hilbert_of_aabb passes on every
+   call; none of that distinguishes a Hilbert curve from any other bijection.
+   Morton is a bit permutation and cannot fail that way: the octree-prefix
+   property the partitioning relies on is its definition, not a consequence. */
+
+static inline uint32_t pbvh_part1by2(uint32_t n) {
+	n &= 0x3ffu;
+	n = (n | (n << 16)) & 0x030000FFu;
+	n = (n | (n << 8)) & 0x0300F00Fu;
+	n = (n | (n << 4)) & 0x030C30C3u;
+	n = (n | (n << 2)) & 0x09249249u;
+	return n;
+}
+
+static inline uint32_t pbvh_compact1by2(uint32_t n) {
+	n &= 0x09249249u;
+	n = (n | (n >> 2)) & 0x030C30C3u;
+	n = (n | (n >> 4)) & 0x0300F00Fu;
+	n = (n | (n >> 8)) & 0x030000FFu;
+	n = (n | (n >> 16)) & 0x000003FFu;
+	return n;
+}
+
+/* x leads each triple, matching the corrected Lean convention where X[0] is the
+   most significant. Two implementations disagreeing about this produce different
+   curves while both round-tripping, which is how the last defect hid. */
+static inline uint32_t pbvh_morton3d(uint32_t x, uint32_t y, uint32_t z) {
+	return (pbvh_part1by2(x) << 2) | (pbvh_part1by2(y) << 1) | pbvh_part1by2(z);
+}
+
+static inline void pbvh_morton3d_inverse(uint32_t m, uint32_t *ox, uint32_t *oy, uint32_t *oz) {
+	*ox = pbvh_compact1by2(m >> 2);
+	*oy = pbvh_compact1by2(m >> 1);
+	*oz = pbvh_compact1by2(m);
+}
+
+static inline uint32_t pbvh_norm_coord(int64_t c, int64_t cmin, int64_t extent) {
+	int64_t e = extent > 0 ? extent : 1;
+	int64_t raw = (c - cmin) * 1024 / e;
+	if (raw < 0) {
+		return 0u;
+	}
+	if (raw > 1023) {
+		return 1023u;
+	}
+	return (uint32_t)raw;
+}
+
+/* Centre of `b`, normalized against `scene`, as a 30-bit Morton code. */
+static inline uint32_t pbvh_morton_of_aabb(const Aabb *b, const Aabb *scene) {
+	const uint32_t nx = pbvh_norm_coord((b->min_x + b->max_x) / 2, scene->min_x, scene->max_x - scene->min_x);
+	const uint32_t ny = pbvh_norm_coord((b->min_y + b->max_y) / 2, scene->min_y, scene->max_y - scene->min_y);
+	const uint32_t nz = pbvh_norm_coord((b->min_z + b->max_z) / 2, scene->min_z, scene->max_z - scene->min_z);
+	return pbvh_morton3d(nx, ny, nz);
+}
+
 /* Source: Build.lean (hilbert3D) — Skilling (2004) 3D Hilbert curve.
    O(b) bit manipulation; better locality than Morton for volume partitioning.
    Bader (2013) Ch.7: cluster diameter O(n^{1/3}) vs Morton O(n^{2/3}). */
@@ -1451,6 +1517,19 @@ private:
 	uint32_t index_slot = 0;
 	bool dirty = false; // true if insert/update/remove happened since last build
 
+	// The extent codes are normalized against. Every node's code is the Morton
+	// index of its centre inside this box, so it has to be stable for the life of
+	// the tree: recomputing it as contents grow would renumber existing nodes and
+	// silently invalidate the sort. +/-1 km in micrometres covers a Godot scene by
+	// a wide margin; anything outside clamps to the edge cell rather than aliasing.
+	static constexpr int64_t WORLD_BOUND_UM = 1000LL * 1000000LL;
+	_FORCE_INLINE_ static Aabb _world_aabb() {
+		Aabb w;
+		w.min_x = w.min_y = w.min_z = -WORLD_BOUND_UM;
+		w.max_x = w.max_y = w.max_z = WORLD_BOUND_UM;
+		return w;
+	}
+
 	_FORCE_INLINE_ void _ensure_capacity(uint32_t need) {
 		if (need <= tree.capacity) {
 			return;
@@ -1542,6 +1621,13 @@ public:
 
 	_FORCE_INLINE_ bool is_empty() const { return pbvh_tree_is_empty(&tree); }
 
+	// The space-filling code stored for a node. Exists so the ordering property can
+	// be asserted from outside: every node used to carry 0 here, the radix sort
+	// ordered a constant, and nothing could see it because nothing could read it.
+	_FORCE_INLINE_ uint32_t debug_code(const ID &p_id) const {
+		return (p_id.is_valid() && p_id.id < tree.capacity) ? tree.nodes[p_id.id].hilbert : 0u;
+	}
+
 	_FORCE_INLINE_ void clear() {
 		pbvh_tree_clear(&tree);
 		userdata.clear();
@@ -1551,7 +1637,8 @@ public:
 	ID insert(const AABB &p_box, void *p_userdata) {
 		_ensure_capacity(tree.count + 1u);
 		const Aabb r = _aabb_to_i64(p_box);
-		pbvh_node_id_t id = pbvh_tree_insert(&tree, (pbvh_eclass_id_t)tree.count, r);
+		const Aabb w = _world_aabb();
+		pbvh_node_id_t id = pbvh_tree_insert_h(&tree, (pbvh_eclass_id_t)tree.count, r, pbvh_morton_of_aabb(&r, &w));
 		if (id >= userdata.size()) {
 			userdata.resize(id + 1u);
 		}
@@ -1567,7 +1654,8 @@ public:
 			return false;
 		}
 		const Aabb r = _aabb_to_i64(p_box);
-		pbvh_tree_update(&tree, p_id.id, r);
+		const Aabb w = _world_aabb();
+		pbvh_tree_update_h(&tree, p_id.id, r, pbvh_morton_of_aabb(&r, &w));
 		dirty = true;
 		return true;
 	}
