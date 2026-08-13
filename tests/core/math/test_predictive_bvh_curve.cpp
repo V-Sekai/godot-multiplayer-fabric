@@ -89,7 +89,10 @@ TEST_CASE("[PredictiveBVH] insert assigns distinct codes to distinct positions")
 	const int N = 64;
 	LocalVector<PredictiveBVH::ID> ids;
 	for (int i = 0; i < N; i++) {
-		const float f = (float)i;
+		// One cell is WORLD_BOUND_UM*2 / 1024 ~= 1.95 m, so boxes must be spaced wider
+		// than that to be guaranteed distinct codes. At 1 m apart, 64 boxes landed in 53
+		// cells -- correct quantisation, not a defect, but it makes a poor assertion.
+		const float f = (float)i * 8.0f;
 		ids.push_back(bvh.insert(AABB(Vector3(f, f * 0.5f, -f), Vector3(0.5f, 0.5f, 0.5f)), nullptr));
 	}
 
