@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "entities-godot: the multiplayer-fabric fork of Godot Engine"
+abstract: >
+  Godot Engine, plus the multiplayer-fabric feature branches assembled on top of it.
+  The engine is upstream's and so is its README; what this copy adds is the
+  assembly -- d3d12 download retry, tapered capsule shapes, joint limitation, lasso,
+  the HTTP/3 module, and the lint and CI work -- carried on the multiplayer-fabric
+  and multiplayer-fabric-base branches. This file exists because a fork is the
+  repository whose provenance most needs stating: it is upstream's code plus a branch
+  nobody upstream has, and nothing else in the tree says which is which.
+authors:
+  - name: "Godot Engine contributors"
+  - family-names: Linietsky
+    given-names: Juan
+  - family-names: Manzur
+    given-names: Ariel
+version: 0.1.0-dev.1
+date-released: "2026-08-17"
+license: MIT
+repository-code: "https://github.com/v-sekai-multiplayer-fabric/entities-godot"
+keywords:
+  - godot
+  - game-engine
+  - fork
+references:
+
+  - type: software
+    title: "Godot Engine"
+    authors:
+      - name: "Godot Engine contributors"
+      - family-names: Linietsky
+        given-names: Juan
+      - family-names: Manzur
+        given-names: Ariel
+    url: "https://github.com/godotengine/godot"
+    notes: >
+      Upstream. This repository carries no fork flag on GitHub, because it was made by
+      pushing an existing history rather than by pressing the button, so the evidence
+      is stated instead of fetched: the README opens "# Godot Engine" and links
+      godotengine.org nineteen times. It tracks the gyre branch while upstream's own
+      default is master, which is one of two revisions in the manifest that a reader
+      would not guess.
+
+  - type: software
+    title: "entities-assembly: the branch assembly that produces this fork"
+    authors:
+      - family-names: Lee
+        given-names: "K. S. Ernest (iFire)"
+    url: "https://github.com/v-sekai-multiplayer-fabric/entities-assembly"
+    notes: >
+      The multiplayer-fabric branches here are force-pushed by that repository from its
+      gitassembly file. This history is a product of that recipe, so the list of what
+      the fork adds is kept there rather than restated here where it would drift.
