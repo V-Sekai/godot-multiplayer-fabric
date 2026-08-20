@@ -71,6 +71,15 @@ class MovieWriter : public Object {
 	bool readback_hdr = false;
 	bool async_readback = true;
 
+	// What to do when the movie size and the window disagree.
+	enum SizeMismatchAction {
+		SIZE_MISMATCH_RESIZE,
+		SIZE_MISMATCH_USE_WINDOW,
+		SIZE_MISMATCH_ABORT,
+	};
+	// begin() returns void, so the refusal is kept here rather than changing the API.
+	Error begin_error = OK;
+
 	void _request_frame_async(RID p_viewport_texture, uint64_t p_index);
 	void _frame_data_ready(const PackedByteArray &p_data, uint64_t p_index);
 	Ref<Image> _image_from_readback(const PendingFrame &p_frame) const;
