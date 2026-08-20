@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+Import("env_modules")
+
+env_cineform = env_modules.Clone()
+
+thirdparty_obj = []
+
+# GoPro CineForm SDK, encoder path only, vendored at
+# 11574d0295771edccadd17af14af74a539f924c7.
+thirdparty_dir = "#thirdparty/cineform/"
+thirdparty_sources = [
+    "Codec/DemoasicFrames.cpp",
+    "Codec/InvertHorizontalStrip16s.c",
+    "Codec/RGB2YUV.c",
+    "Codec/allocator.c",
+    "Codec/bandfile.c",
+    "Codec/bayer.c",
+    "Codec/bitstream.c",
+    "Codec/buffer.c",
+    "Codec/codebooks.c",
+    "Codec/codec.c",
+    "Codec/convert.c",
+    "Codec/cpuid.c",
+    "Codec/debug.c",
+    "Codec/decoder.c",
+    "Codec/dither.c",
+    "Codec/draw.c",
+    "Codec/dump.c",
+    "Codec/encoder.c",
+    "Codec/entropy_threading.c",
+    "Codec/exception.cpp",
+    "Codec/filter.c",
+    "Codec/frame.c",
+    "Codec/image.c",
+    "Codec/keyframes.c",
+    "Codec/lutpath.cpp",
+    "Codec/metadata.c",
+    "Codec/quantize.c",
+    "Codec/recursive.c",
+    "Codec/scanner.c",
+    "Codec/spatial.c",
+    "Codec/stats.c",
+    "Codec/swap.c",
+    "Codec/temporal.c",
+    "Codec/thread.c",
+    "Codec/thumbnail.c",
+    "Codec/timing.c",
+    "Codec/vlc.c",
+    "Codec/wavelet.c",
+    "Common/MessageQueue.cpp",
+    "Common/ThreadMessage.cpp",
+    "Common/ThreadPool.cpp",
+    "EncoderSDK/AsyncEncoder.cpp",
+    "EncoderSDK/CFHDEncoder.cpp",
+    "EncoderSDK/CFHDEncoderMetadata.cpp",
+    "EncoderSDK/CFHDEncoderPool.cpp",
+    "EncoderSDK/EncoderPool.cpp",
+    "EncoderSDK/EncoderQueue.cpp",
+    "EncoderSDK/MetadataWriter.cpp",
+    "EncoderSDK/SampleEncoder.cpp",
+    "EncoderSDK/VideoBuffers.cpp",
+    "WarpLib/GeoMesh.c",
+    "WarpLib/GeoMeshApply.c",
+    "WarpLib/GeoMeshCache.c",
+    "WarpLib/GeoMeshGoPro.c",
+    "WarpLib/GeoMeshInterp.c",
+    "WarpLib/GeoMeshTransform.c",
+    "WarpLib/GeoMeshYuy2.c",
+]
+thirdparty_sources = [thirdparty_dir + f for f in thirdparty_sources]
+
+# libwebm supplies the Matroska muxer. AVI caps a file at 4 GB, which measured out at
+# about 56 seconds of 4K60 CineForm.
+libwebm_dir = "#thirdparty/libwebm/"
+libwebm_sources = [
+    "mkvmuxer/mkvmuxer.cc",
+    "mkvmuxer/mkvmuxerutil.cc",
+    "mkvmuxer/mkvwriter.cc",
+    "common/hdr_util.cc",
+    "common/webm_endian.cc",
+    "mkvparser/mkvparser.cc",  # mkvmuxer.cc includes it
+]
+libwebm_sources = [libwebm_dir + f for f in libwebm_sources]
+
+env_cineform.Prepend(
+    CPPPATH=[thirdparty_dir + d for d in ["Common", "Codec", "EncoderSDK", "WarpLib"]]
+    + [libwebm_dir]
+)
+
+env_thirdparty = env_cineform.Clone()
+env_thirdparty.disable_warnings()
+
+# Godot builds with /fp:strict, under which the MSVC C compiler does not fold floating point
+# constant expressions, so the codec's static tables fail with C2099.
+if env.msvc:
+    env_thirdparty["CCFLAGS"] = [f for f in env_thirdparty["CCFLAGS"] if f != "/fp:strict"]
+    env_thirdparty.Append(CCFLAGS=["/fp:precise"])
+    # The encoder calls CoCreateGuid, which its own headers only reach on some platform
+    # branches. Force including objbase.h avoids patching the sources. ole32 is already linked.
+    env_thirdparty.Append(CCFLAGS=["/FIobjbase.h"])
+env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
+
+env_libwebm = env_modules.Clone()
+env_libwebm.disable_warnings()
+env_libwebm.Prepend(CPPPATH=[libwebm_dir])
+env_libwebm.add_source_files(thirdparty_obj, libwebm_sources)
+
+env.modules_sources += thirdparty_obj
+
+# Godot source files
+
+module_obj = []
+
+env_cineform.add_source_files(module_obj, "*.cpp")
+env.modules_sources += module_obj
+
+# Needed to force rebuilding the module files when the thirdparty library is updated.
+env.Depends(module_obj, thirdparty_obj)
