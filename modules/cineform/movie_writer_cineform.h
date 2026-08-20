@@ -52,7 +52,6 @@ class MovieWriterCineForm : public MovieWriter {
 	bool keep_alpha = false;
 
 	uint32_t audio_block_size = 0;
-	uint32_t track_channels = 2;
 	uint32_t audio_frames = 0;
 
 	CFHD_EncoderPoolRef pool = nullptr;
@@ -88,7 +87,7 @@ class MovieWriterCineForm : public MovieWriter {
 	uint64_t audio_track = 0;
 
 	void _drain(bool p_block);
-	void _store_video_chunk(const void *p_data, uint32_t p_size);
+	void _write_encoded_frame(const void *p_data, uint32_t p_size);
 
 protected:
 	virtual uint32_t get_audio_mix_rate() const override;

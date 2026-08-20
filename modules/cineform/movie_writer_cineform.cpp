@@ -84,7 +84,6 @@ void MovieWriterCineForm::get_supported_extensions(List<String> *r_extensions) c
 }
 
 Error MovieWriterCineForm::write_begin(const Size2i &p_movie_size, uint32_t p_fps, const String &p_base_path) {
-	// AVI layout follows movie_writer_mjpeg, which this container is otherwise identical to.
 	base_path = p_base_path.get_basename();
 	if (base_path.is_relative_path()) {
 		base_path = "res://" + base_path;
@@ -171,7 +170,6 @@ Error MovieWriterCineForm::write_begin(const Size2i &p_movie_size, uint32_t p_fp
 			break;
 	}
 	audio_block_size = (mix_rate / fps) * (audio_bit_depth / 8) * channels;
-	track_channels = channels;
 
 	audio_track = segment->AddAudioTrack(int32_t(mix_rate), int32_t(channels), 2);
 	ERR_FAIL_COND_V(audio_track == 0, ERR_CANT_CREATE);
@@ -183,7 +181,7 @@ Error MovieWriterCineForm::write_begin(const Size2i &p_movie_size, uint32_t p_fp
 	return OK;
 }
 
-void MovieWriterCineForm::_store_video_chunk(const void *p_data, uint32_t p_size) {
+void MovieWriterCineForm::_write_encoded_frame(const void *p_data, uint32_t p_size) {
 	// Matroska timestamps are absolute nanoseconds, so a frame index and the rate give them
 	// exactly. Every CineForm frame is a keyframe.
 	const uint64_t timestamp_ns = uint64_t(frame_count) * 1000000000ULL / uint64_t(fps);
@@ -217,7 +215,7 @@ void MovieWriterCineForm::_drain(bool p_block) {
 		void *data = nullptr;
 		size_t len = 0;
 		if (CFHD_GetEncodedSample(buffer, &data, &len) == CFHD_ERROR_OKAY && data != nullptr) {
-			_store_video_chunk(data, uint32_t(len));
+			_write_encoded_frame(data, uint32_t(len));
 		}
 		CFHD_ReleaseSampleBuffer(pool, buffer);
 		queued--;
