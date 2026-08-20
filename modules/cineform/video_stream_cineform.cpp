@@ -83,9 +83,7 @@ Error VideoStreamPlaybackCineForm::set_file(const String &p_path) {
 		if (track == nullptr || track->GetType() != mkvparser::Track::kVideo) {
 			continue;
 		}
-		// The writer produces .mkv, so this loader has to claim that extension, and Matroska
-		// carries any codec. Refusing anything that is not CineForm leaves the file to
-		// whichever loader can actually read it.
+		// Matroska carries any codec, so leave a non-CineForm file to another loader.
 		const char *codec_id = track->GetCodecId();
 		if (codec_id == nullptr || String(codec_id) != "V_MS/VFW/FOURCC") {
 			continue;
@@ -151,8 +149,7 @@ bool VideoStreamPlaybackCineForm::_decode_current_block() {
 		return false;
 	}
 
-	// The first sample decides the output format and the buffer size. PrepareToDecode reads
-	// the sample header, so it cannot be called before a sample is in hand.
+	// PrepareToDecode reads the sample header, so it needs the first sample in hand.
 	if (decoded.is_empty()) {
 		int actual_w = 0, actual_h = 0;
 		CFHD_PixelFormat actual_format = CFHD_PIXEL_FORMAT_UNKNOWN;
@@ -212,9 +209,7 @@ void VideoStreamPlaybackCineForm::update(double p_delta) {
 	}
 	time += p_delta;
 
-	// A block's timestamp is read BEFORE it is decoded. Decoding first and then taking the
-	// timestamp runs a frame ahead, because the frame just shown sets the deadline that was
-	// already met, so the loop immediately decodes another.
+	// Read the block's timestamp before decoding it, or playback runs a frame ahead.
 	while (true) {
 		if (!block_pending) {
 			if (!_advance_to_next_block()) {
@@ -283,8 +278,7 @@ double VideoStreamPlaybackCineForm::get_playback_position() const {
 }
 
 void VideoStreamPlaybackCineForm::seek(double p_time) {
-	// Every CineForm frame is a keyframe, so seeking is a walk to the cluster holding the
-	// time and no earlier frame has to be decoded to get there.
+	// Every frame is a keyframe, so seeking is a walk to the cluster holding the time.
 	if (segment == nullptr) {
 		return;
 	}
@@ -348,8 +342,7 @@ Ref<Resource> ResourceFormatLoaderCineForm::load(const String &p_path, const Str
 		}
 		return Ref<Resource>();
 	}
-	// Loading verifies the file really carries CineForm, so a Matroska holding something else
-	// falls through to another loader rather than failing at playback.
+	// Loading verifies the codec, so another loader can claim a non-CineForm Matroska.
 	Ref<VideoStreamPlaybackCineForm> probe;
 	probe.instantiate();
 	if (probe->set_file(p_path) != OK) {

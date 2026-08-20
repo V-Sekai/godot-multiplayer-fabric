@@ -105,8 +105,7 @@ Error MovieWriterCineForm::write_begin(const Size2i &p_movie_size, uint32_t p_fp
 		threads = CLAMP(OS::get_singleton()->get_processor_count(), 1, 16);
 	}
 
-	// A pool created with zero encoders accepts every frame and fails all of them with
-	// CFHD_ERROR_UNEXPECTED, reporting a complete recording of an empty file.
+	// A pool of zero encoders accepts every frame and fails it with CFHD_ERROR_UNEXPECTED.
 	CFHD_Error err = CFHD_CreateEncoderPool(&pool, threads, 8, nullptr);
 	ERR_FAIL_COND_V_MSG(err != CFHD_ERROR_OKAY, ERR_CANT_CREATE,
 			vformat("CFHD_CreateEncoderPool failed with code %d.", int(err)));
@@ -136,13 +135,11 @@ Error MovieWriterCineForm::write_begin(const Size2i &p_movie_size, uint32_t p_fp
 	ERR_FAIL_COND_V(video_track == 0, ERR_CANT_CREATE);
 	mkvmuxer::VideoTrack *vt = (mkvmuxer::VideoTrack *)segment->GetTrackByNumber(video_track);
 	ERR_FAIL_NULL_V(vt, ERR_CANT_CREATE);
-	// AddVideoTrack defaults to VP8. A non WebM codec id makes the muxer write a DocType of
-	// matroska rather than webm, which is what carries CineForm.
+	// AddVideoTrack defaults to VP8. A non-WebM codec id selects a DocType of matroska.
 	vt->set_codec_id("V_MS/VFW/FOURCC");
 	vt->set_frame_rate(double(fps));
 
-	// CodecPrivate for V_MS/VFW/FOURCC is a BITMAPINFOHEADER, the same forty bytes AVI keeps
-	// in its strf chunk.
+	// CodecPrivate for V_MS/VFW/FOURCC is a BITMAPINFOHEADER.
 	uint8_t bih[40];
 	memset(bih, 0, sizeof(bih));
 	encode_uint32(40, bih + 0); // biSize
@@ -182,16 +179,14 @@ Error MovieWriterCineForm::write_begin(const Size2i &p_movie_size, uint32_t p_fp
 }
 
 void MovieWriterCineForm::_write_encoded_frame(const void *p_data, uint32_t p_size) {
-	// Matroska timestamps are absolute nanoseconds, so a frame index and the rate give them
-	// exactly. Every CineForm frame is a keyframe.
+	// Matroska timestamps are absolute nanoseconds. Every CineForm frame is a keyframe.
 	const uint64_t timestamp_ns = uint64_t(frame_count) * 1000000000ULL / uint64_t(fps);
 	if (!segment->AddFrame((const uint8_t *)p_data, p_size, video_track, timestamp_ns, true)) {
 		ERR_PRINT(vformat("Could not add video frame %d to the segment.", frame_count));
 	}
 	frame_count++;
 
-	// The pool returns samples in submission order, so the head of the queue belongs to this
-	// frame.
+	// The pool returns samples in submission order.
 	if (!pending_audio.is_empty()) {
 		const Vector<int16_t> block = pending_audio.front()->get();
 		pending_audio.pop_front();
@@ -235,8 +230,7 @@ Error MovieWriterCineForm::write_frame(const Ref<Image> &p_image, const int32_t 
 	const uint32_t pitch = size.width * 4;
 	ERR_FAIL_COND_V(uint32_t(src.size()) < pitch * uint32_t(size.height), ERR_INVALID_DATA);
 
-	// RGBA to BGRA with the rows reversed, since AVI stores bottom up. The scalar form of
-	// this cost 25 ms per frame at 2160p against 13 ms to encode it.
+	// RGBA to BGRA with the rows reversed, as the encoder takes bottom-up input.
 	const __m128i swizzle = _mm_setr_epi8(2, 1, 0, 3, 6, 5, 4, 7, 10, 9, 8, 11, 14, 13, 12, 15);
 	const int wide = int(pitch) & ~15;
 	const uint8_t *in = src.ptr();
@@ -274,8 +268,7 @@ Error MovieWriterCineForm::write_frame(const Ref<Image> &p_image, const int32_t 
 	}
 	pending_audio.push_back(block);
 
-	// Not blocking. Waiting for this frame's own sample would idle every encoder in the pool
-	// but one, which is the parallelism the pool exists to provide.
+	// Not blocking: waiting for this frame's sample would idle the rest of the pool.
 	_drain(false);
 
 	return OK;
@@ -290,8 +283,7 @@ void MovieWriterCineForm::write_end() {
 	}
 
 	if (segment != nullptr) {
-		// Matroska takes its duration from the last timestamp, so without the final frame's
-		// own duration a two second recording reports 1.983 seconds.
+		// Matroska takes its duration from the last timestamp, so the final frame needs one.
 		const uint64_t duration_ns = uint64_t(frame_count) * 1000000000ULL / uint64_t(fps ? fps : 1);
 		segment->set_duration(double(duration_ns) / 1000000.0);
 		if (!segment->Finalize()) {
