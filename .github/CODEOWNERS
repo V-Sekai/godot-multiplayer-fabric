@@ -80,6 +80,8 @@
 # Modules
 
 ## Audio (+ video)
+/modules/cineform/                            @godotengine/audio
+/modules/cineform/doc_classes/                @godotengine/audio @godotengine/documentation
 /modules/interactive_music/                   @godotengine/audio
 /modules/interactive_music/doc_classes/       @godotengine/audio @godotengine/documentation
 /modules/interactive_music/editor/            @godotengine/audio @godotengine/editor

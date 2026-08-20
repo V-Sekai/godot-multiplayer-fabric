@@ -106,6 +106,40 @@ Files extracted from upstream source:
 - `LICENSE`
 
 
+## cineform
+
+- Upstream: https://github.com/gopro/cineform-sdk
+- Version: git (11574d0295771edccadd17af14af74a539f924c7, 2024)
+- License: Apache-2.0 OR MIT
+
+The GoPro CineForm codec, used by `modules/cineform` to record Movie Maker output as a
+12-bit wavelet intermediate and to play it back.
+
+Files extracted from upstream source:
+
+- `Codec/`, `Common/`, `EncoderSDK/`, `DecoderSDK/`, `ConvertLib/` and `WarpLib/` folders
+- `LICENSE-APACHE`, `LICENSE-MIT` and `README.md`
+
+The examples are not included. `DecoderSDK/` and `ConvertLib/` are needed by
+`VideoStreamCineForm` only; a build with just the writer does not use them.
+
+Patches:
+
+- `Codec/lutpath.cpp`: `LPTSTR lpValueName` changed to `LPCTSTR`. Assigning a string literal
+  to a non-const pointer is an error in C++, and the file is built as C++.
+- `Codec/encoder.c`: five `MessageBox` calls removed. They opened a system modal licensing
+  dialog from inside the encoder, which would block a headless render and cannot be dismissed
+  by a shipped game. The error code each one accompanied is still set and returned.
+
+Build notes:
+
+- `modules/cineform/SCsub` drops `/fp:strict` for these files when building with MSVC. Under
+  that flag the C compiler does not fold floating point constant expressions, so the static
+  colour matrices fail with C2099.
+- The codec includes `<emmintrin.h>` unconditionally and has no NEON path, so
+  `modules/cineform/config.py` restricts the module to x86 architectures.
+
+
 ## certs
 
 - Upstream: Mozilla, via https://github.com/bagder/ca-bundle
@@ -643,6 +677,26 @@ Files extracted from upstream source:
 - `lib/*` except from: `lookups.pl`, `Makefile.*`
 - `include/vorbis/*.h` as `vorbis/`
 - `COPYING`
+
+
+## libwebm
+
+- Upstream: https://github.com/webmproject/libwebm
+- Version: git (6184f4484a82c4b0f7d34e2b1a2e2b34d5d0c9d4, 2024)
+- License: BSD-3-Clause
+
+Used by `modules/cineform` to write Matroska. Despite the name, `mkvmuxer` writes a general
+Matroska file: a track whose codec id is not one of the WebM set makes it emit a DocType of
+`matroska` rather than `webm`.
+
+Files extracted from upstream source:
+
+- `mkvmuxer/` and `mkvparser/` folders, as `mkvmuxer.cc` includes the parser
+- `common/hdr_util.*`, `common/webm_endian.*` and `common/webmids.h`
+- `LICENSE.TXT`, `AUTHORS.TXT` and `PATENTS.TXT`
+
+The vp9 header and level tools and the sample applications are not included, as only muxing
+is used.
 
 
 ## libwebp
