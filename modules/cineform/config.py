@@ -9,7 +9,7 @@ def configure(env):
 
 
 def get_doc_classes():
-    return ["MovieWriterCineForm", "VideoStreamCineForm", "VideoStreamPlaybackCineForm"]
+    return ["VideoStreamCineForm", "VideoStreamPlaybackCineForm"]
 
 
 def get_doc_path():
