@@ -33,12 +33,14 @@
 #include "core/config/engine.h"
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
+#include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "core/os/time.h"
 #include "core/templates/rb_set.h"
 #include "scene/main/window.h"
 #include "servers/audio/audio_driver_dummy.h"
 #include "servers/display/display_server_enums.h"
+#include "servers/rendering/rendering_device.h"
 #include "servers/rendering/rendering_server.h"
 
 MovieWriter *MovieWriter::writers[MovieWriter::MAX_WRITERS];
@@ -100,6 +102,17 @@ void MovieWriter::get_supported_extensions(List<String> *r_extensions) const {
 }
 
 void MovieWriter::begin(const Size2i &p_movie_size, uint32_t p_fps, const String &p_base_path) {
+	async_readback = GLOBAL_GET("editor/movie_writer/async_readback");
+	// Drivers without a RenderingDevice, such as OpenGL, have no asynchronous readback. This
+	// is decided here rather than on the first request, so no frame is queued for a download
+	// that will never be issued.
+	if (RenderingDevice::get_singleton() == nullptr) {
+		async_readback = false;
+	}
+	next_request_index = 0;
+	next_write_index = 0;
+	pending_frames.clear();
+
 	project_name = GLOBAL_GET("application/config/name");
 	movie_size = p_movie_size;
 
@@ -152,6 +165,7 @@ void MovieWriter::_bind_methods() {
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "editor/movie_writer/speaker_mode", PROPERTY_HINT_ENUM, "Stereo,3.1,5.1,7.1"), 0);
 	GLOBAL_DEF(PropertyInfo(Variant::FLOAT, "editor/movie_writer/video_quality", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), 0.75);
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "editor/movie_writer/audio_bit_depth", PROPERTY_HINT_ENUM, "16:16,32:32"), 16);
+	GLOBAL_DEF_BASIC("editor/movie_writer/async_readback", true);
 	GLOBAL_DEF(PropertyInfo(Variant::FLOAT, "editor/movie_writer/ogv/audio_quality", PROPERTY_HINT_RANGE, "-0.1,1.0,0.01"), 0.5);
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "editor/movie_writer/ogv/encoding_speed", PROPERTY_HINT_ENUM, "Fastest (Lowest Efficiency):4,Fast (Low Efficiency):3,Slow (High Efficiency):2,Slowest (Highest Efficiency):1"), 4);
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "editor/movie_writer/ogv/keyframe_interval", PROPERTY_HINT_RANGE, "1,1024,1"), 64);
@@ -183,6 +197,137 @@ void MovieWriter::set_extensions_hint() {
 	ProjectSettings::get_singleton()->set_custom_property_info(PropertyInfo(Variant::STRING, "editor/movie_writer/movie_file", PROPERTY_HINT_GLOBAL_SAVE_FILE, ext_hint));
 }
 
+
+// Must run on the rendering thread, as texture_get_data_async is render thread guarded.
+void MovieWriter::_request_frame_async(RID p_viewport_texture, uint64_t p_index) {
+	RenderingDevice *rd = RenderingDevice::get_singleton();
+	RID rd_texture = RenderingServer::get_singleton()->texture_get_rd_texture(p_viewport_texture);
+	if (rd == nullptr || rd_texture.is_null()) {
+		MutexLock lock(pending_mutex);
+		pending_frames.erase(p_index);
+		async_readback = false;
+		return;
+	}
+
+	// The callback returns raw bytes, so the image format must come from the texture.
+	const RenderingDevice::TextureFormat tf = rd->texture_get_format(rd_texture);
+	readback_size = Size2i(tf.width, tf.height);
+	const RenderingDevice::DataFormat fmt = tf.format;
+	if (fmt == RenderingDevice::DATA_FORMAT_R8G8B8A8_UNORM ||
+			fmt == RenderingDevice::DATA_FORMAT_R8G8B8A8_SRGB) {
+		readback_format = Image::FORMAT_RGBA8;
+	} else if (fmt == RenderingDevice::DATA_FORMAT_R16G16B16A16_SFLOAT) {
+		readback_format = Image::FORMAT_RGBAH;
+	} else {
+		WARN_PRINT_ONCE(vformat("MovieWriter: unsupported viewport format %d, falling back to blocking readback.", fmt));
+		MutexLock lock(pending_mutex);
+		pending_frames.erase(p_index);
+		async_readback = false;
+		return;
+	}
+	rd->texture_get_data_async(rd_texture, 0,
+			callable_mp(this, &MovieWriter::_frame_data_ready).bind(p_index));
+}
+
+void MovieWriter::_frame_data_ready(const PackedByteArray &p_data, uint64_t p_index) {
+	MutexLock lock(pending_mutex);
+	PendingFrame *frame = pending_frames.getptr(p_index);
+	if (frame == nullptr) {
+		return;
+	}
+	frame->data = p_data;
+	frame->ready = true;
+}
+
+void MovieWriter::_conform_image(Ref<Image> &r_image, bool p_hdr) const {
+	if (r_image->get_size() != movie_size) {
+		const float src_aspect = r_image->get_size().aspect();
+		const float dst_aspect = movie_size.aspect();
+		int crop_width = r_image->get_size().width;
+		int crop_height = r_image->get_size().height;
+		if (src_aspect > dst_aspect) {
+			crop_width = int(r_image->get_size().height * dst_aspect);
+			r_image->crop_from_point((r_image->get_size().width - crop_width) / 2, 0, crop_width, crop_height);
+		} else if (src_aspect < dst_aspect) {
+			crop_height = int(r_image->get_size().width / dst_aspect);
+			r_image->crop_from_point(0, (r_image->get_size().height - crop_height) / 2, crop_width, crop_height);
+		}
+		r_image->resize(movie_size.width, movie_size.height, Image::INTERPOLATE_BILINEAR);
+	}
+	if (p_hdr) {
+		r_image->convert(Image::FORMAT_RGBA8);
+		r_image->linear_to_srgb();
+	}
+}
+
+Ref<Image> MovieWriter::_image_from_readback(const PendingFrame &p_frame) const {
+	// The viewport is not always the movie size, so the image is built at the size the
+	// texture actually had and conformed afterwards, as the blocking path does.
+	Ref<Image> img = Image::create_from_data(readback_size.width, readback_size.height, false,
+			readback_format, p_frame.data);
+	if (img.is_valid()) {
+		_conform_image(img, readback_hdr);
+	}
+	return img;
+}
+
+
+void MovieWriter::_write_one(const Ref<Image> &p_image, const int32_t *p_audio) {
+	uint64_t encoding_start_usec = Time::get_singleton()->get_ticks_usec();
+	write_frame(p_image, p_audio);
+	encoding_time_usec += Time::get_singleton()->get_ticks_usec() - encoding_start_usec;
+}
+
+void MovieWriter::_drain_ready_frames(bool p_flush) {
+	// Written in index order, regardless of the order downloads complete in.
+	while (true) {
+		PendingFrame frame;
+		{
+			MutexLock lock(pending_mutex);
+			PendingFrame *next = pending_frames.getptr(next_write_index);
+			if (next == nullptr || !next->ready) {
+				break;
+			}
+			frame = *next;
+			pending_frames.erase(next_write_index);
+		}
+		next_write_index++;
+
+		Ref<Image> img = _image_from_readback(frame);
+		if (img.is_valid()) {
+			_write_one(img, frame.audio.ptr());
+		} else {
+			ERR_PRINT(vformat("MovieWriter: could not rebuild frame %d from its readback.", frame.index));
+		}
+	}
+	if (!p_flush) {
+		return;
+	}
+
+	// Advance the rendering server until outstanding downloads complete. No further requests
+	// are issued at this point, so the extra draws are not captured.
+	int attempts = 0;
+	while (true) {
+		bool empty;
+		{
+			MutexLock lock(pending_mutex);
+			empty = pending_frames.is_empty();
+		}
+		if (empty) {
+			return;
+		}
+		if (++attempts > 64) {
+			MutexLock lock(pending_mutex);
+			ERR_PRINT(vformat("MovieWriter: %d frames were never returned by the GPU.", pending_frames.size()));
+			pending_frames.clear();
+			return;
+		}
+		RenderingServer::get_singleton()->sync();
+		RenderingServer::get_singleton()->draw(false, 0);
+		_drain_ready_frames(false);
+	}
+}
+
 void MovieWriter::add_frame() {
 	const int movie_time_seconds = Engine::get_singleton()->get_frames_drawn() / fps;
 	const int frame_remainder = Engine::get_singleton()->get_frames_drawn() % fps;
@@ -199,42 +344,6 @@ void MovieWriter::add_frame() {
 
 	RID main_vp_rid = RenderingServer::get_singleton()->viewport_find_from_screen_attachment(DisplayServerEnums::MAIN_WINDOW_ID);
 	RID main_vp_texture = RenderingServer::get_singleton()->viewport_get_texture(main_vp_rid);
-	Ref<Image> vp_tex = RenderingServer::get_singleton()->texture_2d_get(main_vp_texture);
-
-	if (vp_tex->get_size() != movie_size) {
-		// Resize the texture to the output resolution if it differs from the current viewport size.
-		// This ensures all frames have the same resolution, as not all video formats and players
-		// support resolution changes during playback.
-
-		const float src_aspect = vp_tex->get_size().aspect();
-		const float dst_aspect = movie_size.aspect();
-
-		int crop_width = vp_tex->get_size().width;
-		int crop_height = vp_tex->get_size().height;
-		int crop_x = 0;
-		int crop_y = 0;
-
-		// If the aspect ratio differs, crop the image to cover the base resolution's aspect ratio
-		// in a way similar to `TextureRect.STRETCH_KEEP_ASPECT_COVERED`.
-		if (src_aspect > dst_aspect) {
-			// Source is wider, crop horizontally.
-			crop_width = int(vp_tex->get_size().height * dst_aspect);
-			crop_x = (vp_tex->get_size().width - crop_width) / 2;
-			vp_tex->crop_from_point(crop_x, crop_y, crop_width, crop_height);
-		} else if (src_aspect < dst_aspect) {
-			// Source is taller, crop vertically.
-			crop_height = int(vp_tex->get_size().width / dst_aspect);
-			crop_y = (vp_tex->get_size().height - crop_height) / 2;
-			vp_tex->crop_from_point(crop_x, crop_y, crop_width, crop_height);
-		}
-
-		vp_tex->resize(movie_size.width, movie_size.height, Image::INTERPOLATE_BILINEAR);
-	}
-
-	if (RenderingServer::get_singleton()->viewport_is_using_hdr_2d(main_vp_rid)) {
-		vp_tex->convert(Image::FORMAT_RGBA8);
-		vp_tex->linear_to_srgb();
-	}
 
 	RenderingServer::get_singleton()->viewport_set_measure_render_time(main_vp_rid, true);
 	cpu_time += RenderingServer::get_singleton()->viewport_get_measured_render_time_cpu(main_vp_rid);
@@ -243,13 +352,35 @@ void MovieWriter::add_frame() {
 
 	AudioDriverDummy::get_dummy_singleton()->mix_audio(mix_rate / fps, audio_mix_buffer.ptr());
 
-	uint64_t encoding_start_usec = Time::get_singleton()->get_ticks_usec();
-	write_frame(vp_tex, audio_mix_buffer.ptr());
-	uint64_t encoding_end_usec = Time::get_singleton()->get_ticks_usec();
-	encoding_time_usec += encoding_end_usec - encoding_start_usec;
+	if (async_readback) {
+		// One request is issued and, after the download latency, one completes per iteration,
+		// so the queue depth settles at that latency rather than growing.
+		readback_hdr = RenderingServer::get_singleton()->viewport_is_using_hdr_2d(main_vp_rid);
+		const uint64_t index = next_request_index++;
+		{
+			MutexLock lock(pending_mutex);
+			PendingFrame frame;
+			frame.index = index;
+			frame.audio = audio_mix_buffer;
+			pending_frames.insert(index, frame);
+		}
+		RenderingServer::get_singleton()->call_on_render_thread(
+				callable_mp(this, &MovieWriter::_request_frame_async)
+						.bind(main_vp_texture, index));
+		_drain_ready_frames(false);
+		return;
+	}
+
+	// Blocking path, used by drivers without a RenderingDevice.
+	Ref<Image> vp_tex = RenderingServer::get_singleton()->texture_2d_get(main_vp_texture);
+	_conform_image(vp_tex, RenderingServer::get_singleton()->viewport_is_using_hdr_2d(main_vp_rid));
+
+	_write_one(vp_tex, audio_mix_buffer.ptr());
 }
 
 void MovieWriter::end() {
+	_drain_ready_frames(true);
+
 	uint64_t encoding_start_usec = Time::get_singleton()->get_ticks_usec();
 	write_end();
 	uint64_t encoding_end_usec = Time::get_singleton()->get_ticks_usec();
