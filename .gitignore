@@ -416,3 +416,6 @@ $RECYCLE.BIN/
 *.generated.props
 
 .lake/
+
+# Supplied by the repo manifest, not vendored. See default.xml.
+modules/sandbox/
