@@ -53,6 +53,40 @@ class MovieWriter : public Object {
 
 	LocalVector<int32_t> audio_mix_buffer;
 
+	// Viewport readback is requested asynchronously so it overlaps encoding of the previous
+	// frame. Frames are written in index order and end() waits for those still in flight.
+	struct PendingFrame {
+		uint64_t index = 0;
+		PackedByteArray data;
+		LocalVector<int32_t> audio;
+		bool ready = false;
+	};
+
+	Mutex pending_mutex;
+	HashMap<uint64_t, PendingFrame> pending_frames;
+	uint64_t next_request_index = 0;
+	uint64_t next_write_index = 0;
+	Image::Format readback_format = Image::FORMAT_RGBA8;
+	Size2i readback_size;
+	bool readback_hdr = false;
+	bool async_readback = true;
+
+	// What to do when the movie size and the window disagree.
+	enum SizeMismatchAction {
+		SIZE_MISMATCH_RESIZE,
+		SIZE_MISMATCH_USE_WINDOW,
+		SIZE_MISMATCH_ABORT,
+	};
+	// begin() returns void, so the refusal is kept here rather than changing the API.
+	Error begin_error = OK;
+
+	void _request_frame_async(RID p_viewport_texture, uint64_t p_index);
+	void _frame_data_ready(const PackedByteArray &p_data, uint64_t p_index);
+	Ref<Image> _image_from_readback(const PendingFrame &p_frame) const;
+	void _conform_image(Ref<Image> &r_image, bool p_hdr) const;
+	void _drain_ready_frames(bool p_flush);
+	void _write_one(const Ref<Image> &p_image, const int32_t *p_audio);
+
 	enum {
 		MAX_WRITERS = 8
 	};
