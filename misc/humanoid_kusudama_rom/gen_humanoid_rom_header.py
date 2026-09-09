@@ -7,33 +7,55 @@ template per bone, rotates each bone's swing cones into the Kusudama canonical f
 scene/resources/3d/humanoid_kusudama_rom_data.h with cone arrays keyed by Godot
 SkeletonProfileHumanoid bone names + clinical gap-fills + phenotype-scale coeffs.
 """
-import json, numpy as np, sys, os
+
+import json
+import os
+import sys
+
+import numpy as np
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_REPO = os.path.normpath(os.path.join(_HERE, '..', '..'))  # misc/humanoid_kusudama_rom -> repo root
+_REPO = os.path.normpath(os.path.join(_HERE, "..", ".."))  # misc/humanoid_kusudama_rom -> repo root
 sys.path.insert(0, _HERE)  # for `import humanoid_joint_fans`
-SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(_HERE, 'rom_limits.jsonl.zst')
-OUT = sys.argv[2] if len(sys.argv) > 2 else \
-    os.path.join(_REPO, 'scene', 'resources', '3d', 'humanoid_kusudama_rom_data.h')
+SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(_HERE, "rom_limits.jsonl.zst")
+OUT = (
+    sys.argv[2]
+    if len(sys.argv) > 2
+    else os.path.join(_REPO, "scene", "resources", "3d", "humanoid_kusudama_rom_data.h")
+)
+
 
 def _open_lines(path):
     """Read a .jsonl or zstd-compressed .jsonl.zst into a list of lines."""
-    if path.endswith('.zst'):
+    if path.endswith(".zst"):
         try:
             import zstandard
-            with open(path, 'rb') as fh:
+
+            with open(path, "rb") as fh:
                 return zstandard.ZstdDecompressor().stream_reader(fh).read().decode().splitlines()
         except ImportError:
             import subprocess  # fall back to the zstd CLI
-            return subprocess.run(['zstd', '-dc', path], capture_output=True, check=True).stdout.decode().splitlines()
+
+            return subprocess.run(["zstd", "-dc", path], capture_output=True, check=True).stdout.decode().splitlines()
     with open(path) as fh:
         return fh.readlines()
+
+
 # sinew bone -> Godot SkeletonProfileHumanoid bone slot
-BONE_MAP = {"LeftUpperLeg": "LeftUpperLeg", "RightUpperLeg": "RightUpperLeg",
-    "LeftLowerLeg": "LeftLowerLeg", "RightLowerLeg": "RightLowerLeg",
-    "LeftFoot": "LeftFoot", "RightFoot": "RightFoot",
-    "LeftUpperArm": "LeftUpperArm", "RightUpperArm": "RightUpperArm",
-    "LeftLowerArm": "LeftLowerArm", "RightLowerArm": "RightLowerArm", "Chest": "Spine"}
+BONE_MAP = {
+    "LeftUpperLeg": "LeftUpperLeg",
+    "RightUpperLeg": "RightUpperLeg",
+    "LeftLowerLeg": "LeftLowerLeg",
+    "RightLowerLeg": "RightLowerLeg",
+    "LeftFoot": "LeftFoot",
+    "RightFoot": "RightFoot",
+    "LeftUpperArm": "LeftUpperArm",
+    "RightUpperArm": "RightUpperArm",
+    "LeftLowerArm": "LeftLowerArm",
+    "RightLowerArm": "RightLowerArm",
+    "Chest": "Spine",
+}
+
 
 def muscle_frame(centers, mean):
     """Rows-of-basis rotation into the bone MUSCLE frame: forward (mean swing) -> +Y AND
@@ -50,11 +72,12 @@ def muscle_frame(centers, mean):
     else:
         spread = np.array([1.0, 0.0, 0.0]) if abs(y[0]) < 0.9 else np.array([0.0, 0.0, 1.0])
     x = spread - (spread @ y) * y
-    x /= (np.linalg.norm(x) + 1e-12)
+    x /= np.linalg.norm(x) + 1e-12
     z = np.cross(x, y)
-    z /= (np.linalg.norm(z) + 1e-12)
+    z /= np.linalg.norm(z) + 1e-12
     x = np.cross(y, z)  # re-orthonormalize, right-handed
     return np.array([x, y, z])
+
 
 def aggregate_bone(cand):
     """Population template at the ANNY reference phenotype: per-bone ROM aggregated
@@ -86,6 +109,7 @@ def aggregate_bone(cand):
         cnt += 1
     return acc / max(cnt, 1), float(np.median([c["twist_range_deg"] for c in kcand])), cnt
 
+
 def main():
     rows = [json.loads(l) for l in _open_lines(SRC) if l.strip()]
     rows = [r for r in rows if r.get("bones")]
@@ -94,10 +118,11 @@ def main():
         cand = [r["bones"][sinew] for r in rows if sinew in r["bones"]]
         if not cand:
             continue
-        cones, twist_deg, nsub = aggregate_bone(cand)          # averaged across subjects
+        cones, twist_deg, nsub = aggregate_bone(cand)  # averaged across subjects
         centers = cones[:, :3]
-        mean = centers.mean(0); mean /= (np.linalg.norm(mean) + 1e-12)
-        R = muscle_frame(centers, mean)                         # forward -> +Y, flexion -> +X
+        mean = centers.mean(0)
+        mean /= np.linalg.norm(mean) + 1e-12
+        R = muscle_frame(centers, mean)  # forward -> +Y, flexion -> +X
         rc = (R @ centers.T).T
         rc /= np.linalg.norm(rc, axis=1, keepdims=True)
         baked = [(rc[i, 0], rc[i, 1], rc[i, 2], np.radians(cones[i, 3])) for i in range(len(cones))]
@@ -105,11 +130,18 @@ def main():
 
     # bone -> (swing_deg, twist_deg); clinical normatives for joints with no model ROM.
     CLIN_DEG = {
-        "Hips": (45, 90), "Neck": (45, 140), "Head": (30, 90),
-        "Chest": (25, 60), "UpperChest": (20, 60),
-        "LeftShoulder": (25, 30), "RightShoulder": (25, 30),
-        "LeftToes": (40, 0), "RightToes": (40, 0),
-        "LeftEye": (28, 0), "RightEye": (28, 0), "Jaw": (18, 0),
+        "Hips": (45, 90),
+        "Neck": (45, 140),
+        "Head": (30, 90),
+        "Chest": (25, 60),
+        "UpperChest": (20, 60),
+        "LeftShoulder": (25, 30),
+        "RightShoulder": (25, 30),
+        "LeftToes": (40, 0),
+        "RightToes": (40, 0),
+        "LeftEye": (28, 0),
+        "RightEye": (28, 0),
+        "Jaw": (18, 0),
     }
     # Fingers (both hands): per-segment flexion ROM as a single clinical cone + small twist.
     _FINGER_SEG = {  # finger -> {segment: (swing_deg, twist_deg)}
@@ -131,12 +163,14 @@ def main():
     # the crude single symmetric cones that over-covered (the wrist "bulge up").
     # BONE_FANS[bone] = (twist_deg, [(swing_x, swing_z, radius_deg), ...]); y derived (|c|=1).
     from humanoid_joint_fans import BONE_FANS
+
     def _fan_cones(axes):
         out = []
         for sx, sz, rdeg in axes:
             y = float(np.sqrt(max(0.0, 1.0 - sx * sx - sz * sz)))
             out.append((sx, y, sz, float(np.radians(rdeg))))
         return out
+
     JOINT_FANS = {b: (float(np.radians(tw)), _fan_cones(axes)) for b, (tw, axes) in BONE_FANS.items()}
 
     L = []
@@ -186,13 +220,18 @@ def main():
     P("static const float ANNY_PROPORTIONS_COEF = 0.0f;")
     P("static const float SCALE_MIN = 0.6f;")
     P("static const float SCALE_MAX = 1.15f;")
-    P("static const float MIN_CONE_RADIUS = 0.095993f; // 5.5 deg floor (~1.6x SOFT_BAND): tighter hinges, never zero-ROM")
+    P(
+        "static const float MIN_CONE_RADIUS = 0.095993f; // 5.5 deg floor (~1.6x SOFT_BAND): tighter hinges, never zero-ROM"
+    )
     P("} // namespace HumanoidKusudamaRomData")
     P("")
     P("#endif // HUMANOID_KUSUDAMA_ROM_DATA_H")
-    open(OUT, 'w').write("\n".join(L) + "\n")
-    print(f"wrote {OUT}\n  template bones: {list(template.keys())}\n  clinical: "
-          f"{[b for b in CLINICAL if b not in template]}\n  total baked bones: {len(names)} from {len(rows)} subjects")
+    open(OUT, "w").write("\n".join(L) + "\n")
+    print(
+        f"wrote {OUT}\n  template bones: {list(template.keys())}\n  clinical: "
+        f"{[b for b in CLINICAL if b not in template]}\n  total baked bones: {len(names)} from {len(rows)} subjects"
+    )
+
 
 if __name__ == "__main__":
     main()

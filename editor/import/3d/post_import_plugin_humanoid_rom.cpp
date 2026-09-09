@@ -30,8 +30,8 @@
 
 #include "post_import_plugin_humanoid_rom.h"
 
-#include "scene/3d/swing_twist_ik_3d.h"
 #include "scene/3d/skeleton_3d.h"
+#include "scene/3d/swing_twist_ik_3d.h"
 #include "scene/resources/3d/humanoid_kusudama_rom.h"
 
 void PostImportPluginHumanoidRom::get_internal_import_options(InternalImportCategory p_category, List<ResourceImporter::ImportOption> *r_options) {
