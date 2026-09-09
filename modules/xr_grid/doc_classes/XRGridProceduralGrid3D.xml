@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridProceduralGrid3D" inherits="Node3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="distance_between_points" type="float" setter="set_distance_between_points" getter="get_distance_between_points" default="0.5">
+		</member>
+		<member name="focus_node_path" type="NodePath" setter="set_focus_node_path" getter="get_focus_node_path" default="NodePath(&quot;&quot;)">
+		</member>
+		<member name="grid1_path" type="NodePath" setter="set_grid1_path" getter="get_grid1_path" default="NodePath(&quot;BaseProceduralGrid3D&quot;)">
+		</member>
+		<member name="grid2_path" type="NodePath" setter="set_grid2_path" getter="get_grid2_path" default="NodePath(&quot;BaseProceduralGrid3D/BaseProceduralGrid3D2&quot;)">
+		</member>
+		<member name="level_color" type="GradientTexture1D" setter="set_level_color" getter="get_level_color">
+		</member>
+	</members>
+</class>

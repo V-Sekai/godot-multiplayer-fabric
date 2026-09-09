@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridXROrigin" inherits="Node3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_vr_supported" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="fabric_address" type="String" setter="set_fabric_address" getter="get_fabric_address" default="&quot;127.0.0.1&quot;">
+		</member>
+		<member name="fabric_manager_path" type="NodePath" setter="set_fabric_manager_path" getter="get_fabric_manager_path" default="NodePath(&quot;&quot;)">
+		</member>
+		<member name="fabric_port" type="int" setter="set_fabric_port" getter="get_fabric_port" default="9000">
+		</member>
+	</members>
+</class>

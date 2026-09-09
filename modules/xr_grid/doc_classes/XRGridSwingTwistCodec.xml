@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridSwingTwistCodec" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="decode_rotation_i16" qualifiers="static">
+			<return type="Quaternion" />
+			<param index="0" name="twist_x_i16" type="int" />
+			<param index="1" name="swing_y_i16" type="int" />
+			<param index="2" name="swing_z_i16" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="encode_rotation_i16" qualifiers="static">
+			<return type="PackedInt32Array" />
+			<param index="0" name="q" type="Quaternion" />
+			<description>
+			</description>
+		</method>
+		<method name="quat_to_swing_twist" qualifiers="static">
+			<return type="Vector3" />
+			<param index="0" name="q" type="Quaternion" />
+			<description>
+			</description>
+		</method>
+		<method name="swing_twist_to_quat" qualifiers="static">
+			<return type="Quaternion" />
+			<param index="0" name="vec" type="Vector3" />
+			<description>
+			</description>
+		</method>
+	</methods>
+</class>

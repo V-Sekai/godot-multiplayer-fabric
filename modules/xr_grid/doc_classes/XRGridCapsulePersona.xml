@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridCapsulePersona" inherits="MeshInstance3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="body_color" type="Color" setter="set_body_color" getter="get_body_color" default="Color(0.6, 0.7, 0.85, 1)">
+		</member>
+		<member name="height" type="float" setter="set_height" getter="get_height" default="1.7">
+		</member>
+		<member name="radius" type="float" setter="set_radius" getter="get_radius" default="0.18">
+		</member>
+	</members>
+</class>

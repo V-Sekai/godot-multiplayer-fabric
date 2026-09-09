@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridStrokeChannel" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_reliable_receive_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_reliable_send_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="poll">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="send_stroke">
+			<return type="int" enum="Error" />
+			<param index="0" name="packet" type="PackedByteArray" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="peer" type="MultiplayerPeer" setter="set_peer" getter="get_peer">
+		</member>
+		<member name="stroke_channel" type="int" setter="set_stroke_channel" getter="get_stroke_channel" default="1">
+		</member>
+	</members>
+	<signals>
+		<signal name="entity_packet_received">
+			<param index="0" name="packet" type="PackedByteArray" />
+			<description>
+			</description>
+		</signal>
+		<signal name="stroke_packet_received">
+			<param index="0" name="packet" type="PackedByteArray" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+</class>

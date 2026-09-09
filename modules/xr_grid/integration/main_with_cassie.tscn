@@ -1,0 +1,23 @@
+; Copyright (c) 2026 K. S. Ernest (iFire) Lee
+; SPDX-License-Identifier: MIT
+;
+; Overlay scene that instantiates xr-grid's main.tscn (from the vendored
+; subtree at modules/xr_grid/project/) and adds the CassieSketcher
+; patch canvas under canvas/. The upstream main.tscn nodes are reused
+; unchanged; boot this scene when you want the CASSIE pipeline running.
+;
+; The CassieSketcher itself is created by the CassieStrokeRelay
+; autoload; this scene just provides the rendering destination for the
+; patch_added signal.
+
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://../project/procedural_3d_grid_sample/scenes/main.tscn" id="1_grid"]
+[ext_resource type="Script" path="res://cassie_patch_canvas.gd" id="2_patches"]
+
+[node name="MainWithCassie" type="Node3D"]
+
+[node name="XRGridMain" parent="." instance=ExtResource("1_grid")]
+
+[node name="cassie_patches" type="MeshInstance3D" parent="XRGridMain/canvas"]
+script = ExtResource("2_patches")

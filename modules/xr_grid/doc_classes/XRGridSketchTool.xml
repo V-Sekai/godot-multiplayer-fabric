@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridSketchTool" inherits="Node3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="active" type="bool" setter="set_active" getter="is_active" default="false">
+		</member>
+		<member name="canvas_path" type="NodePath" setter="set_canvas_path" getter="get_canvas_path" default="NodePath(&quot;&quot;)">
+		</member>
+		<member name="color" type="Color" setter="set_color" getter="get_color" default="Color(0, 0, 0, 1)">
+		</member>
+		<member name="pressure" type="float" setter="set_pressure" getter="get_pressure" default="0.0">
+		</member>
+	</members>
+</class>

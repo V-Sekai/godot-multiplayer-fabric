@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridFabricTransformSync" inherits="Node" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="apply_remote">
+			<return type="void" />
+			<param index="0" name="decoded" type="Dictionary" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="entity_class" type="int" setter="set_entity_class" getter="get_entity_class" default="1">
+		</member>
+		<member name="fabric_manager_path" type="NodePath" setter="set_fabric_manager_path" getter="get_fabric_manager_path" default="NodePath(&quot;&quot;)">
+		</member>
+		<member name="is_local" type="bool" setter="set_is_local" getter="get_is_local" default="true">
+		</member>
+		<member name="send_rate_hz" type="float" setter="set_send_rate_hz" getter="get_send_rate_hz" default="30.0">
+		</member>
+		<member name="sub_index" type="int" setter="set_sub_index" getter="get_sub_index" default="0">
+		</member>
+	</members>
+</class>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridXRPinch" inherits="Node3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="angular_dampening" type="float" setter="set_angular_dampening" getter="get_angular_dampening" default="0.45">
+		</member>
+		<member name="debounce_duration" type="float" setter="set_debounce_duration" getter="get_debounce_duration" default="0.4">
+		</member>
+		<member name="hand_left_path" type="NodePath" setter="set_hand_left_path" getter="get_hand_left_path" default="NodePath(&quot;&quot;)">
+		</member>
+		<member name="hand_right_path" type="NodePath" setter="set_hand_right_path" getter="get_hand_right_path" default="NodePath(&quot;&quot;)">
+		</member>
+		<member name="linear_dampening" type="float" setter="set_linear_dampening" getter="get_linear_dampening" default="0.45">
+		</member>
+	</members>
+	<constants>
+		<constant name="MODE_NONE" value="0" enum="Mode">
+		</constant>
+		<constant name="MODE_GRAB" value="1" enum="Mode">
+		</constant>
+		<constant name="MODE_PINCH" value="2" enum="Mode">
+		</constant>
+		<constant name="MODE_ORBIT" value="3" enum="Mode">
+		</constant>
+	</constants>
+</class>

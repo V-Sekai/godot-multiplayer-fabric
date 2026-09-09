@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridFabricManager" inherits="Node" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="connect_to_zone">
+			<return type="int" enum="Error" />
+			<param index="0" name="address" type="String" />
+			<param index="1" name="port" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_frame_counter" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_hlc_counter" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_local_player_id" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_state" qualifiers="const">
+			<return type="int" enum="XRGridFabricManager.State" />
+			<description>
+			</description>
+		</method>
+		<method name="increment_hlc_counter">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="send_entity">
+			<return type="void" />
+			<param index="0" name="packet" type="PackedByteArray" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="peer" type="MultiplayerPeer" setter="set_peer" getter="get_peer">
+		</member>
+	</members>
+	<signals>
+		<signal name="connection_state_changed">
+			<param index="0" name="state" type="int" />
+			<description>
+			</description>
+		</signal>
+		<signal name="entity_received">
+			<param index="0" name="packet" type="PackedByteArray" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="STATE_DISCONNECTED" value="0" enum="State">
+		</constant>
+		<constant name="STATE_CONNECTING" value="1" enum="State">
+		</constant>
+		<constant name="STATE_CONNECTED" value="2" enum="State">
+		</constant>
+	</constants>
+</class>

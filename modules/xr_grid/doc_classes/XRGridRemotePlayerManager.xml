@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridRemotePlayerManager" inherits="Node" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_remote_player_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="on_entity_received">
+			<return type="void" />
+			<param index="0" name="packet" type="PackedByteArray" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="fabric_manager_path" type="NodePath" setter="set_fabric_manager_path" getter="get_fabric_manager_path" default="NodePath(&quot;&quot;)">
+		</member>
+	</members>
+</class>

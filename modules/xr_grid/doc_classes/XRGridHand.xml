@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridHand" inherits="XRController3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="max_pressure_size" type="float" setter="set_max_pressure_size" getter="get_max_pressure_size" default="0.01">
+		</member>
+		<member name="save_path" type="String" setter="set_save_path" getter="get_save_path" default="&quot;user://test_save.mesh&quot;">
+		</member>
+		<member name="sketch_tool_path" type="NodePath" setter="set_sketch_tool_path" getter="get_sketch_tool_path" default="NodePath(&quot;&quot;)">
+		</member>
+	</members>
+</class>
