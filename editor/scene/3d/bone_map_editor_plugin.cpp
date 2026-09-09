@@ -32,8 +32,8 @@
 
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
-#include "editor/import/3d/post_import_plugin_skeleton_renamer.h"
 #include "editor/import/3d/post_import_plugin_humanoid_rom.h"
+#include "editor/import/3d/post_import_plugin_skeleton_renamer.h"
 #include "editor/import/3d/post_import_plugin_skeleton_rest_fixer.h"
 #include "editor/import/3d/post_import_plugin_skeleton_track_organizer.h"
 #include "editor/import/3d/scene_import_settings.h"
