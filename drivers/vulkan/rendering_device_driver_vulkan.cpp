@@ -591,6 +591,21 @@ Error RenderingDeviceDriverVulkan::_initialize_device_extensions() {
 	// can and will fill the validation layers with useless info otherwise if not enabled.
 	_register_requested_device_extension(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME, false);
 
+	// External memory import (zero-copy GPU surface sharing). Used by the
+	// native_media module to receive NV12 frames from OS decoders straight
+	// into Vulkan-resident textures (MediaFoundation D3D11 + DXGI shared
+	// handles on Windows, DMA-BUF / V4L2 on Linux). All optional; the
+	// module probes for each at runtime and falls back to CPU staging when
+	// the host doesn't support it.
+	_register_requested_device_extension(VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME, false);
+	_register_requested_device_extension(VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME, false);
+	_register_requested_device_extension(VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME, false);
+#ifdef WINDOWS_ENABLED
+	_register_requested_device_extension(VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME, false);
+	_register_requested_device_extension(VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME, false);
+	_register_requested_device_extension(VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME, false);
+#endif
+
 	if (Engine::get_singleton()->is_generate_spirv_debug_info_enabled()) {
 		_register_requested_device_extension(VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME, true);
 	}

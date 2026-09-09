@@ -1,0 +1,3 @@
+# generate_stubs.py (thirdparty/generate_stubs/) regenerates these from *.sigs at build time.
+gstreamer_stubs.cc
+gstreamer_stubs.h

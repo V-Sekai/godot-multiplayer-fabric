@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="VideoStreamNative" inherits="VideoStream" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Video stream decoded by the host operating system's native media APIs.
+	</brief_description>
+	<description>
+		Holds a compressed video container (WebM/MP4/MKV) and plays it back through whichever OS-native decoder ships on the build platform. The decoder is asked for NV12 frames; YCbCr-to-RGB conversion runs on the GPU via the compute shader [code]ycbcr_sampler.glsl[/code] (Vulkan / D3D12 / Metal) or [code]ycbcr_sampler_compat.gdshader[/code] (OpenGL Compatibility). No CPU per-pixel work — designed for 8K content at multiple-screen scale.
+		Use with [VideoStreamPlayer] like any other [VideoStream] resource. If no native backend is installed at runtime, [method VideoStreamPlayer.get_video_texture] returns a 1x1 black placeholder texture.
+	</description>
+	<tutorials>
+		<link title="Playing videos">$DOCS_URL/tutorials/animation/playing_videos.html</link>
+	</tutorials>
+	<methods>
+		<method name="get_frame_rate">
+			<return type="float" />
+			<description>
+				Returns the source video's frame rate in frames per second, or [code]0.0[/code] if it is unknown or [member data] is empty. Opens the native decoder lazily on the first call and caches the result.
+			</description>
+		</method>
+		<method name="load_from_buffer" qualifiers="static">
+			<return type="VideoStreamNative" />
+			<param index="0" name="buffer" type="PackedByteArray" />
+			<param index="1" name="hint" type="int" default="0" />
+			<description>
+				Creates a new [VideoStreamNative] from an in-memory container buffer. [param hint] uses the same enum as [AudioStreamNative].
+			</description>
+		</method>
+		<method name="load_from_file" qualifiers="static">
+			<return type="VideoStreamNative" />
+			<param index="0" name="path" type="String" />
+			<description>
+				Reads the file at [param path] into memory and calls [method load_from_buffer].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="container_hint" type="int" setter="set_container_hint" getter="get_container_hint" default="0">
+			Container-format hint for the OS decoder.
+		</member>
+		<member name="data" type="PackedByteArray" setter="set_data" getter="get_data" default="PackedByteArray()">
+			Raw bytes of the compressed container.
+		</member>
+	</members>
+</class>
