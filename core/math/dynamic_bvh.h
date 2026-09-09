@@ -30,6 +30,8 @@
 
 #pragma once
 
+#ifndef DISABLE_DEPRECATED
+
 #include "core/math/aabb.h"
 #include "core/templates/list.h"
 #include "core/templates/local_vector.h"
@@ -473,3 +475,5 @@ void DynamicBVH::ray_query(const Vector3 &p_from, const Vector3 &p_to, QueryResu
 		}
 	} while (depth > 0);
 }
+
+#endif // DISABLE_DEPRECATED

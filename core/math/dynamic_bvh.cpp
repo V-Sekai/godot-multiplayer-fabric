@@ -30,6 +30,8 @@
 
 #include "dynamic_bvh.h"
 
+#ifndef DISABLE_DEPRECATED
+
 void DynamicBVH::_delete_node(Node *p_node) {
 	node_allocator.free(p_node);
 }
@@ -437,3 +439,5 @@ int DynamicBVH::get_max_depth() const {
 DynamicBVH::~DynamicBVH() {
 	clear();
 }
+
+#endif // DISABLE_DEPRECATED
