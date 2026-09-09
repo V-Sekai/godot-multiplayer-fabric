@@ -307,3 +307,6 @@ SCsub                                         @godotengine/buildsystem
 # V-Sekai Open Telemetry
 
 /modules/open_telemetry/                      @fire
+# V-Sekai Keychain
+
+/modules/keychain/                            @fire
