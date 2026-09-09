@@ -160,7 +160,11 @@ public:
 
 			Vector3 from = root_joint_solver_info->forward_vector;
 			Vector3 to = root_joint_solver_info->current_grest.xform_inv(root_joint_solver_info->current_vector).normalized();
-			root_joint_solver_info->current_lpose = root_joint_solver_info->current_lrest * get_swing(Quaternion(from, to), from);
+			if (from.is_zero_approx() || to.is_zero_approx()) {
+				root_joint_solver_info->current_lpose = root_joint_solver_info->current_lrest;
+			} else {
+				root_joint_solver_info->current_lpose = root_joint_solver_info->current_lrest * get_swing(Quaternion(from, to), from);
+			}
 
 			root_joint_solver_info->current_gpose = parent_gpose * root_joint_solver_info->current_lpose;
 			root_joint_solver_info->current_gpose.normalize();
@@ -173,7 +177,11 @@ public:
 
 			from = mid_joint_solver_info->forward_vector;
 			to = mid_joint_solver_info->current_grest.xform_inv(mid_joint_solver_info->current_vector).normalized();
-			mid_joint_solver_info->current_lpose = mid_joint_solver_info->current_lrest * get_swing(Quaternion(from, to), from);
+			if (from.is_zero_approx() || to.is_zero_approx()) {
+				mid_joint_solver_info->current_lpose = mid_joint_solver_info->current_lrest;
+			} else {
+				mid_joint_solver_info->current_lpose = mid_joint_solver_info->current_lrest * get_swing(Quaternion(from, to), from);
+			}
 
 			mid_joint_solver_info->current_gpose = root_gpose * mid_joint_solver_info->current_lpose;
 			mid_joint_solver_info->current_gpose.normalize();

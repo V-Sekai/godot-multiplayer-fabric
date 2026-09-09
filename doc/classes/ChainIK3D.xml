@@ -82,6 +82,12 @@
 				Returns [code]true[/code] if the end bone is extended to have a tail.
 			</description>
 		</method>
+		<method name="resolve_chains">
+			<return type="void" />
+			<description>
+				Immediately links the parent [Skeleton3D] and rebuilds the joint chains, without requiring the node to be inside the [SceneTree]. Useful when a tool or importer configures the chains on a detached scene and needs the joints resolved before reading or modifying them.
+			</description>
+		</method>
 		<method name="set_end_bone">
 			<return type="void" />
 			<param index="0" name="index" type="int" />

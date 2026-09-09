@@ -105,10 +105,14 @@ public:
 					Vector3 from = solver_info->forward_vector;
 					Vector3 to = solver_info->current_grest.xform_inv(solver_info->current_vector).normalized();
 
-					Basis b = get_swing(Quaternion(from, to), from);
-					b.rotate_local(from, twists[HEAD] - parent_twist);
+					if (from.is_zero_approx() || to.is_zero_approx()) {
+						solver_info->current_lpose = solver_info->current_lrest;
+					} else {
+						Basis b = get_swing(Quaternion(from, to), from);
+						b.rotate_local(from, twists[HEAD] - parent_twist);
+						solver_info->current_lpose = solver_info->current_lrest * b.get_rotation_quaternion();
+					}
 					parent_twist = twists[HEAD];
-					solver_info->current_lpose = solver_info->current_lrest * b.get_rotation_quaternion();
 
 					solver_info->current_gpose = parent_gpose * solver_info->current_lpose;
 					solver_info->current_gpose.normalize();
@@ -127,7 +131,11 @@ public:
 					Vector3 from = solver_info->forward_vector;
 					Vector3 to = solver_info->current_grest.xform_inv(solver_info->current_vector).normalized();
 
-					solver_info->current_lpose = solver_info->current_lrest * get_swing(Quaternion(from, to), from);
+					if (from.is_zero_approx() || to.is_zero_approx()) {
+						solver_info->current_lpose = solver_info->current_lrest;
+					} else {
+						solver_info->current_lpose = solver_info->current_lrest * get_swing(Quaternion(from, to), from);
+					}
 
 					solver_info->current_gpose = parent_gpose * solver_info->current_lpose;
 					solver_info->current_gpose.normalize();

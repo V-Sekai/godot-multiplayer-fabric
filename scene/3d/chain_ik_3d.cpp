@@ -185,9 +185,11 @@ void ChainIK3D::set_root_bone(int p_index, int p_bone) {
 	chain_settings[p_index]->root_bone.bone = p_bone;
 	Skeleton3D *sk = get_skeleton();
 	if (sk) {
-		if (chain_settings[p_index]->root_bone.bone <= -1 || chain_settings[p_index]->root_bone.bone >= sk->get_bone_count()) {
+		if (chain_settings[p_index]->root_bone.bone >= sk->get_bone_count()) {
 			WARN_PRINT_ED("Setting: " + itos(p_index) + ": Root bone index '" + itos(p_bone) + "' is out of range!");
 			chain_settings[p_index]->root_bone.bone = -1;
+		} else if (chain_settings[p_index]->root_bone.bone <= -1) {
+			chain_settings[p_index]->root_bone.bone = -1; // unset / unresolved name -- valid, stay silent (no spam)
 		} else {
 			chain_settings[p_index]->root_bone.name = sk->get_bone_name(chain_settings[p_index]->root_bone.bone);
 		}
@@ -222,9 +224,11 @@ void ChainIK3D::set_end_bone(int p_index, int p_bone) {
 	chain_settings[p_index]->end_bone.bone = p_bone;
 	Skeleton3D *sk = get_skeleton();
 	if (sk) {
-		if (chain_settings[p_index]->end_bone.bone <= -1 || chain_settings[p_index]->end_bone.bone >= sk->get_bone_count()) {
+		if (chain_settings[p_index]->end_bone.bone >= sk->get_bone_count()) {
 			WARN_PRINT_ED("Setting: " + itos(p_index) + ": End bone index '" + itos(p_bone) + "' is out of range!");
 			chain_settings[p_index]->end_bone.bone = -1;
+		} else if (chain_settings[p_index]->end_bone.bone <= -1) {
+			chain_settings[p_index]->end_bone.bone = -1; // unset / unresolved name -- valid, stay silent (no spam)
 		} else {
 			chain_settings[p_index]->end_bone.name = sk->get_bone_name(chain_settings[p_index]->end_bone.bone);
 		}
@@ -351,6 +355,7 @@ int ChainIK3D::get_joint_count(int p_index) const {
 
 void ChainIK3D::_bind_methods() {
 	// Setting.
+	ClassDB::bind_method(D_METHOD("resolve_chains"), &ChainIK3D::resolve_chains);
 	ClassDB::bind_method(D_METHOD("set_root_bone_name", "index", "bone_name"), &ChainIK3D::set_root_bone_name);
 	ClassDB::bind_method(D_METHOD("get_root_bone_name", "index"), &ChainIK3D::get_root_bone_name);
 	ClassDB::bind_method(D_METHOD("set_root_bone", "index", "bone"), &ChainIK3D::set_root_bone);
@@ -373,6 +378,11 @@ void ChainIK3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_joint_bone", "index", "joint"), &ChainIK3D::get_joint_bone);
 
 	ClassDB::bind_method(D_METHOD("get_joint_count", "index"), &ChainIK3D::get_joint_count);
+}
+
+void ChainIK3D::resolve_chains() {
+	_update_skeleton_path(); // links the parent Skeleton3D without requiring the SceneTree
+	_validate_bone_names(); // resolves root/end bone names -> ids and rebuilds the joint chains
 }
 
 void ChainIK3D::_validate_bone_names() {

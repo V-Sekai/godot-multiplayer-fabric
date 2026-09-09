@@ -125,6 +125,7 @@ public:
 		}
 
 		// Get limited rotation from forward axis in local rest space.
+		// Returns the constrained direction scaled by original length.
 		Vector3 get_limited_rotation(const Quaternion &p_offset, const Vector3 &p_vector, const Vector3 &p_forward) const {
 			ERR_FAIL_COND_V(limitation.is_null(), p_vector);
 			Vector3 local_vector = p_offset.xform_inv(p_vector);
@@ -132,8 +133,9 @@ public:
 			if (Math::is_zero_approx(length)) {
 				return p_vector;
 			}
-			Vector3 limited = limitation->solve(p_forward, get_limitation_right_axis_vector(), limitation_rotation_offset, local_vector.normalized()) * length;
-			return p_offset.xform(limited);
+			Vector3 input_dir = local_vector.normalized();
+			Vector3 constrained_dir = limitation->solve(p_forward, get_limitation_right_axis_vector(), limitation_rotation_offset, input_dir);
+			return p_offset.xform(constrained_dir * length);
 		}
 
 		~IterateIK3DJointSetting() {
@@ -170,6 +172,13 @@ public:
 				Vector3 from = solver_info->forward_vector;
 				Vector3 to = solver_info->current_grest.xform_inv(solver_info->current_vector).normalized();
 				Quaternion prev = solver_info->current_lpose;
+				// A zero-length child bone (coincident bones, common in humanoid spine
+				// chains) leaves forward_vector at (0,0,0); a null target leaves `to` zero.
+				// Quaternion's shortest-arc ctor rejects zero vectors, so skip the swing for
+				// this joint (it simply isn't rotated) instead of spamming the error.
+				if (from.is_zero_approx() || to.is_zero_approx()) {
+					continue;
+				}
 				if (joint_settings[HEAD]->rotation_axis == ROTATION_AXIS_ALL) {
 					solver_info->current_lpose = solver_info->current_lrest * get_swing(Quaternion(from, to), from);
 				} else {
@@ -259,6 +268,10 @@ protected:
 	bool _set(const StringName &p_path, const Variant &p_value);
 	void _get_property_list(List<PropertyInfo> *p_list) const;
 	void _validate_dynamic_prop(PropertyInfo &p_property) const;
+	// Hook for subclasses to add their own per-joint inspector properties, emitted INSIDE the
+	// base joint loop so they interleave with the joint (no duplicate "settings" block). p_path is
+	// "settings/<i>/joints/<j>/". Default adds nothing.
+	virtual void _get_joint_extra_properties(int p_setting, int p_joint, const String &p_path, LocalVector<PropertyInfo> &p_props) const {}
 
 	static void _bind_methods();
 

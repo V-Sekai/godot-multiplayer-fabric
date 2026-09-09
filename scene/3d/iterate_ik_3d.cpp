@@ -126,6 +126,7 @@ void IterateIK3D::_get_property_list(List<PropertyInfo> *p_list) const {
 			props.push_back(PropertyInfo(Variant::INT, joint_path + "limitation/right_axis", PROPERTY_HINT_ENUM, SkeletonModifier3D::get_hint_secondary_direction()));
 			props.push_back(PropertyInfo(Variant::VECTOR3, joint_path + "limitation/right_axis_vector"));
 			props.push_back(PropertyInfo(Variant::QUATERNION, joint_path + "limitation/rotation_offset"));
+			_get_joint_extra_properties(i, j, joint_path, props); // subclass per-joint props, interleaved
 		}
 	}
 

@@ -232,6 +232,11 @@ public:
 		chain_settings.clear();
 	}
 
+	// Force-resolve the skeleton link and rebuild the joint chains immediately, even when
+	// the modifier is not inside the SceneTree (e.g. when configured by a tool/importer on
+	// a detached scene). Needed before set_joint_limitation() in that context.
+	void resolve_chains();
+
 	// Setting.
 	void set_root_bone_name(int p_index, const String &p_bone_name);
 	String get_root_bone_name(int p_index) const;

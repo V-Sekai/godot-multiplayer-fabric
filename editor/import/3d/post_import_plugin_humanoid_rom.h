@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  chain_ik_3d_gizmo_plugin.h                                            */
+/*  post_import_plugin_humanoid_rom.h                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -30,33 +30,16 @@
 
 #pragma once
 
-#include "editor/scene/3d/node_3d_editor_gizmos.h"
-#include "scene/resources/3d/joint_limitation_3d.h"
+#include "editor/import/3d/resource_importer_scene.h"
 
-class ChainIK3D;
-class SurfaceTool;
-
-class ChainIK3DGizmoPlugin : public EditorNode3DGizmoPlugin {
-	GDCLASS(ChainIK3DGizmoPlugin, EditorNode3DGizmoPlugin);
-
-	struct SelectionMaterials {
-		Ref<StandardMaterial3D> unselected_mat;
-		Ref<StandardMaterial3D> unselected_fill_mat;
-		Ref<ShaderMaterial> selected_mat;
-		Ref<ShaderMaterial> selected_fill_mat;
-	};
-	static SelectionMaterials selection_materials;
+// Optional import step (default OFF): when "humanoid_rom/generate_limits" is enabled on
+// a Skeleton3D, attaches an IterateIK3D modifier carrying the phenotype-scaled full-body
+// Kusudama range-of-motion limits (via HumanoidKusudamaRom).
+class PostImportPluginHumanoidRom : public EditorScenePostImportPlugin {
+	GDCLASS(PostImportPluginHumanoidRom, EditorScenePostImportPlugin);
 
 public:
-	static void get_joints_mesh(Skeleton3D *p_skeleton, ChainIK3D *p_ik, bool p_is_selected, Ref<ArrayMesh> &r_skinned_mesh, Ref<ArrayMesh> &r_mesh, Ref<ArrayMesh> &r_fill_mesh, Vector<ExtraMeshEntry> &r_extra_meshes);
-	static void draw_line(Ref<SurfaceTool> &p_surface_tool, const Vector3 &p_begin_pos, const Vector3 &p_end_pos, const Color &p_color);
-
-	bool has_gizmo(Node3D *p_spatial) override;
-	String get_gizmo_name() const override;
-	int get_priority() const override;
-
-	void redraw(EditorNode3DGizmo *p_gizmo) override;
-
-	ChainIK3DGizmoPlugin();
-	~ChainIK3DGizmoPlugin();
+	virtual void get_internal_import_options(InternalImportCategory p_category, List<ResourceImporter::ImportOption> *r_options) override;
+	virtual Variant get_internal_option_visibility(InternalImportCategory p_category, const String &p_scene_import_type, const String &p_option, const HashMap<StringName, Variant> &p_options) const override;
+	virtual void internal_process(InternalImportCategory p_category, Node *p_base_scene, Node *p_node, Ref<Resource> p_resource, const Dictionary &p_options) override;
 };
