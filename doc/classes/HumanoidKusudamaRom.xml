@@ -15,7 +15,7 @@
 			<param index="0" name="ik" type="IterateIK3D" />
 			<param index="1" name="rig" type="int" enum="HumanoidKusudamaRom.ControlRig" default="1" />
 			<description>
-				Builds a standard humanoid control rig of [Marker3D] controls under [code]ik[/code], seated at the rest pose, and returns a [Dictionary] mapping each control name to its [Marker3D]. The head, hands and feet are chain end-effectors (IK goals) that drive the IK chains; the hips control is the root reference; the elbow/knee controls are pole vectors and the chest is an upper-body control. [constant CONTROL_RIG_IK_GOALS] creates the six effectors; [constant CONTROL_RIG_FULL] (the default) is a strict superset that adds the chest control and the four pole vectors (eleven controls total).
+				Builds a standard humanoid control rig of [Marker3D] controls under [param ik], seated at the rest pose, and returns a [Dictionary] mapping each control name to its [Marker3D]. The head, hands and feet are chain end-effectors (IK goals) that drive the IK chains; the hips control is the root reference; the elbow/knee controls are pole vectors and the chest is an upper-body control. [constant CONTROL_RIG_IK_GOALS] creates the six effectors; [constant CONTROL_RIG_FULL] (the default) is a strict superset that adds the chest control and the four pole vectors (eleven controls total).
 			</description>
 		</method>
 		<method name="apply_ik_limits" qualifiers="const">
@@ -23,7 +23,7 @@
 			<param index="0" name="ik" type="IterateIK3D" />
 			<param index="1" name="phenotype" type="Dictionary" />
 			<description>
-				Attaches the phenotype-scaled Kusudama ROM to every joint of [code]ik[/code] whose bone maps to a humanoid slot, and returns the number of limits applied. The IK must be parented to a [Skeleton3D]; the chains are resolved automatically (so this also works on a detached scene during import).
+				Attaches the phenotype-scaled Kusudama ROM to every joint of [param ik] whose bone maps to a humanoid slot, and returns the number of limits applied. The IK must be parented to a [Skeleton3D]; the chains are resolved automatically (so this also works on a detached scene during import).
 			</description>
 		</method>
 		<method name="generate" qualifiers="const">
@@ -31,7 +31,7 @@
 			<param index="0" name="bones" type="PackedStringArray" />
 			<param index="1" name="phenotype" type="Dictionary" />
 			<description>
-				Returns a [Dictionary] mapping each requested humanoid bone name to a [JointLimitationKusudama3D] ROM limit for the given [code]phenotype[/code]. Bones with no ROM data are omitted.
+				Returns a [Dictionary] mapping each requested humanoid bone name to a [JointLimitationKusudama3D] ROM limit for the given [param phenotype]. Bones with no ROM data are omitted.
 			</description>
 		</method>
 		<method name="generate_bone" qualifiers="const">
@@ -46,7 +46,7 @@
 			<return type="Dictionary" />
 			<param index="0" name="phenotype" type="Dictionary" />
 			<description>
-				Returns a [Dictionary] mapping every supported humanoid bone slot to its [JointLimitationKusudama3D] ROM limit for the given [code]phenotype[/code].
+				Returns a [Dictionary] mapping every supported humanoid bone slot to its [JointLimitationKusudama3D] ROM limit for the given [param phenotype].
 			</description>
 		</method>
 		<method name="get_supported_bones" qualifiers="const">
@@ -59,14 +59,14 @@
 			<return type="float" />
 			<param index="0" name="phenotype" type="Dictionary" />
 			<description>
-				Returns the smooth ROM scale factor for an ANNY [code]phenotype[/code] [Dictionary] (axes [code]gender[/code], [code]age[/code], [code]muscle[/code], [code]weight[/code], [code]height[/code], [code]proportions[/code] in [code][0, 1][/code]). Values below [code]1.0[/code] tighten the range of motion.
+				Returns the smooth ROM scale factor for an ANNY [param phenotype] [Dictionary] (axes [code]gender[/code], [code]age[/code], [code]muscle[/code], [code]weight[/code], [code]height[/code], [code]proportions[/code] in [code][0, 1][/code]). Values below [code]1.0[/code] tighten the range of motion.
 			</description>
 		</method>
 		<method name="setup_humanoid_chains" qualifiers="const">
 			<return type="int" />
 			<param index="0" name="ik" type="IterateIK3D" />
 			<description>
-				Configures the standard humanoid IK chains on [code]ik[/code] (two arms, two legs, spine) by [SkeletonProfileHumanoid] bone name, and returns the number of chains created. Bone names resolve once [code]ik[/code] is attached to a [Skeleton3D].
+				Configures the standard humanoid IK chains on [param ik] (two arms, two legs, spine) by [SkeletonProfileHumanoid] bone name, and returns the number of chains created. Bone names resolve once [param ik] is attached to a [Skeleton3D].
 			</description>
 		</method>
 	</methods>
