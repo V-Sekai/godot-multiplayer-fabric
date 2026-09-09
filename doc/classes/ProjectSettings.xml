@@ -1138,8 +1138,20 @@
 		<member name="editor/import/use_multiple_threads" type="bool" setter="" getter="" default="true">
 			If [code]true[/code] importing of resources is run on multiple threads.
 		</member>
+		<member name="editor/movie_writer/async_readback" type="bool" setter="" getter="" default="true">
+			If [code]true[/code], viewport frames are read back from the GPU asynchronously, so a frame is encoded while the next one renders. Disable this only to rule out the readback path when diagnosing a recording problem, as it makes every frame wait for its own transfer.
+		</member>
 		<member name="editor/movie_writer/audio_bit_depth" type="int" setter="" getter="" default="16">
 			Number of bits per audio sample written to the [code].avi[/code] file. Only 16 and 32-bit are supported.
+		</member>
+		<member name="editor/movie_writer/cineform/keep_alpha" type="bool" setter="" getter="" default="false">
+			If [code]true[/code], the CineForm writer records an alpha channel. This requires the root viewport to be transparent, and increases the bit rate.
+		</member>
+		<member name="editor/movie_writer/cineform/quality" type="int" setter="" getter="" default="2">
+			The encoding quality the CineForm writer uses, from [code]0[/code] (low) to [code]5[/code] (film scan 3). Higher values raise the bit rate without changing the encoding speed much, as the codec spends the same work on every frame.
+		</member>
+		<member name="editor/movie_writer/cineform/thread_count" type="int" setter="" getter="" default="0">
+			The number of encoder threads the CineForm writer uses. [code]0[/code] lets the encoder pool size itself to the CPU. A pool of one encodes each frame in turn, which is slower than the default at every resolution.
 		</member>
 		<member name="editor/movie_writer/disable_vsync" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], requests V-Sync to be disabled when writing a movie (similar to setting [member display/window/vsync/vsync_mode] to [b]Disabled[/b]). This can speed up video writing if the hardware is fast enough to render, encode and save the video at a framerate higher than the monitor's refresh rate.
@@ -1154,10 +1166,11 @@
 		</member>
 		<member name="editor/movie_writer/movie_file" type="String" setter="" getter="" default="&quot;&quot;">
 			The output path for the movie. The file extension determines the [MovieWriter] that will be used.
-			Godot has 3 built-in [MovieWriter]s:
+			Godot has 4 built-in [MovieWriter]s:
 			- OGV container with Theora for video and Vorbis for audio ([code].ogv[/code] file extension). Lossy compression, medium file sizes, fast encoding. The lossy compression quality can be adjusted by changing [member ProjectSettings.editor/movie_writer/video_quality] and [member ProjectSettings.editor/movie_writer/ogv/audio_quality]. The resulting file can be viewed in Godot with [VideoStreamPlayer] and most video players, but not web browsers as they don't support Theora.
 			- AVI container with MJPEG for video and uncompressed audio ([code].avi[/code] file extension). Lossy compression, medium file sizes, fast encoding. The lossy compression quality can be adjusted by changing [member ProjectSettings.editor/movie_writer/video_quality]. The resulting file can be viewed in most video players, but it must be converted to another format for viewing on the web or by Godot with [VideoStreamPlayer]. MJPEG does not support transparency. AVI output is currently limited to a file of 4 GB in size at most.
 			- PNG image sequence for video and WAV for audio ([code].png[/code] file extension). Lossless compression, large file sizes, slow encoding. Designed to be encoded to a video file with another tool such as [url=https://ffmpeg.org/]FFmpeg[/url] after recording. Transparency is currently not supported, even if the root viewport is set to be transparent.
+			- Matroska container with CineForm for video and uncompressed audio ([code].mkv[/code] file extension). Visually lossless wavelet compression at 12 bits per channel, large file sizes, fast encoding. Every frame is a keyframe, and transparency is supported by setting [member ProjectSettings.editor/movie_writer/cineform/keep_alpha]. The resulting file can be viewed in Godot with [VideoStreamPlayer] and in video players that support CineForm. Requires an x86 CPU.
 			If you need to encode to a different format or pipe a stream through third-party software, you can extend this [MovieWriter] class to create your own movie writers.
 			When using PNG output, the frame number will be appended at the end of the file name. It starts from 0 and is padded with 8 digits to ensure correct sorting and easier processing. For example, if the output path is [code]/tmp/hello.png[/code], the first two frames will be [code]/tmp/hello00000000.png[/code] and [code]/tmp/hello00000001.png[/code]. The audio will be saved at [code]/tmp/hello.wav[/code].
 		</member>
@@ -1170,6 +1183,9 @@
 		</member>
 		<member name="editor/movie_writer/ogv/keyframe_interval" type="int" setter="" getter="" default="64" keywords="theora">
 			Forces keyframes at the specified interval (in frame count). Higher values can improve compression up to a certain level at the expense of higher latency when seeking.
+		</member>
+		<member name="editor/movie_writer/size_mismatch_action" type="int" setter="" getter="" default="0">
+			What to do when the movie size and the window size differ. [code]0[/code] resizes every frame to the movie size, which is the behavior of previous versions and can cost several times more than encoding. [code]1[/code] records at the window size instead. [code]2[/code] refuses to start recording. A mismatch is easy to cause without noticing, as the display server is free to grant a window smaller than the one requested.
 		</member>
 		<member name="editor/movie_writer/speaker_mode" type="int" setter="" getter="" default="0" keywords="stereo, surround">
 			The speaker mode to use in the recorded audio when writing a movie. See [enum AudioServer.SpeakerMode] for possible values.
