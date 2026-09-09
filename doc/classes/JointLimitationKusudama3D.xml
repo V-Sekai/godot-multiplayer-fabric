@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JointLimitationKusudama3D" inherits="JointLimitation3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		A Kusudama joint limitation that constrains bone orientation using multiple cones connected by tangent paths.
+	</brief_description>
+	<description>
+		JointLimitationKusudama3D represents a spherical constraint region using multiple sequence cones that are automatically connected by smooth tangent paths. The term "Kusudama" originates from Japanese papercraft models made by sewing or gluing pyramidal units through a common vertex, which this constraint visually resembles.
+		[b]How Kusudamas Work:[/b]
+		Each cone is defined by a center direction and a radius (radii may vary per cone). The constraint allows bone orientations within any of these cones. Additionally, adjacent cones in the sequence are automatically connected by tangent paths, creating a smooth transition region between cones. The inside of tangent circles is forbidden, while the region outside both tangent circles (between the cones) forms the allowed path.
+		[b]Important:[/b] With 2 or more cones, the constraint automatically sorts cones into convex hull order on the sphere and connects them in a closed loop (including wrap-around from the last cone back to the first). This forms a convex spherical polygon as the constraint boundary, ensuring flicker-free animation interpolation with any number of cones.
+		[b]Constraint Solving Process:[/b]
+		If there are no cones ([code]cone_count[/code] is 0), the constraint is effectively disabled and the bone direction is returned unchanged. Otherwise:
+		1. First, the solver checks if the bone direction is within any sequence cone. If so, the orientation is allowed.
+		2. If not, it checks if the bone direction is within the tangent path regions between adjacent cones.
+		3. If the bone is outside all allowed regions, it is constrained to the nearest boundary point.
+		[b]Note:[/b] Kusudamas constrain the swing (direction) of the bone.
+		[b]Tangent Cone Calculation:[/b]
+		The tangent cones connecting adjacent sequence cones are automatically calculated. The tangent cone radius is determined by the formula: [code](π - (θa + θb)) / 2[/code], where [code]θa[/code] and [code]θb[/code] are the apex angles of the two sequence cones being connected. This ensures smooth transitions between cones while maintaining the constraint boundaries.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clamp_twist_angle" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="angle" type="float" />
+			<description>
+				Clamps a twist [param angle] (radians) into [member twist_from]..[member twist_to]. Returns the angle unchanged if no twist limit is set.
+			</description>
+		</method>
+		<method name="get_cone_axes" qualifiers="const">
+			<return type="Vector2" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the center of the cone at [param index] as two basis axes in [code][-1, 1][/code]: the right (X) and forward (Z) components of the unit center direction. The up (Y) component is implied. See [method set_cone_axes].
+			</description>
+		</method>
+		<method name="get_cone_center" qualifiers="const">
+			<return type="Vector3" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the center direction vector of the cone at the specified index. This vector points in the direction the cone opens and should be normalized.
+			</description>
+		</method>
+		<method name="get_cone_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of cones in this kusudama constraint.
+			</description>
+		</method>
+		<method name="get_cone_radius" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the radius of the cone at the specified index. This determines how wide the cone opens.
+			</description>
+		</method>
+		<method name="has_twist_limit" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when a twist limit is active, that is when [member twist_to] is greater than [member twist_from].
+			</description>
+		</method>
+		<method name="limit_twist" qualifiers="const">
+			<return type="Quaternion" />
+			<param index="0" name="rotation" type="Quaternion" />
+			<param index="1" name="axis" type="Vector3" />
+			<description>
+				Decomposes [param rotation] into swing and twist about [param axis], clamps the twist into [member twist_from]..[member twist_to], and recomposes. The swing (bone direction) is left unchanged; the operation is idempotent and leaves an in-range twist untouched.
+			</description>
+		</method>
+		<method name="set_cone_axes">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="axes" type="Vector2" />
+			<description>
+				Sets the center of the cone at [param index] from two basis axes in [code][-1, 1][/code] ([code]axes.x[/code] = right/X, [code]axes.y[/code] = forward/Z); the up (Y) component is derived so the center stays a unit direction in the forward hemisphere. Lets a cone center be authored as two axes instead of a [Vector3]. See [method get_cone_axes].
+			</description>
+		</method>
+		<method name="set_cone_center">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="center" type="Vector3" />
+			<description>
+				Sets the center direction vector of the cone at the specified index. The vector will be normalized automatically. This defines the direction in which the cone opens. Tangent paths between adjacent cones are automatically recalculated when a cone center is changed.
+			</description>
+		</method>
+		<method name="set_cone_count">
+			<return type="void" />
+			<param index="0" name="count" type="int" />
+			<description>
+				Sets the number of cones. If the count is [code]0[/code], all cones are cleared. If increasing the count, new cones are added with default values (center at the +Y axis, radius of [code]0.785398[/code] radians, approximately [code]45[/code] degrees). If decreasing, excess cones are removed. The constraint boundary polygon is automatically rebuilt.
+			</description>
+		</method>
+		<method name="set_cone_radius">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="radius" type="float" />
+			<description>
+				Sets the radius of the cone at the specified index in radians. The editor exposes this as 1° to 180°. Larger values create wider cones. Tangent paths between adjacent cones are automatically recalculated when a cone radius is changed.
+			</description>
+		</method>
+		<method name="swing_from_normalized" qualifiers="const">
+			<return type="Vector3" />
+			<param index="0" name="normalized" type="Vector2" />
+			<description>
+				Inverse of [method swing_to_normalized]: maps a unit-disk coordinate back to a swing direction within this constraint's range of motion. Decoding the same normalized value against differently-sized constraints transfers a pose proportionally between them.
+			</description>
+		</method>
+		<method name="swing_to_normalized" qualifiers="const">
+			<return type="Vector2" />
+			<param index="0" name="direction" type="Vector3" />
+			<description>
+				Normalizes a swing [param direction] to a unit-disk coordinate (per-axis normalized): magnitude [code]0[/code] at the range-of-motion center and [code]1[/code] on its boundary, with the direction encoding the azimuth. Use with [method swing_from_normalized] to retarget poses between range-of-motion sizes.
+			</description>
+		</method>
+		<method name="twist_from_normalized" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="normalized" type="float" />
+			<description>
+				Maps a [param normalized] value in [code][0, 1][/code] to a twist angle between [member twist_from] and [member twist_to].
+			</description>
+		</method>
+		<method name="twist_to_normalized" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="angle" type="float" />
+			<description>
+				Maps a twist [param angle] (radians) to [code][0, 1][/code] between [member twist_from] and [member twist_to].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="cones" type="PackedVector4Array" setter="set_cones" getter="get_cones" default="PackedVector4Array()">
+			The array of cones that define this kusudama constraint. Each cone is stored as a Vector4 where the XYZ components represent the center direction (stored raw; normalized internally) and the W component is the cone radius in radians (engine property range 1° to 180°). The cones are automatically sorted into convex hull order and connected in a closed loop to form a convex spherical polygon constraint boundary.
+		</member>
+		<member name="cushion" type="float" setter="set_cushion" getter="get_cushion" default="0.06">
+			Soft-limit margin in radians. Near a cone or twist boundary the projection eases the direction back over this band, giving a smooth approach to the limit. Wider values make the joint resist the limit earlier and more gently.
+		</member>
+		<member name="strength" type="float" setter="set_strength" getter="get_strength" default="1.0">
+			How strongly the limit is enforced, from 0 to 1. 1 clamps the direction fully into the allowed region; 0 passes it through unconstrained; values between blend the two. Lets a constraint be softened or disabled in place without removing it.
+		</member>
+		<member name="twist_from" type="float" setter="set_twist_from" getter="get_twist_from" default="0.0">
+			Lower bound of the twist limit, in radians, about the bone forward axis. The twist limit is active only when [member twist_to] is greater than [member twist_from]. See [method limit_twist].
+		</member>
+		<member name="twist_to" type="float" setter="set_twist_to" getter="get_twist_to" default="0.0">
+			Upper bound of the twist limit, in radians, about the bone forward axis. The twist limit is active only when it is greater than [member twist_from]. See [method limit_twist].
+		</member>
+	</members>
+</class>

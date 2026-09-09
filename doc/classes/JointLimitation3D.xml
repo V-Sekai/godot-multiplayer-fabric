@@ -8,4 +8,15 @@
 	</description>
 	<tutorials>
 	</tutorials>
+	<methods>
+		<method name="solve" qualifiers="const">
+			<return type="Vector3" />
+			<param index="0" name="local_forward_vector" type="Vector3" />
+			<param index="1" name="local_right_vector" type="Vector3" />
+			<param index="2" name="rotation_offset" type="Quaternion" />
+			<param index="3" name="local_current_vector" type="Vector3" />
+			<description>
+			</description>
+		</method>
+	</methods>
 </class>

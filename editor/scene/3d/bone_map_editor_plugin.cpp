@@ -32,6 +32,7 @@
 
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
+#include "editor/import/3d/post_import_plugin_humanoid_rom.h"
 #include "editor/import/3d/post_import_plugin_skeleton_renamer.h"
 #include "editor/import/3d/post_import_plugin_skeleton_rest_fixer.h"
 #include "editor/import/3d/post_import_plugin_skeleton_track_organizer.h"
@@ -1478,4 +1479,8 @@ BoneMapEditorPlugin::BoneMapEditorPlugin() {
 	Ref<PostImportPluginSkeletonRestFixer> post_import_plugin_rest_fixer;
 	post_import_plugin_rest_fixer.instantiate();
 	add_scene_post_import_plugin(post_import_plugin_rest_fixer);
+
+	Ref<PostImportPluginHumanoidRom> post_import_plugin_humanoid_rom;
+	post_import_plugin_humanoid_rom.instantiate();
+	add_scene_post_import_plugin(post_import_plugin_humanoid_rom);
 }

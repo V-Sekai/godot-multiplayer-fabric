@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SwingTwistIK3D" inherits="IterateIK3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Whole-body swing-twist inverse kinematics solver with per-joint controls.
+	</brief_description>
+	<description>
+		A concrete [IterateIK3D] solver that poses a whole [Skeleton3D] to reach its targets. It runs over all chains at once: each bone is rotated by a multi-limb best fit toward its downstream targets (swing), then twisted about the resulting axis. Everything maps onto the controls [IterateIK3D] already provides: a bone with a target (a chain's [code]target_node[/code]) is a pin, and a parentless pinned root translates to its target (the motion root, no flag needed). Per-joint [Vector3] priorities weight position, swing, and twist; the per-joint [code]stiffness[/code] ([code]1[/code] freezes the bone at its forward-kinematics pose), [code]engage[/code], [code]isolation[/code] and [code]relax[/code] controls shape how the chain settles. A pole is set up as a low-position, zero-orientation weight on a mid joint, so it needs no dedicated control.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_joint_engage" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<description>
+				Returns the joint's engage value: the solve progress (0 to 1) at which it starts moving. 0 means it moves from the first iteration.
+			</description>
+		</method>
+		<method name="get_joint_isolation" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<description>
+				Returns the joint's isolation (0 to 1): how strongly its target blocks descendant targets from pulling on bones above it. 0 lets the pull through.
+			</description>
+		</method>
+		<method name="get_joint_priorities" qualifiers="const">
+			<return type="Vector3" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<description>
+				Returns the joint's [Vector3] priorities: x weights the pull toward the target point, y weights aiming the forward axis (swing), z weights matching the roll (twist).
+			</description>
+		</method>
+		<method name="get_joint_relax" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<description>
+				Returns the joint's relax value (0 to 1): the strength of the restoring pull toward its rest pose.
+			</description>
+		</method>
+		<method name="get_joint_stiffness" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<description>
+				Returns the joint's stiffness (0 to 1): how much it resists rotating. 0 is free, 1 is rigid.
+			</description>
+		</method>
+		<method name="set_joint_engage">
+			<return type="void" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<param index="2" name="engage" type="float" />
+			<description>
+				Sets the joint's engage value: the solve progress (0 to 1) at which it starts moving. 0 means it moves from the first iteration.
+			</description>
+		</method>
+		<method name="set_joint_isolation">
+			<return type="void" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<param index="2" name="isolation" type="float" />
+			<description>
+				Sets the joint's isolation (0 to 1): how strongly its target blocks descendant targets from pulling on bones above it. 0 lets the pull through.
+			</description>
+		</method>
+		<method name="set_joint_priorities">
+			<return type="void" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<param index="2" name="position" type="float" />
+			<param index="3" name="swing" type="float" />
+			<param index="4" name="twist" type="float" />
+			<description>
+				Sets the joint's priorities: [param position] weights the pull toward the target point, [param swing] weights aiming the forward axis, [param twist] weights matching the roll.
+			</description>
+		</method>
+		<method name="set_joint_relax">
+			<return type="void" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<param index="2" name="relax" type="float" />
+			<description>
+				Sets the joint's relax value (0 to 1): the strength of the restoring pull toward its rest pose. It biases the slack the targets leave free, so reach is kept; at 1 the bone sits at rest.
+			</description>
+		</method>
+		<method name="set_joint_stiffness">
+			<return type="void" />
+			<param index="0" name="setting" type="int" />
+			<param index="1" name="joint" type="int" />
+			<param index="2" name="stiffness" type="float" />
+			<description>
+				Sets the joint's stiffness (0 to 1): how much it resists rotating. 0 is free, 1 is rigid.
+			</description>
+		</method>
+		<method name="solve">
+			<return type="void" />
+			<description>
+				Runs a full solve immediately.
+			</description>
+		</method>
+	</methods>
+</class>
