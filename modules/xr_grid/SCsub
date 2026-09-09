@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+from misc.utility.scons_hints import *
+
+"""
+SCsub for the xr-grid engine module.
+
+xr-grid is V-Sekai's VR multiplayer canvas project (MIT, upstream at
+https://github.com/v-sekai-multiplayer-fabric/xr-grid). It is vendored
+in this fork as the `project/` git submodule so the engine ships
+alongside a known-good GDScript layer for the FabricManager-based
+networking + CassieSketcher-based per-stroke pipeline.
+
+This module exposes one C++ class:
+
+    XRGridStrokeChannel
+
+a thin RefCounted helper that wraps the WebTransport reliable-send
+pattern the xr-grid FabricManager would otherwise have to learn about
+from GDScript. It lets CassieSketcher.stroke_committed -> peer
+broadcast stay native end-to-end.
+
+The actual scene + GDScript layer lives under project/ (read-only,
+sourced from upstream) and integration/ (overlay scripts that drop
+into the xr-grid project to wire CassieSketcher in).
+"""
+
+Import("env")
+
+env_xr_grid = env.Clone()
+
+env_xr_grid.Append(
+    CPPPATH=[
+        "#modules/xr_grid/src",
+    ]
+)
+
+sources = [
+    "register_types.cpp",
+] + Glob("src/*.cpp")
+
+env_xr_grid.add_source_files(env.modules_sources, sources)

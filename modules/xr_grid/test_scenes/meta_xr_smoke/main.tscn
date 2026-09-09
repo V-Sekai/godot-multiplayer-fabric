@@ -1,0 +1,63 @@
+[gd_scene load_steps=10 format=3 uid="uid://xrgridmetasmoke"]
+
+[ext_resource type="Script" path="res://cassie_replay.gd" id="1_replay"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+background_color = Color(0.1, 0.12, 0.18, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.7, 0.75, 0.85, 1)
+ambient_light_energy = 0.6
+
+[sub_resource type="StandardMaterial3D" id="GridMat_1"]
+albedo_color = Color(0.2, 0.4, 0.6, 1)
+shading_mode = 0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_1"]
+size = Vector2(20, 20)
+subdivide_width = 20
+subdivide_depth = 20
+material = SubResource("GridMat_1")
+
+[sub_resource type="StandardMaterial3D" id="PatchMat_1"]
+albedo_color = Color(0.9, 0.5, 0.2, 0.7)
+shading_mode = 2
+transparency = 1
+
+[node name="Root" type="Node3D"]
+script = ExtResource("1_replay")
+sketcher_path = NodePath("Sketcher")
+patches_mesh_path = NodePath("PatchesMesh")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+mesh = SubResource("PlaneMesh_1")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Sketcher" type="CassieSketcher" parent="."]
+async_triangulation = false
+
+[node name="PatchesMesh" type="MeshInstance3D" parent="."]
+material_override = SubResource("PatchMat_1")
+
+[node name="LocalPersona" type="XRGridCapsulePersona" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+body_color = Color(0.6, 0.7, 0.85, 1)
+
+[node name="XROrigin" type="XRGridXROrigin" parent="."]
+fabric_address = "127.0.0.1"
+fabric_port = 9000
+
+[node name="XRCamera3D" type="XRCamera3D" parent="XROrigin"]
+
+[node name="hand_left" type="XRGridHand" parent="XROrigin"]
+tracker = &"left_hand"
+pose = &"aim"
+
+[node name="hand_right" type="XRGridHand" parent="XROrigin"]
+tracker = &"right_hand"
+pose = &"aim"
+
+[node name="FlatscreenFallback" type="XRGridFlatscreenController" parent="XROrigin"]

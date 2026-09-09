@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridSimpleSketch" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_line">
+			<return type="void" />
+			<param index="0" name="from" type="Vector3" />
+			<param index="1" name="to" type="Vector3" />
+			<param index="2" name="from_size" type="float" />
+			<param index="3" name="to_size" type="float" />
+			<param index="4" name="from_color" type="Color" />
+			<param index="5" name="to_color" type="Color" />
+			<param index="6" name="begin_stroke" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="stroke_add">
+			<return type="void" />
+			<param index="0" name="point" type="Vector3" />
+			<param index="1" name="size" type="float" />
+			<param index="2" name="color" type="Color" />
+			<description>
+			</description>
+		</method>
+		<method name="stroke_begin">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="stroke_end">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="target_mesh" type="ArrayMesh" setter="set_target_mesh" getter="get_target_mesh">
+		</member>
+	</members>
+</class>

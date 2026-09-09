@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridBaseProceduralGrid3D" inherits="MultiMeshInstance3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="regenerate_mesh">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="set_points_per_dimension_from_fade">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="fade_zone" type="float" setter="set_fade_zone" getter="get_fade_zone" default="0.5">
+		</member>
+		<member name="far_fade" type="float" setter="set_far_fade" getter="get_far_fade" default="1.0">
+		</member>
+		<member name="n_vertex_circle" type="int" setter="set_n_vertex_circle" getter="get_n_vertex_circle" default="32">
+		</member>
+		<member name="points_per_dimension" type="int" setter="set_points_per_dimension" getter="get_points_per_dimension" default="6">
+		</member>
+	</members>
+</class>

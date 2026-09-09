@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridStrokes" inherits="MeshInstance3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="hand_left_path" type="NodePath" setter="set_hand_left_path" getter="get_hand_left_path" default="NodePath(&quot;&quot;)">
+		</member>
+		<member name="hand_right_path" type="NodePath" setter="set_hand_right_path" getter="get_hand_right_path" default="NodePath(&quot;&quot;)">
+		</member>
+	</members>
+</class>

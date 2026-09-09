@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridGPUTrail3D" inherits="GPUParticles3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_flags" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="billboard" type="bool" setter="set_billboard" getter="get_billboard" default="false">
+		</member>
+		<member name="clip_overlaps" type="bool" setter="set_clip_overlaps" getter="get_clip_overlaps" default="true">
+		</member>
+		<member name="color_ramp" type="GradientTexture1D" setter="set_color_ramp" getter="get_color_ramp">
+		</member>
+		<member name="curve" type="CurveTexture" setter="set_curve" getter="get_curve">
+		</member>
+		<member name="dewiggle" type="bool" setter="set_dewiggle" getter="get_dewiggle" default="true">
+		</member>
+		<member name="snap_to_transform" type="bool" setter="set_snap_to_transform" getter="get_snap_to_transform" default="false">
+		</member>
+		<member name="texture" type="Texture2D" setter="set_texture" getter="get_texture">
+		</member>
+		<member name="trail_length" type="int" setter="set_trail_length" getter="get_trail_length" default="100">
+		</member>
+		<member name="use_red_as_alpha" type="bool" setter="set_use_red_as_alpha" getter="get_use_red_as_alpha" default="false">
+		</member>
+		<member name="vertical_texture" type="bool" setter="set_vertical_texture" getter="get_vertical_texture" default="false">
+		</member>
+	</members>
+	<constants>
+		<constant name="FLAG_VERTICAL_TEXTURE" value="1" enum="TrailFlags" is_bitfield="true">
+		</constant>
+		<constant name="FLAG_USE_RED_AS_ALPHA" value="2" enum="TrailFlags" is_bitfield="true">
+		</constant>
+		<constant name="FLAG_BILLBOARD" value="4" enum="TrailFlags" is_bitfield="true">
+		</constant>
+		<constant name="FLAG_DEWIGGLE" value="8" enum="TrailFlags" is_bitfield="true">
+		</constant>
+		<constant name="FLAG_SNAP_TO_TRANSFORM" value="16" enum="TrailFlags" is_bitfield="true">
+		</constant>
+		<constant name="FLAG_CLIP_OVERLAPS" value="32" enum="TrailFlags" is_bitfield="true">
+		</constant>
+	</constants>
+</class>

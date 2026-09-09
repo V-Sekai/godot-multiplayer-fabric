@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridWorldGrab" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_grab_transform">
+			<return type="Transform3D" />
+			<param index="0" name="from" type="Transform3D" />
+			<param index="1" name="to" type="Transform3D" />
+			<description>
+			</description>
+		</method>
+		<method name="get_orbit_transform">
+			<return type="Transform3D" />
+			<param index="0" name="from_pivot" type="Vector3" />
+			<param index="1" name="from_b" type="Vector3" />
+			<param index="2" name="to_pivot" type="Vector3" />
+			<param index="3" name="to_b" type="Vector3" />
+			<description>
+			</description>
+		</method>
+		<method name="get_pinch_transform">
+			<return type="Transform3D" />
+			<param index="0" name="from_a" type="Vector3" />
+			<param index="1" name="from_b" type="Vector3" />
+			<param index="2" name="to_a" type="Vector3" />
+			<param index="3" name="to_b" type="Vector3" />
+			<description>
+			</description>
+		</method>
+		<method name="split_blend">
+			<return type="Transform3D" />
+			<param index="0" name="from" type="Transform3D" />
+			<param index="1" name="to" type="Transform3D" />
+			<param index="2" name="pos_weight" type="float" />
+			<param index="3" name="rot_weight" type="float" />
+			<param index="4" name="scale_weight" type="float" />
+			<param index="5" name="from_pivot" type="Vector3" />
+			<param index="6" name="to_pivot" type="Vector3" />
+			<description>
+			</description>
+		</method>
+	</methods>
+</class>

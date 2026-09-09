@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="XRGridEntityPacket" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Fixed 100-byte entity envelope: absolute int64-micrometer position (no origin shift), i16 velocity, swing-twist i16 rotation, HLC, and a 42-byte userdata payload.
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="decode" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="data" type="PackedByteArray" />
+			<description>
+			</description>
+		</method>
+		<method name="encode" qualifiers="static">
+			<return type="PackedByteArray" />
+			<param index="0" name="global_id" type="int" />
+			<param index="1" name="pos" type="Vector3" />
+			<param index="2" name="vel" type="Vector3" />
+			<param index="3" name="quat" type="Quaternion" />
+			<param index="4" name="entity_class" type="int" />
+			<param index="5" name="owner_id" type="int" />
+			<param index="6" name="hlc_frame" type="int" />
+			<param index="7" name="hlc_counter" type="int" />
+			<param index="8" name="sub_index" type="int" />
+			<param index="9" name="payload" type="PackedByteArray" default="PackedByteArray()" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="PACKET_SIZE" value="100">
+		</constant>
+		<constant name="PAYLOAD_OFFSET" value="58">
+			The byte offset where the 42-byte userdata payload begins.
+		</constant>
+		<constant name="PLAYER_ENTITY_BASE" value="2000000">
+		</constant>
+		<constant name="STROKE_ENTITY_BASE" value="1000000">
+		</constant>
+		<constant name="MAX_PLAYER_ID" value="700000000">
+		</constant>
+	</constants>
+</class>
