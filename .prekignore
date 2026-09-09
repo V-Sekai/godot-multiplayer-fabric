@@ -1,0 +1,7 @@
+# prek discovers nested .pre-commit-config.yaml files and installs their hooks,
+# which is separate from the file `exclude` in .pre-commit-config.yaml. A vendored
+# pybind11 config under thirdparty/geogram pins isort 5.10.1, whose Poetry metadata
+# modern poetry-core refuses to build, so the static-checks job failed before it
+# linted anything. Vendored trees are not ours to lint; the root config already
+# says so for files.
+thirdparty/
