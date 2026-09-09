@@ -11,6 +11,13 @@
 		<link title="SSL certificates">$DOCS_URL/tutorials/networking/ssl_certificates.html</link>
 	</tutorials>
 	<methods>
+		<method name="get_der" qualifiers="const">
+			<return type="PackedByteArray" />
+			<param index="0" name="public_only" type="bool" default="false" />
+			<description>
+				Returns the key encoded as DER bytes. If [param public_only] is [code]true[/code], only the public component is included; otherwise the full keypair is emitted. Returns an empty array on failure.
+			</description>
+		</method>
 		<method name="is_public_only" qualifiers="const">
 			<return type="bool" />
 			<description>

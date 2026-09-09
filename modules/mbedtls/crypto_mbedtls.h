@@ -58,6 +58,7 @@ public:
 	String save_to_string(bool p_public_only) override;
 	Error load_from_string(const String &p_string_key, bool p_public_only) override;
 	bool is_public_only() const override { return public_only; }
+	PackedByteArray get_der(bool p_public_only) const override;
 
 	CryptoKeyMbedTLS() {
 		mbedtls_pk_init(&pkey);
@@ -91,6 +92,7 @@ public:
 	Error save(const String &p_path) override;
 	String save_to_string() override;
 	Error load_from_string(const String &p_string_key) override;
+	PackedByteArray get_der() const override;
 
 	X509CertificateMbedTLS() {
 		mbedtls_x509_crt_init(&cert);
@@ -144,7 +146,9 @@ public:
 
 	PackedByteArray generate_random_bytes(int p_bytes) override;
 	Ref<CryptoKey> generate_rsa(int p_bytes) override;
+	Ref<CryptoKey> generate_ecdsa() override;
 	Ref<X509Certificate> generate_self_signed_certificate(Ref<CryptoKey> p_key, const String &p_issuer_name, const String &p_not_before, const String &p_not_after) override;
+	Ref<X509Certificate> generate_self_signed_certificate_san(Ref<CryptoKey> p_key, const String &p_issuer_name, const String &p_not_before, const String &p_not_after, const PackedStringArray &p_san) override;
 	Vector<uint8_t> sign(HashingContext::HashType p_hash_type, const Vector<uint8_t> &p_hash, Ref<CryptoKey> p_key) override;
 	bool verify(HashingContext::HashType p_hash_type, const Vector<uint8_t> &p_hash, const Vector<uint8_t> &p_signature, Ref<CryptoKey> p_key) override;
 	Vector<uint8_t> encrypt(Ref<CryptoKey> p_key, const Vector<uint8_t> &p_plaintext) override;

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="WebTransportPeer" inherits="MultiplayerPeer" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A [MultiplayerPeer] that transports packets over WebTransport (HTTP/3 + QUIC).
+	</brief_description>
+	<description>
+		WebTransportPeer implements [MultiplayerPeer] using WebTransport over HTTP/3 and QUIC. It supports both client and server roles.
+		[b]Transfer modes:[/b]
+		- [constant MultiplayerPeer.TRANSFER_MODE_UNRELIABLE] and [constant MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED] send packets as QUIC datagrams.
+		- [constant MultiplayerPeer.TRANSFER_MODE_RELIABLE] opens a fresh bidirectional QUIC stream per packet.
+
+		[b]Server usage:[/b]
+		[codeblocks]
+		[gdscript]
+		var crypto = Crypto.new()
+		var key = crypto.generate_ecdsa()
+		var now = int(Time.get_unix_time_from_system())
+		var cert = crypto.generate_self_signed_certificate_san(
+		    key, "CN=godot-wt", _fmt_validity(now), _fmt_validity(now + 13 * 86400),
+		    PackedStringArray(["DNS:localhost", "IP:127.0.0.1"]))
+		var ctx = HashingContext.new()
+		ctx.start(HashingContext.HASH_SHA256)
+		ctx.update(cert.get_der())
+		var hash = Marshalls.raw_to_base64(ctx.finish())
+		var peer = WebTransportPeer.new()
+		peer.create_server(54370, "/wt", cert, key)
+		print("Pin this hash in serverCertificateHashes: ", hash)
+		[/gdscript]
+		[/codeblocks]
+
+		[b]Client usage:[/b]
+		[codeblocks]
+		[gdscript]
+		var peer = WebTransportPeer.new()
+		peer.create_client("127.0.0.1", 54370, "/wt")
+		[/gdscript]
+		[/codeblocks]
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create_client">
+			<return type="int" enum="Error" />
+			<param index="0" name="host" type="String" />
+			<param index="1" name="port" type="int" />
+			<param index="2" name="path" type="String" default="&quot;/&quot;" />
+			<description>
+				Dials a WebTransport server at [param host]:[param port][param path] using the spec-correct HTTP/3 + QUIC path (picowt).
+				Returns [constant OK] on success. The connection handshake proceeds asynchronously; poll [method MultiplayerPeer.get_connection_status] until it reaches [constant MultiplayerPeer.CONNECTION_CONNECTED].
+				Falls back to a raw QUIC connection with ALPN [code]"webtransport"[/code] if no session backend is registered (e.g. picoquic not compiled in).
+			</description>
+		</method>
+		<method name="create_server">
+			<return type="int" enum="Error" />
+			<param index="0" name="port" type="int" />
+			<param index="1" name="path" type="String" />
+			<param index="2" name="cert" type="X509Certificate" />
+			<param index="3" name="key" type="CryptoKey" />
+			<description>
+				Starts a WebTransport server on [param port] accepting connections at [param path], using the provided [param cert] and [param key].
+				Build the certificate in GDScript using [method Crypto.generate_ecdsa] and [method Crypto.generate_self_signed_certificate_san]. The certificate must have ≤14-day validity to satisfy WebTransport's [code]serverCertificateHashes[/code] constraint. After a successful call, compute the SHA-256 fingerprint from [method X509Certificate.get_der] using [HashingContext] and pass it to browser clients as [code]serverCertificateHashes[/code].
+				Returns [constant OK] on success, [constant ERR_UNAVAILABLE] if the picoquic backend is not compiled in, or another error if network binding fails.
+				[b]Note:[/b] Only one server instance is supported at a time.
+			</description>
+		</method>
+		<method name="get_quic" qualifiers="const">
+			<return type="QUICClient" />
+			<description>
+				Returns the underlying [QUICClient] used by this peer, or [code]null[/code] if the session is using the WebTransport session backend (the common case after [method create_client]).
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="MODE_NONE" value="0" enum="Mode">
+			No role assigned. Initial state before [method create_client] or [method create_server].
+		</constant>
+		<constant name="MODE_CLIENT" value="1" enum="Mode">
+			Operating as a WebTransport client.
+		</constant>
+		<constant name="MODE_SERVER" value="2" enum="Mode">
+			Operating as a WebTransport server.
+		</constant>
+	</constants>
+</class>

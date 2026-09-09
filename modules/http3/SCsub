@@ -1,0 +1,148 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+import os
+
+Import("env")
+Import("env_modules")
+
+env_quic = env_modules.Clone()
+
+# Third-party integration — picoquic + picotls are vendored under
+# `thirdparty/picoquic/` and `thirdparty/picotls/`. When either tree is
+# missing we skip the native transport sources and only compile the registry
+# stub so the Godot build stays green. The module re-registers as no-op.
+
+picoquic_root = "#thirdparty/picoquic"
+picotls_root = "#thirdparty/picotls"
+
+picoquic_present = os.path.isdir(Dir(picoquic_root).abspath)
+picotls_present = os.path.isdir(Dir(picotls_root).abspath)
+
+# mbedtls is required — picotls binds to it for TLS 1.3 crypto.
+if picoquic_present and picotls_present and not env["builtin_mbedtls"]:
+    # Linking picotls/mbedtls.c against a system mbedtls is viable but not
+    # what we ship; fail loudly so the user opts in explicitly.
+    raise RuntimeError(
+        "modules/http3 requires builtin_mbedtls=yes (picotls mbedtls bridge links against the in-tree copy)"
+    )
+
+thirdparty_obj = []
+
+if picoquic_present and picotls_present and env["platform"] != "web":
+    # picoquic + picotls + picoquic's mbedtls bridge.
+    #
+    # Upstream layout (verified 2026-04-15):
+    #   thirdparty/picoquic/picoquic/           — QUIC core + utils (loglib merged in)
+    #   thirdparty/picoquic/picohttp/           — HTTP/3 + WebTransport (webtransport.c,
+    #                                             wt_baton.c, h3zero*, pico_webtransport.h)
+    #   thirdparty/picoquic/picoquic_mbedtls/   — picoquic's own picotls↔mbedtls glue
+    #                                             (used instead of picotls/lib/mbedtls.c)
+    #   thirdparty/picotls/lib/picotls.c        — picotls core
+    env_quic.Prepend(
+        CPPPATH=[
+            # picotls paths BEFORE picoquic: picotls's wincompat.h includes
+            # ws2tcpip.h (needed for inet_pton); picoquic's wincompat.h doesn't.
+            # If picoquic's path comes first, its wincompat.h shadows picotls's.
+            picotls_root + "/include",
+            picotls_root + "/picotlsvs/picotls",
+            picoquic_root + "/picoquic",
+            picoquic_root + "/picohttp",
+            picoquic_root + "/picoquic_mbedtls",
+            "#thirdparty/webtransportd",  # wtd_frame codec for persistent WT stream framing
+            "#thirdparty/mbedtls/include",
+        ]
+    )
+
+    import glob
+
+    # Per-platform excludes for picoquic/picotls. We ship with the mbedtls
+    # crypto backend only (no OpenSSL, no x86 "Fusion") — see the `PTLS_WITHOUT_*`
+    # compile-defs below. Matching source files must be dropped too.
+    excludes = {"picoquic_ptls_openssl.c"}
+    # x86-only AES-NI "Fusion" cipher suite pulls in <mmintrin.h>/<immintrin.h>
+    # and does not compile on arm64. Always excluded because we ship WITHOUT_FUSION.
+    excludes.add("picoquic_ptls_fusion.c")  # picoquic/
+    # Minicrypto provider depends on picotls minicrypto/uecc/cifra symbols we
+    # don't compile; mbedtls covers all our TLS 1.3 needs.
+    excludes.add("picoquic_ptls_minicrypto.c")  # picoquic/
+    # Windows-only WSA packet loop; the POSIX sockloop.c covers everything else.
+    if env["platform"] != "windows":
+        excludes.add("winsockloop.c")
+
+    def _c_files(rel_dir):
+        absdir = Dir("#" + rel_dir).abspath
+        return [
+            "#" + rel_dir + "/" + os.path.basename(p)
+            for p in glob.glob(os.path.join(absdir, "*.c"))
+            if os.path.basename(p) not in excludes
+        ]
+
+    thirdparty_sources = []
+    for sub in ("picoquic", "picohttp", "picoquic_mbedtls"):
+        thirdparty_sources += _c_files("thirdparty/picoquic/" + sub)
+    picotls_sources = [
+        "#thirdparty/picotls/lib/picotls.c",
+        "#thirdparty/picotls/lib/pembase64.c",
+        "#thirdparty/picotls/lib/hpke.c",
+        "#thirdparty/picotls/lib/asn1.c",
+    ]
+    thirdparty_sources += picotls_sources
+
+    if env["platform"] == "windows":
+        env_quic.Append(LIBS=["ws2_32", "iphlpapi", "bcrypt"])
+
+    env_thirdparty = env_quic.Clone()
+    env_thirdparty.disable_warnings()
+    env_thirdparty.Append(
+        CPPDEFINES=[
+            "PTLS_WITHOUT_OPENSSL",
+            "PTLS_WITHOUT_FUSION",
+            "PICOQUIC_WITH_MBEDTLS",
+            # Suppress picoquic's DBG_PRINTF — its MAX macro conflicts with some
+            # toolchain headers. We route debug output via debug_printf_push_stream
+            # instead.
+            "DISABLE_DEBUG_PRINTF",
+        ]
+    )
+    if env["platform"] == "windows":
+        # picoquic uses #ifdef _WINDOWS for winsock vs POSIX socket headers.
+        # Godot's MinGW toolchain defines _WIN32 but not _WINDOWS.
+        env_thirdparty.Append(CPPDEFINES=["_WINDOWS"])
+        env_quic.Append(CPPDEFINES=["_WINDOWS"])
+        if not env_thirdparty.msvc:
+            # MinGW 14's ws2tcpip.h / ws2ipdef.h define IN6_* helpers with
+            # __CRT_INLINE (extern inline) which emits duplicate external
+            # definitions across translation units. This is a known MinGW
+            # header bug; --allow-multiple-definition merges them at link time.
+            env.Append(LINKFLAGS=["-Wl,--allow-multiple-definition"])
+    env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
+    env.modules_sources += thirdparty_obj
+
+    env_quic.Append(
+        CPPDEFINES=["GODOT_QUIC_NATIVE_BACKEND", "PTLS_WITHOUT_OPENSSL", "PTLS_WITHOUT_FUSION", "PICOQUIC_WITH_MBEDTLS"]
+    )
+
+elif env["platform"] == "web":
+    # Web target: browser supplies WebTransport + HTTP/3 via fetch()/WebTransport globals.
+    # No picoquic/picotls compiled — the JS library provides the transport.
+    # wt_frame_codec.cpp is still built on every platform and #includes frame.c,
+    # so the webtransportd path must be on CPPPATH here too (the native branch
+    # above adds it alongside the picoquic/picotls paths it doesn't need on web).
+    env_quic.Append(CPPPATH=["#thirdparty/webtransportd"])
+    env_quic.AddJSLibraries([env_quic.File("quic_web_glue.js")])
+    env_quic.Append(CPPDEFINES=["GODOT_QUIC_WEB_BACKEND"])
+
+# Godot module sources
+module_obj = []
+env_quic.add_source_files(module_obj, "*.cpp")
+# The webtransportd frame codec is compiled via the wt_frame_codec.cpp wrapper
+# (which #includes frame.c) so its object is owned by exactly one environment.
+
+if env["tests"]:
+    env_quic.add_source_files(module_obj, "./tests/*.cpp")
+
+env.modules_sources += module_obj
+
+if thirdparty_obj:
+    env.Depends(module_obj, thirdparty_obj)

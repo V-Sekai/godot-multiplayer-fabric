@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="QUICServer" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="close">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="get_alpn" qualifiers="const">
+			<return type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="get_port" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="is_listening" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="listen">
+			<return type="int" enum="Error" />
+			<param index="0" name="port" type="int" />
+			<param index="1" name="cert_path" type="String" />
+			<param index="2" name="key_path" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="set_alpn">
+			<return type="void" />
+			<param index="0" name="alpn" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="take_connection">
+			<return type="QUICClient" />
+			<description>
+			</description>
+		</method>
+	</methods>
+</class>

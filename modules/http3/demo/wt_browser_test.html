@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head><title>Godot WebTransport Browser Test</title></head>
+<body>
+<pre id="log"></pre>
+<script>
+// Browser-side WebTransport test against webtransportd echo server.
+// Start server: webtransportd --server --cert=auto --port=54370 --exec=.../echo
+// Update HASH_B64 with the cert-hash printed by the server on startup.
+const PORT = 54370;
+const HASH_B64 = "REPLACE_WITH_CERT_HASH_FROM_SERVER_STDOUT";
+const MSG = "Hello Godot WebTransport";
+
+const log = s => { document.getElementById("log").textContent += s + "\n"; console.log(s); };
+
+(async () => {
+  if (typeof WebTransport === "undefined") {
+    log("SKIP: WebTransport API not available in this browser");
+    document.title = "SKIP";
+    return;
+  }
+  const hashBytes = Uint8Array.from(atob(HASH_B64), c => c.charCodeAt(0));
+  log("connecting to 127.0.0.1:" + PORT + " ...");
+  let wt;
+  try {
+    wt = new WebTransport("https://127.0.0.1:" + PORT + "/wt", {
+      serverCertificateHashes: [{ algorithm: "sha-256", value: hashBytes }]
+    });
+    await wt.ready;
+    log("session ready");
+  } catch (e) {
+    log("FAIL connect: " + e);
+    document.title = "FAIL";
+    return;
+  }
+
+  // Reliable stream round-trip
+  try {
+    const stream = await wt.createBidirectionalStream();
+    const writer = stream.writable.getWriter();
+    await writer.write(new TextEncoder().encode(MSG));
+    await writer.close();
+    log("sent stream: " + MSG);
+
+    const reader = stream.readable.getReader();
+    let chunks = [];
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+    const echo = new TextDecoder().decode(
+      chunks.reduce((a, b) => { const c = new Uint8Array(a.length+b.length); c.set(a); c.set(b,a.length); return c; })
+    );
+    if (echo === MSG) {
+      log("PASS stream: echo matched (" + JSON.stringify(echo) + ")");
+      document.title = "PASS";
+    } else {
+      log("FAIL stream: got " + JSON.stringify(echo));
+      document.title = "FAIL";
+    }
+  } catch (e) {
+    log("FAIL stream: " + e);
+    document.title = "FAIL";
+  }
+})();
+</script>
+</body>
+</html>

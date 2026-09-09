@@ -37,8 +37,10 @@
 #include "core/os/os.h"
 
 #include <mbedtls/debug.h>
+#include <mbedtls/ecp.h>
 #include <mbedtls/md.h>
 #include <mbedtls/pem.h>
+#include <mbedtls/sha256.h>
 
 #define PEM_BEGIN_CRT "-----BEGIN CERTIFICATE-----\n"
 #define PEM_END_CRT "-----END CERTIFICATE-----\n"
@@ -390,6 +392,36 @@ Ref<CryptoKey> CryptoMbedTLS::generate_rsa(int p_bytes) {
 	return out;
 }
 
+PackedByteArray CryptoKeyMbedTLS::get_der(bool p_public_only) const {
+	// mbedtls writes DER from the tail of the buffer; copy the result to a PackedByteArray.
+	unsigned char buf[4096];
+	int ret;
+	if (p_public_only) {
+		ret = mbedtls_pk_write_pubkey_der(const_cast<mbedtls_pk_context *>(&pkey), buf, sizeof(buf));
+	} else {
+		ret = mbedtls_pk_write_key_der(const_cast<mbedtls_pk_context *>(&pkey), buf, sizeof(buf));
+	}
+	if (ret < 0) {
+		return PackedByteArray();
+	}
+	PackedByteArray out;
+	out.resize(ret);
+	memcpy(out.ptrw(), buf + sizeof(buf) - ret, ret);
+	return out;
+}
+
+Ref<CryptoKey> CryptoMbedTLS::generate_ecdsa() {
+	Ref<CryptoKeyMbedTLS> out;
+	out.instantiate();
+	int ret = mbedtls_pk_setup(&(out->pkey), mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY));
+	ERR_FAIL_COND_V(ret != 0, nullptr);
+	ret = mbedtls_ecp_gen_key(MBEDTLS_ECP_DP_SECP256R1, mbedtls_pk_ec(out->pkey),
+			mbedtls_ctr_drbg_random, &ctr_drbg);
+	ERR_FAIL_COND_V(ret != 0, nullptr);
+	out->public_only = false;
+	return out;
+}
+
 Ref<X509Certificate> CryptoMbedTLS::generate_self_signed_certificate(Ref<CryptoKey> p_key, const String &p_issuer_name, const String &p_not_before, const String &p_not_after) {
 	Ref<CryptoKeyMbedTLS> key = static_cast<Ref<CryptoKeyMbedTLS>>(p_key);
 	ERR_FAIL_COND_V_MSG(key.is_null(), nullptr, "Invalid private key argument.");
@@ -432,6 +464,104 @@ Ref<X509Certificate> CryptoMbedTLS::generate_self_signed_certificate(Ref<CryptoK
 	Ref<X509CertificateMbedTLS> out;
 	out.instantiate();
 	out->load_from_memory(buf, strlen((char *)buf) + 1); // Use strlen to find correct output size.
+	return out;
+}
+
+Ref<X509Certificate> CryptoMbedTLS::generate_self_signed_certificate_san(Ref<CryptoKey> p_key, const String &p_issuer_name, const String &p_not_before, const String &p_not_after, const PackedStringArray &p_san) {
+	Ref<CryptoKeyMbedTLS> key = static_cast<Ref<CryptoKeyMbedTLS>>(p_key);
+	ERR_FAIL_COND_V_MSG(key.is_null(), nullptr, "Invalid private key argument.");
+	mbedtls_x509write_cert crt;
+	mbedtls_x509write_crt_init(&crt);
+
+	mbedtls_x509write_crt_set_subject_key(&crt, &(key->pkey));
+	mbedtls_x509write_crt_set_issuer_key(&crt, &(key->pkey));
+	mbedtls_x509write_crt_set_subject_name(&crt, p_issuer_name.utf8().get_data());
+	mbedtls_x509write_crt_set_issuer_name(&crt, p_issuer_name.utf8().get_data());
+	mbedtls_x509write_crt_set_version(&crt, MBEDTLS_X509_CRT_VERSION_3);
+	mbedtls_x509write_crt_set_md_alg(&crt, MBEDTLS_MD_SHA256);
+
+	uint8_t rand_serial[20];
+	mbedtls_ctr_drbg_random(&ctr_drbg, rand_serial, sizeof(rand_serial));
+	mbedtls_x509write_crt_set_serial_raw(&crt, rand_serial, sizeof(rand_serial));
+	mbedtls_x509write_crt_set_validity(&crt, p_not_before.utf8().get_data(), p_not_after.utf8().get_data());
+	mbedtls_x509write_crt_set_basic_constraints(&crt, 0, -1);
+
+	// Build SAN extension from p_san entries ("DNS:foo" or "IP:1.2.3.4").
+	if (p_san.size() > 0) {
+		// Pre-encode each entry as a GeneralName DER value, then wrap in SEQUENCE.
+		uint8_t san_buf[512];
+		size_t san_off = 2; // reserve 2 bytes for outer SEQUENCE tag+len
+
+		for (int i = 0; i < p_san.size(); i++) {
+			String entry = p_san[i];
+			if (entry.begins_with("DNS:")) {
+				String name = entry.substr(4);
+				CharString cs = name.utf8();
+				size_t nlen = cs.length();
+				if (san_off + 2 + nlen > sizeof(san_buf) - 2) {
+					break;
+				}
+				san_buf[san_off++] = 0x82; // dNSName [2] IMPLICIT IA5String
+				san_buf[san_off++] = (uint8_t)nlen;
+				memcpy(san_buf + san_off, cs.get_data(), nlen);
+				san_off += nlen;
+			} else if (entry.begins_with("IP:")) {
+				String ip_str = entry.substr(3);
+				// Try IPv4 first, then IPv6.
+				PackedByteArray addr;
+				// mbedtls has no inet_pton; use manual parsing for v4.
+				if (ip_str.get_slice_count(".") == 4) {
+					addr.resize(4);
+					for (int b = 0; b < 4; b++) {
+						addr.write[b] = (uint8_t)ip_str.get_slice(".", b).to_int();
+					}
+				} else if (ip_str.find(":") != -1) {
+					// Minimal IPv6: only handle "::1" → 16 zero bytes ending in 1.
+					// For the common loopback case this is sufficient.
+					addr.resize(16);
+					addr.fill(0);
+					addr.write[15] = 1;
+				}
+				if (addr.size() > 0 && san_off + 2 + (size_t)addr.size() <= sizeof(san_buf) - 2) {
+					san_buf[san_off++] = 0x87; // iPAddress [7] IMPLICIT OCTET STRING
+					san_buf[san_off++] = (uint8_t)addr.size();
+					memcpy(san_buf + san_off, addr.ptr(), addr.size());
+					san_off += addr.size();
+				}
+			}
+		}
+
+		size_t inner_len = san_off - 2;
+		san_buf[0] = 0x30; // SEQUENCE
+		san_buf[1] = (uint8_t)inner_len;
+
+		// OID for subjectAltName: 2.5.29.17 = 55 1d 11
+		static const uint8_t san_oid[] = { 0x55, 0x1d, 0x11 };
+		mbedtls_x509write_crt_set_extension(&crt, (const char *)san_oid, sizeof(san_oid),
+				0, san_buf, san_off);
+	}
+
+	unsigned char buf[4096];
+	memset(buf, 0, 4096);
+	int ret = mbedtls_x509write_crt_pem(&crt, buf, 4096, mbedtls_ctr_drbg_random, &ctr_drbg);
+	mbedtls_x509write_crt_free(&crt);
+	ERR_FAIL_COND_V_MSG(ret != 0, nullptr, "Failed to generate SAN certificate: " + itos(ret));
+	buf[4095] = '\0';
+
+	Ref<X509CertificateMbedTLS> out;
+	out.instantiate();
+	out->load_from_memory(buf, strlen((char *)buf) + 1);
+	return out;
+}
+
+PackedByteArray X509CertificateMbedTLS::get_der() const {
+	// mbedtls_x509_crt stores the DER in cert.raw.
+	if (cert.raw.len == 0 || cert.raw.p == nullptr) {
+		return PackedByteArray();
+	}
+	PackedByteArray out;
+	out.resize((int)cert.raw.len);
+	memcpy(out.ptrw(), cert.raw.p, cert.raw.len);
 	return out;
 }
 

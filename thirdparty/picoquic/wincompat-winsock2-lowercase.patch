@@ -1,0 +1,13 @@
+diff --git a/thirdparty/picoquic/picoquic/wincompat.h b/thirdparty/picoquic/picoquic/wincompat.h
+index f21deeb3a2..9b13105055 100644
+--- a/thirdparty/picoquic/picoquic/wincompat.h
++++ b/thirdparty/picoquic/picoquic/wincompat.h
+@@ -37,7 +37,7 @@
+ 
+ #include <stdint.h>
+ #define ssize_t int
+-#include <Winsock2.h>
++#include <winsock2.h>
+ 
+ #ifndef gettimeofday
+ #define gettimeofday wintimeofday

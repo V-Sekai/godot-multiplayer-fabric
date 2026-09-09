@@ -48,6 +48,8 @@ public:
 	virtual String save_to_string(bool p_public_only = false) = 0;
 	virtual Error load_from_string(const String &p_string_key, bool p_public_only = false) = 0;
 	virtual bool is_public_only() const = 0;
+	// Returns the raw DER encoding of the key (empty if unsupported).
+	virtual PackedByteArray get_der(bool p_public_only = false) const { return PackedByteArray(); }
 };
 
 class X509Certificate : public Resource {
@@ -64,6 +66,8 @@ public:
 	virtual Error save(const String &p_path) = 0;
 	virtual String save_to_string() = 0;
 	virtual Error load_from_string(const String &string) = 0;
+	// Returns the raw DER encoding of the certificate (empty if unsupported).
+	virtual PackedByteArray get_der() const { return PackedByteArray(); }
 };
 
 class TLSOptions : public RefCounted {
@@ -129,7 +133,14 @@ public:
 
 	virtual PackedByteArray generate_random_bytes(int p_bytes) = 0;
 	virtual Ref<CryptoKey> generate_rsa(int p_bytes) = 0;
+	// Generates a P-256 ECDSA key pair (returns null if unsupported).
+	virtual Ref<CryptoKey> generate_ecdsa() { return Ref<CryptoKey>(); }
 	virtual Ref<X509Certificate> generate_self_signed_certificate(Ref<CryptoKey> p_key, const String &p_issuer_name, const String &p_not_before, const String &p_not_after) = 0;
+	// Like generate_self_signed_certificate but adds Subject Alternative Names.
+	// p_san entries are strings like "DNS:localhost" or "IP:127.0.0.1".
+	virtual Ref<X509Certificate> generate_self_signed_certificate_san(Ref<CryptoKey> p_key, const String &p_issuer_name, const String &p_not_before, const String &p_not_after, const PackedStringArray &p_san) {
+		return generate_self_signed_certificate(p_key, p_issuer_name, p_not_before, p_not_after);
+	}
 
 	virtual Vector<uint8_t> sign(HashingContext::HashType p_hash_type, const Vector<uint8_t> &p_hash, Ref<CryptoKey> p_key) = 0;
 	virtual bool verify(HashingContext::HashType p_hash_type, const Vector<uint8_t> &p_hash, const Vector<uint8_t> &p_signature, Ref<CryptoKey> p_key) = 0;

@@ -135,6 +135,8 @@
 /modules/websocket/                           @godotengine/network
 /modules/websocket/doc_classes/               @godotengine/network @godotengine/documentation
 /modules/websocket/editor/                    @godotengine/network @godotengine/editor
+/modules/http3/                               @fire
+/lean/http3/                                  @fire
 
 ## Physics
 /modules/godot_physics_2d/                    @godotengine/physics
