@@ -264,12 +264,19 @@ void AudioStreamPlayer3D::_notification(int p_what) {
 	internal->notification(p_what);
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
+			if (SpatialAudioServer::get_singleton()) {
+				audio_source_id = SpatialAudioServer::get_singleton()->create_source();
+				SpatialAudioServer::get_singleton()->set_source_transform(audio_source_id, get_global_transform());
+			}
 			velocity_tracker->reset(get_global_transform().origin);
 			AudioServer::get_singleton()->add_listener_changed_callback(_listener_changed_cb, this);
 		} break;
 
 		case NOTIFICATION_EXIT_TREE: {
 			AudioServer::get_singleton()->remove_listener_changed_callback(_listener_changed_cb, this);
+			if (SpatialAudioServer::get_singleton()) {
+				SpatialAudioServer::get_singleton()->destroy_source(audio_source_id);
+			}
 		} break;
 
 		case NOTIFICATION_TRANSFORM_CHANGED: {
@@ -279,7 +286,9 @@ void AudioStreamPlayer3D::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_INTERNAL_PHYSICS_PROCESS: {
-			// Update anything related to position first, if possible of course.
+			if (SpatialAudioServer::get_singleton()) {
+				SpatialAudioServer::get_singleton()->set_source_transform(audio_source_id, get_global_transform());
+			}
 			Vector<AudioFrame> volume_vector;
 			if (setplay.get() > 0 || (internal->active.is_set() && last_mix_count != AudioServer::get_singleton()->get_mix_count()) || force_update_panning) {
 				force_update_panning = false;
@@ -290,7 +299,7 @@ void AudioStreamPlayer3D::_notification(int p_what) {
 				internal->active.set();
 				HashMap<StringName, Vector<AudioFrame>> bus_map;
 				bus_map[_get_actual_bus()] = volume_vector;
-				AudioServer::get_singleton()->start_playback_stream(setplayback, bus_map, setplay.get(), actual_pitch_scale, linear_attenuation, attenuation_filter_cutoff_hz);
+				AudioServer::get_singleton()->start_playback_stream(setplayback, bus_map, setplay.get(), actual_pitch_scale, linear_attenuation, attenuation_filter_cutoff_hz, audio_source_id);
 				setplayback.unref();
 				setplay.set(-1);
 			}
@@ -493,10 +502,13 @@ Vector<AudioFrame> AudioStreamPlayer3D::_update_panning() {
 			frame = AudioFrame(0, 0);
 		}
 
-		if (AudioServer::get_singleton()->get_speaker_mode() == AudioServer::SPEAKER_MODE_STEREO) {
+		if (SpatialAudioServer::get_singleton()) {
+			// Resonance Audio handles spatialization via HRTF.
+			// Bypass Godot's SPCAP panning — use flat equal-volume stereo.
+			listener_volume_vector[0] = AudioFrame(1.0f, 1.0f);
+		} else if (AudioServer::get_singleton()->get_speaker_mode() == AudioServer::SPEAKER_MODE_STEREO) {
 			listener_volume_vector[0] = _calc_output_vol_stereo(local_pos, cached_global_panning_strength * panning_strength);
 		} else {
-			// Bake in a constant factor here to allow the project setting defaults for 2d and 3d to be normalized to 1.0.
 			float tightness = cached_global_panning_strength * 2.0f;
 			tightness *= panning_strength;
 			_calc_output_vol(local_pos.normalized(), tightness, listener_volume_vector);
@@ -551,7 +563,15 @@ Vector<AudioFrame> AudioStreamPlayer3D::_update_panning() {
 	}
 
 	for (Ref<AudioStreamPlayback> &playback : internal->stream_playbacks) {
-		AudioServer::get_singleton()->set_playback_highshelf_params(playback, linear_attenuation, attenuation_filter_cutoff_hz);
+		if (SpatialAudioServer::get_singleton()) {
+			// Godot handles distance attenuation. Pass it to Resonance Audio
+			// as source volume so HRTF processing uses the attenuated signal.
+			SpatialAudioServer::get_singleton()->set_source_attenuation(audio_source_id, linear_attenuation);
+			// Don't apply Godot's highshelf filter — Resonance Audio handles spatialization.
+			AudioServer::get_singleton()->set_playback_highshelf_params(playback, 1.0f, 0.0f, audio_source_id);
+		} else {
+			AudioServer::get_singleton()->set_playback_highshelf_params(playback, linear_attenuation, attenuation_filter_cutoff_hz);
+		}
 	}
 
 	bus_volumes.clear();

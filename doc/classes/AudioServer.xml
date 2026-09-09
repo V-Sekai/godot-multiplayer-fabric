@@ -103,6 +103,12 @@
 				Returns the name of the bus that the bus at index [param bus_idx] sends to.
 			</description>
 		</method>
+		<method name="get_bus_type" qualifiers="const">
+			<return type="int" enum="AudioServer.BusType" />
+			<param index="0" name="bus_idx" type="int" />
+			<description>
+			</description>
+		</method>
 		<method name="get_bus_volume_db" qualifiers="const">
 			<return type="float" />
 			<param index="0" name="bus_idx" type="int" />
@@ -326,6 +332,13 @@
 				If [code]true[/code], the bus at index [param bus_idx] is in solo mode.
 			</description>
 		</method>
+		<method name="set_bus_type">
+			<return type="void" />
+			<param index="0" name="bus_idx" type="int" />
+			<param index="1" name="type" type="int" enum="AudioServer.BusType" />
+			<description>
+			</description>
+		</method>
 		<method name="set_bus_volume_db">
 			<return type="void" />
 			<param index="0" name="bus_idx" type="int" />
@@ -406,6 +419,12 @@
 		</signal>
 	</signals>
 	<constants>
+		<constant name="BUS_TYPE_CONVENTIONAL" value="0" enum="BusType">
+			Standard audio bus with panning and volume control.
+		</constant>
+		<constant name="BUS_TYPE_SPATIAL_3D" value="1" enum="BusType">
+			Spatial 3D audio bus routed through the SpatialAudioServer for HRTF processing.
+		</constant>
 		<constant name="SPEAKER_MODE_STEREO" value="0" enum="SpeakerMode">
 			Two or fewer speakers were detected.
 		</constant>

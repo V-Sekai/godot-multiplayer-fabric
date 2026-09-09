@@ -325,3 +325,7 @@ SCsub                                         @godotengine/buildsystem
 /modules/speech/                              @fire
 /modules/native_media/                        @v-sekai-multiplayer-fabric/multiplayer-fabric
 /modules/native_media/doc_classes/            @v-sekai-multiplayer-fabric/multiplayer-fabric @godotengine/documentation
+# V-Sekai Resonance Audio
+
+/modules/speech/                              @fire
+/servers/resonanceaudio/                      @fire

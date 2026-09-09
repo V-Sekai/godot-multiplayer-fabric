@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ReverbProbeGI" inherits="Node3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="bake">
+			<return type="int" enum="ReverbProbeGI.BakeError" />
+			<param index="0" name="from_node" type="Node" />
+			<param index="1" name="probe_positions" type="PackedVector3Array" />
+			<param index="2" name="ray_count" type="int" default="50000" />
+			<param index="3" name="max_bounces" type="int" default="100" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="bake_data" type="ReverbBakeData" setter="set_bake_data" getter="get_bake_data">
+		</member>
+		<member name="material_map" type="ResonanceAudioMaterialMap" setter="set_material_map" getter="get_material_map">
+		</member>
+		<member name="wall_material" type="int" setter="set_wall_material" getter="get_wall_material" enum="ReverbProbeGI.WallMaterial" default="16">
+		</member>
+	</members>
+	<constants>
+		<constant name="MATERIAL_TRANSPARENT" value="0" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_ACOUSTIC_CEILING_TILES" value="1" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_BRICK_BARE" value="2" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_BRICK_PAINTED" value="3" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_CONCRETE_BLOCK_COARSE" value="4" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_CONCRETE_BLOCK_PAINTED" value="5" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_CURTAIN_HEAVY" value="6" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_FIBER_GLASS_INSULATION" value="7" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_GLASS_THIN" value="8" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_GLASS_THICK" value="9" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_GRASS" value="10" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_LINOLEUM_ON_CONCRETE" value="11" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_MARBLE" value="12" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_METAL" value="13" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_PARQUET_ON_CONCRETE" value="14" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_PLASTER_ROUGH" value="15" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_PLASTER_SMOOTH" value="16" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_PLYWOOD_PANEL" value="17" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_POLISHED_CONCRETE_OR_TILE" value="18" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_SHEETROCK" value="19" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_WATER_OR_ICE_SURFACE" value="20" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_WOOD_CEILING" value="21" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_WOOD_PANEL" value="22" enum="WallMaterial">
+		</constant>
+		<constant name="MATERIAL_UNIFORM" value="23" enum="WallMaterial">
+		</constant>
+		<constant name="BAKE_ERROR_OK" value="0" enum="BakeError">
+		</constant>
+		<constant name="BAKE_ERROR_NO_MESHES" value="1" enum="BakeError">
+		</constant>
+		<constant name="BAKE_ERROR_NO_PROBES" value="2" enum="BakeError">
+		</constant>
+	</constants>
+</class>

@@ -80,6 +80,7 @@
 #include "servers/rendering/rendering_device.h"
 #include "servers/rendering/rendering_server.h"
 #include "servers/rendering/rendering_server_default.h"
+#include "servers/resonanceaudio/resonance_audio_wrapper.h"
 #include "servers/text/text_server.h"
 #include "servers/text/text_server_dummy.h"
 
@@ -179,6 +180,7 @@ static SteamTracker *steam_tracker = nullptr;
 
 // Initialized in setup2()
 static AudioServer *audio_server = nullptr;
+static ResonanceAudioServer *resonance_audio_server = nullptr;
 static CameraServer *camera_server = nullptr;
 static AccessibilityServer *accessibility_server = nullptr;
 static DisplayServer *display_server = nullptr;
@@ -3589,6 +3591,10 @@ Error Main::setup2(bool p_show_boot_logo) {
 		audio_server = memnew(AudioServer);
 		audio_server->init();
 
+		if ((bool)GLOBAL_GET("audio/enable_spatial_audio")) {
+			resonance_audio_server = memnew(ResonanceAudioServer);
+		}
+
 		OS::get_singleton()->benchmark_end_measure("Servers", "Audio");
 	}
 
@@ -5317,6 +5323,10 @@ void Main::cleanup(bool p_force) {
 		memdelete(xr_server);
 	}
 #endif // XR_DISABLED
+
+	if (resonance_audio_server) {
+		memdelete(resonance_audio_server);
+	}
 
 	if (audio_server) {
 		audio_server->finish();

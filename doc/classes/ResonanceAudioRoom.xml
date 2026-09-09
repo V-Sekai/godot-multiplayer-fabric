@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ResonanceAudioRoom" inherits="Node3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="update_room_from_colliders">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="reflection_gain" type="float" setter="set_reflection_gain" getter="get_reflection_gain" default="1.0">
+		</member>
+		<member name="reverb_brightness" type="float" setter="set_reverb_brightness" getter="get_reverb_brightness" default="0.0">
+		</member>
+		<member name="reverb_gain" type="float" setter="set_reverb_gain" getter="get_reverb_gain" default="1.0">
+		</member>
+		<member name="reverb_time_scale" type="float" setter="set_reverb_time_scale" getter="get_reverb_time_scale" default="1.0">
+		</member>
+		<member name="room_effects_enabled" type="bool" setter="set_room_effects_enabled" getter="get_room_effects_enabled" default="true">
+		</member>
+		<member name="wall_material" type="int" setter="set_wall_material" getter="get_wall_material" default="1">
+		</member>
+	</members>
+</class>
