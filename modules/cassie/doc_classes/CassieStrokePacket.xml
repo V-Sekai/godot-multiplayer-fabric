@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieStrokePacket" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="decode" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="bytes" type="PackedByteArray" />
+			<description>
+			</description>
+		</method>
+		<method name="encode" qualifiers="static">
+			<return type="PackedByteArray" />
+			<param index="0" name="peer_id" type="int" />
+			<param index="1" name="stroke_id" type="int" />
+			<param index="2" name="seq" type="int" />
+			<param index="3" name="closed" type="bool" />
+			<param index="4" name="positions" type="PackedVector3Array" />
+			<param index="5" name="pressures" type="PackedFloat32Array" />
+			<description>
+			</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,31 @@
+{
+  "$comment": "Multi-mode multi-prox grand-union sweep baseline after SI-filter relaxation. Recorded 2026-06-02. Task #191 step 4.",
+  "recorded": "2026-06-02",
+  "fixture": "hat_polylines.json",
+  "previous_baseline": {
+    "grand_union_patches": null,
+    "exact_match_vs_upstream_hatPatches": "24/234"
+  },
+  "current_baseline": {
+    "grand_union_patches": 167,
+    "exact_match_vs_upstream_hatPatches": "40/234",
+    "per_mode_best": {
+      "mode_6": "53/153",
+      "mode_8": "59/71",
+      "mode_16": "55/91"
+    },
+    "filter_changes": [
+      "Dropped XZ boundary-self-intersection filter in CyclePatch.patchOneMesh",
+      "Loosened area filter threshold to 1e-12"
+    ]
+  },
+  "delta_vs_previous": {
+    "exact_match_count": "+16",
+    "exact_match_pct_point": "+6.84"
+  },
+  "notes": [
+    "Sweep task id was bakh965n9 (background) in transcript d1450370.",
+    "Output preserved at task output path until session ends; key per-mode rows captured in per_mode_best.",
+    "Counted before any flip-to-port-only on cyclesUnion (CASSIE_CYCLES_PORT_ONLY=0)."
+  ]
+}

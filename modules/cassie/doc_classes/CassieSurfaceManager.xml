@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieSurfaceManager" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="export_raw_data_dict" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+			</description>
+		</method>
+		<method name="get_graph" qualifiers="const">
+			<return type="CassieSketchGraph" />
+			<description>
+			</description>
+		</method>
+		<method name="get_patch_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_patches" qualifiers="const">
+			<return type="CassieSurfacePatch[]" />
+			<description>
+			</description>
+		</method>
+		<method name="get_target_edge_length" qualifiers="const">
+			<return type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="set_graph">
+			<return type="void" />
+			<param index="0" name="graph" type="CassieSketchGraph" />
+			<description>
+			</description>
+		</method>
+		<method name="set_target_edge_length">
+			<return type="void" />
+			<param index="0" name="length" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="update">
+			<return type="Dictionary" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="async_triangulation" type="bool" setter="set_async_triangulation" getter="get_async_triangulation" default="true">
+		</member>
+	</members>
+</class>

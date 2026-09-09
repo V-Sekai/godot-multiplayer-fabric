@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieProfileMover" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Curvenet-driven mesh deformer — the always-on coupling between [CassieCurvenetKnot] manipulators and the underlying mesh.
+	</brief_description>
+	<description>
+		Phase 1.4a — inverse-distance fallback that unblocks Pose-mode preview. Each mesh vertex is skinned to its 6 nearest curvenet samples with normalized inverse-distance weights at bind time. At deform time, sample displacements interpolate along each curve from its two endpoint knots, and each vertex translates by the weighted sum of sample displacements. Uniform translations reproduce exactly (∑ w_i = 1). Per-knot rotations are ignored until Phase 1.4b lands the cut-cell harmonic solve.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="bake_skin" qualifiers="const">
+			<return type="ArrayMesh" />
+			<param index="0" name="max_weights_per_vert" type="int" default="8" />
+			<description>
+			</description>
+		</method>
+		<method name="benchmark_gpu_pcg_solve" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="n" type="int" default="4096" />
+			<param index="1" name="max_iter" type="int" default="100" />
+			<description>
+			</description>
+		</method>
+		<method name="benchmark_gpu_spmv" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="n" type="int" default="4096" />
+			<param index="1" name="iterations" type="int" default="100" />
+			<description>
+			</description>
+		</method>
+		<method name="bind">
+			<return type="void" />
+			<param index="0" name="patch" type="CassieSurfacePatch" />
+			<param index="1" name="curvenet" type="CassieCurvenet" />
+			<description>
+				Snapshot the rest mesh and the curvenet's bind-pose knot positions; sample curves and compute per-vertex inverse-distance weights. One-time cost per [code](patch, curvenet)[/code] pair.
+			</description>
+		</method>
+		<method name="build_skin" qualifiers="const">
+			<return type="Skin" />
+			<description>
+			</description>
+		</method>
+		<method name="compare_cpu_gpu_solve">
+			<return type="Dictionary" />
+			<param index="0" name="max_iter" type="int" default="100" />
+			<description>
+			</description>
+		</method>
+		<method name="compare_jacobi_mas_solve">
+			<return type="Dictionary" />
+			<param index="0" name="max_iter" type="int" default="100" />
+			<description>
+			</description>
+		</method>
+		<method name="count_interior_components" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+			</description>
+		</method>
+		<method name="deform" qualifiers="const">
+			<return type="ArrayMesh" />
+			<description>
+				Re-evaluate the mesh based on the curvenet's current rest-pose transforms. Returns the rest mesh on zero displacement and an empty [ArrayMesh] when not bound.
+			</description>
+		</method>
+		<method name="get_backward_level_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_backward_level_size" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="level" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_bound_mesh" qualifiers="const">
+			<return type="ArrayMesh" />
+			<description>
+				Returns the rest-pose mesh captured at bind time.
+			</description>
+		</method>
+		<method name="get_boundary_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_crack_edge_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Always 0 in Phase 1.4a. Phase 1.4b will return the cut-cell crack edge count.
+			</description>
+		</method>
+		<method name="get_forward_level_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_forward_level_size" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="level" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_interior_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_last_solve_iters" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_sample_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_vertex_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="is_bound" qualifiers="const">
+			<return type="bool" />
+			<description>
+				True after a successful [method bind] call.
+			</description>
+		</method>
+		<method name="is_harmonic_ready" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+	</methods>
+</class>

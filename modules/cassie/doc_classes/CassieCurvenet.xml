@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieCurvenet" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Graph of Bézier curves layered over a [CassieSurfacePatch] — Pixar's curvenet primitive.
+	</brief_description>
+	<description>
+		Constructed from a sketch-graph dictionary via [method build_from_graph]. Each graph node becomes a [CassieCurvenetKnot]; nodes of degree ≥ 3 are flagged as intersections. [method compute_orientations] runs the Pixar §3 algorithm to produce surface-aligned manipulator transforms with zero manual setup.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_curve">
+			<return type="int" />
+			<param index="0" name="curve" type="CassieFinalStroke" />
+			<param index="1" name="start_knot_idx" type="int" />
+			<param index="2" name="end_knot_idx" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="build_from_graph">
+			<return type="void" />
+			<param index="0" name="graph_data" type="Dictionary" />
+			<description>
+				Build curves and knots from a sketch-graph dictionary with keys [code]"curves"[/code] (an array of [CassieFinalStroke]) and [code]"nodes"[/code] (an array of dictionaries with [code]"id"[/code], [code]"position"[/code], [code]"incident_curve_ids"[/code]).
+			</description>
+		</method>
+		<method name="compute_orientations">
+			<return type="void" />
+			<description>
+				Run the Pixar Curvenet Adjuster Mover algorithm on every knot, populating [member CassieCurvenetKnot.rest_pose_transform].
+			</description>
+		</method>
+		<method name="delete_curve">
+			<return type="bool" />
+			<param index="0" name="curve_idx" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_bound_patch" qualifiers="const">
+			<return type="CassieSurfacePatch" />
+			<description>
+			</description>
+		</method>
+		<method name="get_curve_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_curve_endpoint_knots" qualifiers="const">
+			<return type="Vector2i" />
+			<param index="0" name="curve_idx" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_curves" qualifiers="const">
+			<return type="CassieFinalStroke[]" />
+			<description>
+			</description>
+		</method>
+		<method name="get_knot_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_knots" qualifiers="const">
+			<return type="CassieCurvenetKnot[]" />
+			<description>
+			</description>
+		</method>
+		<method name="replace_curve">
+			<return type="bool" />
+			<param index="0" name="curve_idx" type="int" />
+			<param index="1" name="new_curve" type="CassieFinalStroke" />
+			<description>
+			</description>
+		</method>
+		<method name="set_bound_patch">
+			<return type="void" />
+			<param index="0" name="patch" type="CassieSurfacePatch" />
+			<description>
+			</description>
+		</method>
+		<method name="set_curves">
+			<return type="void" />
+			<param index="0" name="curves" type="CassieFinalStroke[]" />
+			<description>
+			</description>
+		</method>
+		<method name="set_knot_transform">
+			<return type="bool" />
+			<param index="0" name="knot_idx" type="int" />
+			<param index="1" name="transform" type="Transform3D" />
+			<description>
+			</description>
+		</method>
+		<method name="set_knots">
+			<return type="void" />
+			<param index="0" name="knots" type="CassieCurvenetKnot[]" />
+			<description>
+			</description>
+		</method>
+		<method name="update_rest_pose">
+			<return type="void" />
+			<param index="0" name="patch" type="CassieSurfacePatch" />
+			<description>
+				Re-project every knot onto the patch and refresh its rest-pose origin. Does not recompute orientations — call [method compute_orientations] afterwards.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="mode" type="int" setter="set_mode" getter="get_mode" enum="CassieCurvenet.Mode" default="0">
+			Edit mode (wireframe authoring) vs Pose mode (knot transforms).
+		</member>
+	</members>
+	<constants>
+		<constant name="MODE_EDIT" value="0" enum="Mode">
+			Edit mode — UI surfaces draw / delete / replace curve controls.
+		</constant>
+		<constant name="MODE_POSE" value="1" enum="Mode">
+			Pose mode — UI surfaces translate / rotate / scale gizmos on every knot.
+		</constant>
+	</constants>
+</class>

@@ -1,0 +1,15 @@
+{"version": "1.1.0",
+ "packagesDir": ".lake/packages",
+ "packages":
+ [{"url": "https://github.com/V-Sekai-fire/lean-slang.git",
+   "type": "git",
+   "subDir": null,
+   "scope": "",
+   "rev": "8970c21ed4fa2e664c08541fbd3733684e436508",
+   "name": "LeanSlang",
+   "manifestFile": "lake-manifest.json",
+   "inputRev": "v0.0.6",
+   "inherited": false,
+   "configFile": "lakefile.toml"}],
+ "name": "«cassie-avbd»",
+ "lakeDir": ".lake"}

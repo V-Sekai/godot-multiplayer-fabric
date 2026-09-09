@@ -1,0 +1,45 @@
+name: Doxygen
+
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout exploragram
+        uses: actions/checkout@v4
+        with:
+          repository: BrunoLevy/exploragram
+          path: src/lib/exploragram
+
+      - name: Dependencies
+        run: |
+            sudo apt-get update
+            sudo apt-get install \
+              xorg-dev  \
+              doxygen
+
+      - name: Configure
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cd build; make doc-devkit-full
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: ./build/doc/devkit-full/html
+          single-commit: true
+          clean: true

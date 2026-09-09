@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieMirrorPlaneConstraint" inherits="CassieConstraint" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Marks the position where a stroke crosses the active mirror plane.
+	</brief_description>
+	<description>
+		Stores the [member plane_normal] of the mirror in addition to the crossing position.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="plane_normal" type="Vector3" setter="set_plane_normal" getter="get_plane_normal" default="Vector3(0, 0, 0)">
+			Outward normal of the mirror plane at the moment the constraint was detected.
+		</member>
+	</members>
+</class>

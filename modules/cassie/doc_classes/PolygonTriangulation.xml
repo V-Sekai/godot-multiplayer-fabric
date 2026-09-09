@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="PolygonTriangulation" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Low-level wrapper around the DMWT optimal 3D polygon triangulator.
+	</brief_description>
+	<description>
+		Exposes the DMWT (Discrete Minimum Weight Triangulation) algorithm from Ming Zou et al. (SGP 2013) with direct control over cost weights and solver parameters. For most use cases [PolygonTriangulationGodot] or [CassieTriangulator] are easier to work with.
+
+		Usage: construct via [method PolygonTriangulationGodot.create] or [method PolygonTriangulationGodot.create_planar], call [method preprocess] then [method start].
+
+		[codeblock]
+		# Prefer PolygonTriangulationGodot for Godot-friendly output.
+		# Use PolygonTriangulation directly when you need to tune DMWT internals.
+		var pt := PolygonTriangulation._create_with_normals(n, pts_ptr, degen_ptr, norms_ptr, false)
+		pt.set_weights(1.0, 0.5, 0.0, 0.0, 1.0)
+		pt.preprocess()
+		pt.start()
+		[/codeblock]
+
+		Implemented as a thin GDScript-visible wrapper; the underlying DMWT object is accessed from C++ via [code]get_dmwt()[/code] (not exposed to GDScript).
+	</description>
+	<tutorials>
+		<link title="An Algorithm for Triangulating Multiple 3D Polygons (Zou et al., SGP 2013)">https://www.cse.wustl.edu/~taoju/zoum/projects/TriMultPoly/index.html</link>
+	</tutorials>
+	<methods>
+		<method name="clear_tiling">
+			<return type="void" />
+			<description>
+				Clears the cached tiling result so [method start] can be called again with the same boundary.
+			</description>
+		</method>
+		<method name="preprocess">
+			<return type="void" />
+			<description>
+				Runs the DMWT preprocessing stage: computes the Delaunay tetrahedralization of the boundary points and builds the candidate triangle set. Must be called before [method start].
+			</description>
+		</method>
+		<method name="set_dot">
+			<return type="void" />
+			<param index="0" name="isdot1" type="bool" />
+			<description>
+				Enables or disables the dot-product normal heuristic during candidate triangle selection. Leave at the default unless you are reproducing specific results from the SGP 2013 paper.
+			</description>
+		</method>
+		<method name="set_point_limit">
+			<return type="void" />
+			<param index="0" name="limit" type="int" />
+			<description>
+				Caps the number of boundary points the algorithm processes. Inputs beyond [param limit] are ignored. Use this to bound worst-case computation time.
+			</description>
+		</method>
+		<method name="set_round">
+			<return type="void" />
+			<param index="0" name="r" type="int" />
+			<description>
+				Sets the number of optimization rounds the dynamic programming solver performs. More rounds improve solution quality at the cost of time. Default is 1.
+			</description>
+		</method>
+		<method name="set_weights">
+			<return type="void" />
+			<param index="0" name="wtri" type="float" />
+			<param index="1" name="wedge" type="float" />
+			<param index="2" name="wbitri" type="float" />
+			<param index="3" name="wtribd" type="float" />
+			<param index="4" name="wwst" type="float" />
+			<description>
+				Sets the five additive cost weights for the DMWT objective function:
+				[br]- [param wtri]: weight on total triangle area.
+				[br]- [param wedge]: weight on total dihedral angle between adjacent triangles.
+				[br]- [param wbitri]: weight on the bi-triangle dihedral angle term.
+				[br]- [param wtribd]: weight on the triangle-boundary dihedral angle term.
+				[br]- [param wwst]: weight on the worst single dihedral angle (minimax term).
+
+				All weights default to 0 except [param wedge] = 1. Setting [param wwst] &gt; 0 produces smoother surfaces at higher computational cost.
+			</description>
+		</method>
+		<method name="start">
+			<return type="bool" />
+			<description>
+				Runs the DMWT dynamic programming solver. Returns [code]true[/code] on success. Call [method preprocess] first. Results are stored internally and retrieved via [PolygonTriangulationGodot] or the C++ [code]get_indexed_result()[/code] accessor.
+			</description>
+		</method>
+		<method name="statistics">
+			<return type="void" />
+			<description>
+				Prints solver statistics to the Godot output log: triangle count, edge count, optimal cost, and whether the early-exit condition triggered.
+			</description>
+		</method>
+	</methods>
+</class>

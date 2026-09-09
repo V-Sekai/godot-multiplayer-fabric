@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="PolygonTriangulationGodot" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Godot-friendly interface to the DMWT 3D polygon triangulator with Godot array output.
+	</brief_description>
+	<description>
+		Wraps [PolygonTriangulation] and returns results as [PackedVector3Array] and [PackedInt32Array] instead of raw C pointers. Use this when you need direct control over DMWT parameters; use [CassieTriangulator] for the full pmp-refined pipeline.
+
+		[codeblock]
+		var pt := PolygonTriangulationGodot.create(boundary_points, normals)
+		pt.set_cost_weights(0.0, 1.0, 0.0, 0.0, 0.5)  # edge + worst-dihedral
+		if pt.preprocess() and pt.triangulate():
+		    var mesh := pt.get_mesh()
+		    print("cost: ", pt.get_optimal_cost())
+		[/codeblock]
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear_cache">
+			<return type="void" />
+			<description>
+				Discards cached vertices, indices, and normals so the next call to [method triangulate] recomputes them.
+			</description>
+		</method>
+		<method name="create" qualifiers="static">
+			<return type="PolygonTriangulationGodot" />
+			<param index="0" name="points" type="PackedVector3Array" />
+			<param index="1" name="normals" type="PackedVector3Array" default="PackedVector3Array()" />
+			<description>
+				Creates a [PolygonTriangulationGodot] from a boundary point array. [param normals] is optional; when omitted, per-point normals are estimated from the local curve geometry. [param points] must have at least three entries.
+			</description>
+		</method>
+		<method name="create_planar" qualifiers="static">
+			<return type="PolygonTriangulationGodot" />
+			<param index="0" name="points" type="PackedVector3Array" />
+			<param index="1" name="degenerate_points" type="PackedVector3Array" />
+			<description>
+				Creates a [PolygonTriangulationGodot] with an explicit set of degenerate (perturbed) points alongside the original boundary. The degenerate set helps the Delaunay stage avoid degenerate configurations when boundary points are nearly co-planar.
+			</description>
+		</method>
+		<method name="enable_dot_output">
+			<return type="void" />
+			<param index="0" name="enable" type="bool" />
+			<description>
+				Enables or disables the dot-product heuristic in the underlying DMWT solver. See [method PolygonTriangulation.set_dot].
+			</description>
+		</method>
+		<method name="get_indices" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns triangle indices as a flat array of vertex index triples. Empty until [method triangulate] succeeds.
+			</description>
+		</method>
+		<method name="get_mesh" qualifiers="const">
+			<return type="ArrayMesh" />
+			<param index="0" name="smooth" type="bool" default="false" />
+			<param index="1" name="subdivisions" type="int" default="0" />
+			<param index="2" name="laplacian_iterations" type="int" default="0" />
+			<description>
+				Builds and returns an [ArrayMesh] from the triangulation result. When [param smooth] is [code]true[/code], per-vertex normals are computed. [param subdivisions] subdivides each triangle [param subdivisions] times. [param laplacian_iterations] runs that many Laplacian smoothing passes on the output.
+			</description>
+		</method>
+		<method name="get_normals" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+				Returns per-vertex normals from the last [method triangulate] call. Empty if no result is cached.
+			</description>
+		</method>
+		<method name="get_optimal_cost" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns the total DMWT objective cost of the current triangulation. Lower values indicate a triangulation closer to the specified cost weights.
+			</description>
+		</method>
+		<method name="get_statistics" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns solver statistics with keys [code]"triangles"[/code] ([int]), [code]"vertices"[/code] ([int]), [code]"optimal_cost"[/code] ([float]), and [code]"early_stop"[/code] ([bool]).
+			</description>
+		</method>
+		<method name="get_triangle_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of output triangles.
+			</description>
+		</method>
+		<method name="get_vertex_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of output vertices. This may exceed the boundary point count when the solver inserts interior points.
+			</description>
+		</method>
+		<method name="get_vertices" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+				Returns output vertex positions. Empty until [method triangulate] succeeds.
+			</description>
+		</method>
+		<method name="preprocess">
+			<return type="bool" />
+			<description>
+				Runs the DMWT preprocessing stage and returns [code]true[/code] on success. Must be called before [method triangulate].
+			</description>
+		</method>
+		<method name="set_cost_weights">
+			<return type="void" />
+			<param index="0" name="triangle" type="float" />
+			<param index="1" name="edge" type="float" />
+			<param index="2" name="bi_triangle" type="float" />
+			<param index="3" name="triangle_boundary" type="float" />
+			<param index="4" name="worst_dihedral" type="float" />
+			<description>
+				Sets the five DMWT cost weights. See [method PolygonTriangulation.set_weights] for the definition of each term. The defaults weight only dihedral angle ([param edge] = 1), which produces smooth surfaces for sketched boundaries.
+			</description>
+		</method>
+		<method name="set_optimization_rounds">
+			<return type="void" />
+			<param index="0" name="rounds" type="int" />
+			<description>
+				Sets the number of optimization rounds. See [method PolygonTriangulation.set_round].
+			</description>
+		</method>
+		<method name="set_point_limit">
+			<return type="void" />
+			<param index="0" name="limit" type="int" />
+			<description>
+				Caps the number of boundary points passed to the solver. See [method PolygonTriangulation.set_point_limit].
+			</description>
+		</method>
+		<method name="triangulate">
+			<return type="bool" />
+			<description>
+				Runs the DMWT solver and caches the result. Returns [code]true[/code] on success. Call [method preprocess] first. Subsequent calls to [method get_vertices], [method get_indices], and [method get_mesh] return the cached result until [method clear_cache] is called.
+			</description>
+		</method>
+	</methods>
+</class>

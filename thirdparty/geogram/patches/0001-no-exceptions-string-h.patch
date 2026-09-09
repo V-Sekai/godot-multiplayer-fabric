@@ -1,0 +1,56 @@
+diff --git a/thirdparty/geogram/src/lib/geogram/basic/string.h b/thirdparty/geogram/src/lib/geogram/basic/string.h
+index 208484b924..79af3c5c97 100644
+--- a/thirdparty/geogram/src/lib/geogram/basic/string.h
++++ b/thirdparty/geogram/src/lib/geogram/basic/string.h
+@@ -49,6 +49,7 @@
+ #include <iomanip>
+ 
+ #include <vector>
++#include <cstdlib>  // -fno-exceptions patch: std::abort
+ #include <stdlib.h>
+ #include <string.h>
+ #include <errno.h>
+@@ -620,7 +621,10 @@ namespace GEO {
+         inline int to_int(const std::string& s) {
+             int value;
+             if(!from_string(s, value)) {
+-                throw ConversionError(s, "integer");
++                // -fno-exceptions patch: see thirdparty/geogram/patches/.
++                // CASSIE doesn't call to_int/to_uint/to_double/to_bool, so the
++                // throw is unreachable in our build; abort makes it loud.
++                ::std::abort();
+             }
+             return value;
+         }
+@@ -637,7 +641,10 @@ namespace GEO {
+         inline unsigned int to_uint(const std::string& s) {
+             unsigned int value;
+             if(!from_string(s, value)) {
+-                throw ConversionError(s, "integer");
++                // -fno-exceptions patch: see thirdparty/geogram/patches/.
++                // CASSIE doesn't call to_int/to_uint/to_double/to_bool, so the
++                // throw is unreachable in our build; abort makes it loud.
++                ::std::abort();
+             }
+             return value;
+         }
+@@ -654,7 +661,8 @@ namespace GEO {
+         inline double to_double(const std::string& s) {
+             double value;
+             if(!from_string(s, value)) {
+-                throw ConversionError(s, "double");
++                // -fno-exceptions patch: see thirdparty/geogram/patches/.
++                ::std::abort();
+             }
+             return value;
+         }
+@@ -671,7 +679,8 @@ namespace GEO {
+         inline bool to_bool(const std::string& s) {
+             bool value;
+             if(!from_string(s, value)) {
+-                throw ConversionError(s, "boolean");
++                // -fno-exceptions patch: see thirdparty/geogram/patches/.
++                ::std::abort();
+             }
+             return value;
+         }

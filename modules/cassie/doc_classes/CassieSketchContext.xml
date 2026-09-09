@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieSketchContext" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Existing sketch state passed to [CassieBeautifier].
+	</brief_description>
+	<description>
+		Holds the list of [CassieFinalStroke] strokes already committed to the sketch graph, the orthogonal axes used for planarity snap, and the optional mirror plane configuration.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_existing_strokes" qualifiers="const">
+			<return type="CassieFinalStroke[]" />
+			<description>
+			</description>
+		</method>
+		<method name="get_ortho_directions" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+			</description>
+		</method>
+		<method name="get_project_on_patch_callback" qualifiers="const">
+			<return type="Callable" />
+			<description>
+			</description>
+		</method>
+		<method name="set_existing_strokes">
+			<return type="void" />
+			<param index="0" name="strokes" type="CassieFinalStroke[]" />
+			<description>
+			</description>
+		</method>
+		<method name="set_ortho_directions">
+			<return type="void" />
+			<param index="0" name="directions" type="PackedVector3Array" />
+			<description>
+			</description>
+		</method>
+		<method name="set_project_on_patch_callback">
+			<return type="void" />
+			<param index="0" name="callback" type="Callable" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="mirror_enabled" type="bool" setter="set_mirror_enabled" getter="is_mirror_enabled" default="false">
+		</member>
+		<member name="mirror_plane" type="Plane" setter="set_mirror_plane" getter="get_mirror_plane" default="Plane(0, 0, 0, 0)">
+		</member>
+	</members>
+</class>

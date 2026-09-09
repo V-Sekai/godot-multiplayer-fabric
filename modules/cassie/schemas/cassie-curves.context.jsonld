@@ -1,0 +1,26 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "https://v-sekai.github.io/cassie/vocab#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "cassie": "https://v-sekai.github.io/cassie/vocab#",
+
+    "CurvesFile": "cassie:CurvesFile",
+    "RawPolyline": "cassie:RawPolyline",
+
+    "polylines": {
+      "@id": "cassie:rawPolylines",
+      "@container": "@list",
+      "@type": "cassie:RawPolyline"
+    },
+    "points": {
+      "@id": "cassie:rawSamples",
+      "@container": "@list",
+      "@type": "cassie:Vec3FlatTriple"
+    },
+    "count": {
+      "@id": "cassie:rawSampleCount",
+      "@type": "xsd:integer"
+    }
+  }
+}

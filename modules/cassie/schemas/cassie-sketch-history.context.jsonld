@@ -1,0 +1,38 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "https://v-sekai.github.io/cassie/vocab#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "cassie": "https://v-sekai.github.io/cassie/vocab#",
+
+    "SketchHistory": "cassie:SketchHistory",
+    "HistoryStroke": "cassie:HistoryStroke",
+
+    "id": {
+      "@id": "cassie:id",
+      "@type": "xsd:integer"
+    },
+    "input_samples": {
+      "@id": "cassie:inputSamples",
+      "@container": "@list",
+      "@type": "cassie:Vec3FlatTriple"
+    },
+    "curve_type": {
+      "@id": "cassie:curveType",
+      "@type": "xsd:string"
+    },
+    "ctrl_pts": {
+      "@id": "cassie:bezierSegmentControlPoints",
+      "@container": "@list",
+      "@type": "cassie:BezierSegment"
+    },
+    "creation_time": {
+      "@id": "cassie:creationTime",
+      "@type": "xsd:double"
+    },
+    "deletion_time": {
+      "@id": "cassie:deletionTime",
+      "@type": "xsd:double"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieConstraintSolver" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Greedy KKT solver that snaps a Bezier curve to a set of constraints.
+	</brief_description>
+	<description>
+		Wraps the CASSIE constraint-solving pipeline: starts from all candidate constraints active, fits the curve, then greedily drops one constraint at a time as long as the overall objective decreases. The objective blends fidelity (how close the solved curve stays to the input) against constraint energy (how many candidates are satisfied) via [member CassieSolverParams.mu_fidelity].
+
+		The hard constraints (position pins, G1 colinearity, closed-loop self-intersection) are folded into a KKT system; the soft constraints (tangent alignment, planarity) augment the quadratic block. The system is solved with Eigen's [code]FullPivLU[/code] because the zero block on the diagonal makes it indefinite.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="solve">
+			<return type="Dictionary" />
+			<param index="0" name="curve" type="Curve3D" />
+			<param index="1" name="constraints" type="CassieConstraint[]" />
+			<param index="2" name="ortho_directions" type="PackedVector3Array" />
+			<param index="3" name="params" type="CassieSolverParams" />
+			<param index="4" name="is_closed" type="bool" />
+			<description>
+				Solves the constraint system and returns a [Dictionary] with the following keys: [code skip-lint]curve[/code] (the beautified [Curve3D]), [code]intersections[/code] (the surviving [CassieIntersectionConstraint] candidates), [code]mirror_constraints[/code], [code]applied_anchors[/code] (the anchor indices that received a position pin), [code]rejected_count[/code], [code]planar[/code], and [code]is_closed_loop[/code]. When the solver detects NaN/Inf in the result it falls back to returning the input curve unmodified.
+			</description>
+		</method>
+	</methods>
+</class>

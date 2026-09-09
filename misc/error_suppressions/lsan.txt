@@ -1,2 +1,8 @@
 # Supported suppression types are:
 # - leak
+
+# geogram (modules/cassie) lazily constructs a process-global message Logger on
+# first use and offers no teardown hook, so its one-time allocation is reported
+# as a leak at shutdown. Benign singleton — suppress it.
+leak:GEO::Logger
+leak:CERRStream

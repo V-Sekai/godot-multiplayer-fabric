@@ -367,6 +367,23 @@ ServiceFabricBackup/
 # Hint file for IntelliSense
 cpp.hint
 
+###########################################
+### Vendored thirdparty un-ignore rules ###
+###########################################
+
+# Vendored thirdparty trees collide with godot's default patterns
+# ([Bb]in/, [Oo]bj/, st[A-Za-z0-9]{6}, *_h.h, *.obj). These are
+# upstream library trees we ship as-is, not godot build output.
+# Placed AFTER all the Visual-Studio-style ignore rules (last-match-wins)
+# but BEFORE the OS-specific block + EOF, so the assembler can append
+# more rules at EOF without colliding with this section.
+!thirdparty/geogram/src/bin/
+!thirdparty/geogram/src/bin/**
+!thirdparty/geogram/src/lib/geogram_gfx/gui/gui_state_h.h
+!thirdparty/pmp/data/obj/
+!thirdparty/pmp/data/obj/**
+!thirdparty/pmp/external/eigen-3.4.0/Eigen/St*
+
 ###################
 ### OS specific ###
 ###################

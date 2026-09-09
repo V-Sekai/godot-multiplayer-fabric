@@ -1,0 +1,8 @@
+add_subdirectory(demo_GLUP)
+add_subdirectory(demo_Delaunay2d)
+add_subdirectory(demo_Delaunay3d)
+add_subdirectory(demo_Evert)
+add_subdirectory(demo_Raytrace)
+add_subdirectory(demo_Application)
+add_subdirectory(demo_SimpleApplication)
+add_subdirectory(demo_Picking)

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieSketchGraph" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_stroke">
+			<return type="int" />
+			<param index="0" name="points" type="PackedVector3Array" />
+			<param index="1" name="normals" type="PackedVector3Array" />
+			<description>
+			</description>
+		</method>
+		<method name="build_from_polylines">
+			<return type="int" />
+			<param index="0" name="polylines" type="PackedVector3Array[]" />
+			<param index="1" name="proximity" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="clear">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="find_cycles" qualifiers="const">
+			<return type="Array" />
+			<description>
+			</description>
+		</method>
+		<method name="get_all_edges" qualifiers="const">
+			<return type="CassieSketchGraphEdge[]" />
+			<description>
+			</description>
+		</method>
+		<method name="get_all_nodes" qualifiers="const">
+			<return type="CassieSketchGraphNode[]" />
+			<description>
+			</description>
+		</method>
+		<method name="get_edge" qualifiers="const">
+			<return type="CassieSketchGraphEdge" />
+			<param index="0" name="id" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_edge_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_merge_epsilon" qualifiers="const">
+			<return type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="get_node" qualifiers="const">
+			<return type="CassieSketchGraphNode" />
+			<param index="0" name="id" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_node_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="sample_cycle_boundary" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<param index="0" name="cycle_edge_ids" type="PackedInt32Array" />
+			<param index="1" name="target_edge_length" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="set_merge_epsilon">
+			<return type="void" />
+			<param index="0" name="value" type="float" />
+			<description>
+			</description>
+		</method>
+	</methods>
+</class>

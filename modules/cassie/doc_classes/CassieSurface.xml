@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieSurface" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Generates an [ArrayMesh] from one or more closed boundary curves.
+	</brief_description>
+	<description>
+		Accepts [CassiePath3D] boundary paths and runs the full CASSIE surface-generation pipeline: optional Taubin beautification, uniform resampling, DMWT optimal triangulation, and pmp uniform remeshing.
+
+		[codeblock]
+		var surface := CassieSurface.new()
+		surface.target_edge_length = 0.05
+		surface.target_boundary_points = 40
+
+		surface.add_boundary_path(outer_loop)
+		var mesh: ArrayMesh = surface.generate_surface()
+		if mesh:
+		    $MeshInstance3D.mesh = mesh
+		[/codeblock]
+
+		[method generate_surface] caches its result; call it once and retrieve it later with [method get_generated_mesh]. Call [method clear_generated_mesh] to force a re-run.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_boundary_path">
+			<return type="void" />
+			<param index="0" name="path" type="CassiePath3D" />
+			<description>
+				Adds [param path] to the list of boundary curves. The first path added is treated as the outer boundary. Currently only single-boundary surfaces are fully supported.
+			</description>
+		</method>
+		<method name="clear_boundary_paths">
+			<return type="void" />
+			<description>
+				Removes all boundary paths. Does not clear the cached mesh.
+			</description>
+		</method>
+		<method name="clear_generated_mesh">
+			<return type="void" />
+			<description>
+				Discards the cached mesh so the next call to [method generate_surface] re-runs the full pipeline.
+			</description>
+		</method>
+		<method name="generate_surface">
+			<return type="ArrayMesh" />
+			<description>
+				Runs the surface generation pipeline and returns the resulting [ArrayMesh], or [code]null[/code] if no boundary paths have been added or triangulation fails.
+
+				If [member auto_beautify] is [code]true[/code], each path is smoothed with Taubin λ/μ before triangulation using [member beautify_lambda], [member beautify_mu], and [member beautify_iterations].
+
+				If [member auto_resample] is [code]true[/code], each path is resampled to [member target_boundary_points] points before triangulation.
+
+				The result is cached; subsequent calls return the cached mesh without re-running the pipeline.
+			</description>
+		</method>
+		<method name="get_boundary_path" qualifiers="const">
+			<return type="CassiePath3D" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the boundary path at [param index].
+			</description>
+		</method>
+		<method name="get_boundary_path_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of boundary paths added.
+			</description>
+		</method>
+		<method name="get_generated_mesh" qualifiers="const">
+			<return type="ArrayMesh" />
+			<description>
+				Returns the cached mesh from the last [method generate_surface] call, or [code]null[/code] if the surface has not been generated yet.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="auto_beautify" type="bool" setter="set_auto_beautify" getter="get_auto_beautify" default="true">
+			When [code]true[/code], [method generate_surface] runs Taubin smoothing on each boundary path before triangulating. Controlled by [member beautify_lambda], [member beautify_mu], and [member beautify_iterations].
+		</member>
+		<member name="auto_resample" type="bool" setter="set_auto_resample" getter="get_auto_resample" default="true">
+			When [code]true[/code], [method generate_surface] resamples each boundary path to [member target_boundary_points] points before triangulating.
+		</member>
+		<member name="beautify_iterations" type="int" setter="set_beautify_iterations" getter="get_beautify_iterations" default="5">
+			Number of Taubin smoothing passes applied when [member auto_beautify] is [code]true[/code].
+		</member>
+		<member name="beautify_lambda" type="float" setter="set_beautify_lambda" getter="get_beautify_lambda" default="0.5">
+			Forward step size for Taubin smoothing. See [method CassiePath3D.beautify_taubin].
+		</member>
+		<member name="beautify_mu" type="float" setter="set_beautify_mu" getter="get_beautify_mu" default="-0.53">
+			Backward step size for Taubin smoothing. Must be negative. See [method CassiePath3D.beautify_taubin].
+		</member>
+		<member name="max_flip_iterations" type="int" setter="set_max_flip_iterations" getter="get_max_flip_iterations" default="100">
+			Maximum Delaunay edge-flip iterations passed to the intrinsic remeshing stage. Only used when [member use_intrinsic_remeshing] is [code]true[/code].
+		</member>
+		<member name="smooth_iterations" type="int" setter="set_smooth_iterations" getter="get_smooth_iterations" default="5">
+			Laplacian smoothing passes applied to the output mesh by the intrinsic remesher. Only used when [member use_intrinsic_remeshing] is [code]true[/code].
+		</member>
+		<member name="target_boundary_points" type="int" setter="set_target_boundary_points" getter="get_target_boundary_points" default="30">
+			Target point count each boundary path is resampled to when [member auto_resample] is [code]true[/code]. Higher values produce finer boundary resolution and more triangles.
+		</member>
+		<member name="target_edge_length" type="float" setter="set_target_edge_length" getter="get_target_edge_length" default="-1.0">
+			Target edge length passed to the pmp remesher. A value of [code]-1.0[/code] lets the remesher choose a length based on the input boundary size.
+		</member>
+		<member name="use_intrinsic_remeshing" type="bool" setter="set_use_intrinsic_remeshing" getter="get_use_intrinsic_remeshing" default="true">
+			When [code]true[/code], an [IntrinsicTriangulation] pass runs after the initial triangulation to improve mesh quality by flipping edges toward Delaunay and applying Laplacian smoothing.
+		</member>
+	</members>
+</class>

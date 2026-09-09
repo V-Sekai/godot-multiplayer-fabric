@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieInputStroke" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Raw sample buffer for a single freehand sketch stroke.
+	</brief_description>
+	<description>
+		Holds the positions, timestamps, and pressures captured during one stroke (a single trigger press in XR, or a single mouse drag on flatscreen) and exposes the pre-fit utilities used by the CASSIE beautifier: temporal-ablation safe-point extraction, G1-continuity sectioning, RDP-based polyline simplification, and stroke validity checks.
+
+		Feed it samples as they come in via [method add_sample], then hand the resulting resource to the beautifier or call [method get_points] for a quick fitter-ready polyline.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_constraint">
+			<return type="void" />
+			<param index="0" name="constraint" type="CassieConstraint" />
+			<param index="1" name="proximity_threshold" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="add_sample">
+			<return type="void" />
+			<param index="0" name="position" type="Vector3" />
+			<param index="1" name="creation_time" type="float" />
+			<param index="2" name="pressure" type="float" />
+			<description>
+				Appends a sample. The running stroke length is updated to include the chord to the previous sample.
+			</description>
+		</method>
+		<method name="average_drawing_speed" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns total stroke length divided by elapsed creation time, or [code]0.0[/code] when fewer than two samples or zero elapsed time.
+			</description>
+		</method>
+		<method name="clear">
+			<return type="void" />
+			<description>
+				Removes all samples and resets the running length to zero.
+			</description>
+		</method>
+		<method name="get_constraint_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_constraints" qualifiers="const">
+			<return type="CassieConstraint[]" />
+			<description>
+			</description>
+		</method>
+		<method name="get_g1_sections" qualifiers="const">
+			<return type="PackedVector3Array[]" />
+			<param index="0" name="discontinuity_angular_threshold" type="float" />
+			<param index="1" name="hook_discontinuity_angular_threshold" type="float" />
+			<param index="2" name="ablation_duration" type="float" />
+			<param index="3" name="min_section_length" type="float" />
+			<param index="4" name="max_hook_length" type="float" />
+			<param index="5" name="max_hook_stroke_ratio" type="float" />
+			<description>
+				Splits the temporally-safe sample list at angular discontinuities and trims short hook segments at both ends. Returns an array of [PackedVector3Array] sections, one per G1-continuous piece.
+			</description>
+		</method>
+		<method name="get_length" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns the total chord length of the stroke.
+			</description>
+		</method>
+		<method name="get_points" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<param index="0" name="rdp_error" type="float" default="0.0" />
+			<description>
+				Returns all sample positions in order. If [param rdp_error] is non-zero, the result is reduced by the Ramer-Douglas-Peucker algorithm using that tolerance.
+			</description>
+		</method>
+		<method name="get_safe_points" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<param index="0" name="ablation_duration" type="float" default="0.01" />
+			<description>
+				Returns the sample positions after dropping any sample whose creation time is within [param ablation_duration] of the stroke's start or end. Endpoint samples are always kept. If the ablation window would empty the result, all sample positions are returned instead.
+			</description>
+		</method>
+		<method name="get_sample_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of samples currently in the buffer.
+			</description>
+		</method>
+		<method name="get_surface_constraints" qualifiers="const">
+			<return type="CassieSurfaceConstraint[]" />
+			<description>
+			</description>
+		</method>
+		<method name="get_weights" qualifiers="const">
+			<return type="PackedFloat32Array" />
+			<description>
+				Returns the per-sample pressure values in order.
+			</description>
+		</method>
+		<method name="in_constrain_to_surface">
+			<return type="void" />
+			<param index="0" name="patch_id" type="int" />
+			<param index="1" name="position" type="Vector3" />
+			<description>
+			</description>
+		</method>
+		<method name="is_valid" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="min_sketching_time" type="float" />
+			<param index="1" name="min_stroke_size" type="float" />
+			<description>
+				Returns [code]true[/code] only when there are at least two samples and either the stroke took longer than [param min_sketching_time] or the bounding span exceeds [param min_stroke_size]. Catches accidental clicks.
+			</description>
+		</method>
+		<method name="out_constrain_to_surface">
+			<return type="void" />
+			<param index="0" name="patch_id" type="int" />
+			<param index="1" name="position" type="Vector3" />
+			<description>
+			</description>
+		</method>
+	</methods>
+</class>

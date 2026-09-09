@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieSurfacePatch" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Triangle-projection patch built from an imported [Mesh], accelerated by a [code]DynamicBVH[/code].
+	</brief_description>
+	<description>
+		Wraps a Godot [Mesh] and answers point-projection queries in the [Dictionary] shape the CASSIE beautifier consumes via [method CassieSketchContext.set_project_on_patch_callback]. BVH-backed from day one to keep ~50 µs per query at the 100k+-triangle scale typical for production avatar meshes.
+
+		[codeblock]
+		var patch := CassieSurfacePatch.new()
+		patch.mesh = preload("res://my_base.glb").instantiate().mesh
+		patch.patch_id = 7
+		var ctx := CassieSketchContext.new()
+		ctx.project_on_patch_callback = patch.get_callback()
+		[/codeblock]
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_triangle">
+			<return type="int" />
+			<param index="0" name="v0" type="int" />
+			<param index="1" name="v1" type="int" />
+			<param index="2" name="v2" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="add_vertex">
+			<return type="int" />
+			<param index="0" name="position" type="Vector3" />
+			<description>
+			</description>
+		</method>
+		<method name="get_active_triangle_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_callback">
+			<return type="Callable" />
+			<description>
+				Returns a [Callable] bound to [method project]. Plug straight into [method CassieSketchContext.set_project_on_patch_callback].
+			</description>
+		</method>
+		<method name="get_triangle_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of non-degenerate triangles after ingest. Zero-area triangles are dropped silently.
+			</description>
+		</method>
+		<method name="get_triangle_indices" qualifiers="const">
+			<return type="Vector3i" />
+			<param index="0" name="idx" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_triangle_normal" qualifiers="const">
+			<return type="Vector3" />
+			<param index="0" name="idx" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_vertex_count" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_vertex_position" qualifiers="const">
+			<return type="Vector3" />
+			<param index="0" name="idx" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="project" qualifiers="const">
+			<return type="Dictionary" />
+			<param index="0" name="position" type="Vector3" />
+			<description>
+				Returns the closest point on the patch to [param position] as [code]{ "on_surface": bool, "patch_id": int, "projected": Vector3, "normal": Vector3, "distance": float }[/code]. [code]on_surface[/code] is [code]true[/code] when any triangle was projected to — the caller chooses whether the [code]distance[/code] is close enough via its own threshold.
+			</description>
+		</method>
+		<method name="remove_triangle">
+			<return type="bool" />
+			<param index="0" name="idx" type="int" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="mesh" type="Mesh" setter="set_mesh" getter="get_mesh">
+			Source mesh. Surface 0 is ingested; other surfaces are ignored. Indexed and non-indexed array meshes are both supported.
+		</member>
+		<member name="patch_id" type="int" setter="set_patch_id" getter="get_patch_id" default="0">
+			Patch identifier returned in projection results. Matches the [member CassieSurfaceConstraint.patch_id] convention.
+		</member>
+		<member name="transform" type="Transform3D" setter="set_transform" getter="get_transform" default="Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)">
+			World-space transform of the patch. Project queries take world-space points; the transform's inverse is applied to take the query into mesh-local space, and the result is transformed back.
+		</member>
+	</members>
+</class>

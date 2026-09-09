@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieTriangulator" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Fills a closed 3D boundary curve with a triangulated mesh.
+	</brief_description>
+	<description>
+		Takes an ordered sequence of 3D boundary points and returns a triangulated patch that spans them. The pipeline runs in three stages: MingCurve edge-protection, DMWT optimal triangulation (Ming Zou et al., SGP 2013), then pmp uniform remeshing.
+
+		For a three-point boundary the DMWT stage is skipped; pmp remeshing runs directly on the input triangle.
+
+		[codeblock]
+		var boundary := PackedVector3Array([
+		    Vector3(0, 0, 0),
+		    Vector3(1, 0, 0),
+		    Vector3(0.5, 0, 0.866),
+		])
+		var result := CassieTriangulator.triangulate(boundary, 0.1)
+		if result["success"]:
+		    var mesh := ArrayMesh.new()
+		    var arr := []
+		    arr.resize(Mesh.ARRAY_MAX)
+		    arr[Mesh.ARRAY_VERTEX] = result["vertices"]
+		    arr[Mesh.ARRAY_INDEX]  = result["faces"]
+		    mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+		[/codeblock]
+
+		Geogram PDEL3d handles Delaunay tetrahedralization internally. The boundary points should be roughly evenly spaced; use [CassiePath3D] to resample before calling [method triangulate] if they are not.
+	</description>
+	<tutorials>
+		<link title="An Algorithm for Triangulating Multiple 3D Polygons (Zou et al., SGP 2013)">https://www.cse.wustl.edu/~taoju/zoum/projects/TriMultPoly/index.html</link>
+		<link title="CASSIE: Curve And Surface Sketching in Immersive Environments (Yu et al., CHI 2021)">https://em-yu.github.io/research/cassie/</link>
+	</tutorials>
+	<methods>
+		<method name="triangulate" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="boundary" type="PackedVector3Array" />
+			<param index="1" name="target_edge_length" type="float" />
+			<description>
+				Triangulates a closed 3D boundary and returns a [Dictionary] with three keys:
+				[br]- [code]"success"[/code] ([bool]): [code]false[/code] if the boundary has fewer than three points or the DMWT stage fails.
+				[br]- [code]"vertices"[/code] ([PackedVector3Array]): output mesh vertices. May include interior points inserted by the remesher.
+				[br]- [code]"faces"[/code] ([PackedInt32Array]): triangle indices into [code]"vertices"[/code], three per triangle.
+
+				[param boundary] must be ordered (either CW or CCW) when projected onto the surface it lies on. Winding determines which side the normals face. [param target_edge_length] controls remeshing density; smaller values produce finer meshes at higher cost.
+			</description>
+		</method>
+	</methods>
+</class>

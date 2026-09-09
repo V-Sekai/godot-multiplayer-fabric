@@ -310,3 +310,13 @@ SCsub                                         @godotengine/buildsystem
 # V-Sekai Keychain
 
 /modules/keychain/                            @fire
+# V-Sekai multiplayer-fabric modules (must stay at EOF — CODEOWNERS is
+# last-match-wins, so placing these above the buildsystem catch-all lets
+# /*.* or SCsub steal ownership of files inside the module and breaks
+# merge assignment.)
+
+/modules/xr_grid/                             @v-sekai-multiplayer-fabric/multiplayer-fabric
+/modules/xr_grid/doc_classes/                 @v-sekai-multiplayer-fabric/multiplayer-fabric @godotengine/documentation
+/modules/cassie/                              @v-sekai-multiplayer-fabric/multiplayer-fabric
+/modules/cassie/doc_classes/                  @v-sekai-multiplayer-fabric/multiplayer-fabric @godotengine/documentation
+/modules/http3/                               @v-sekai-multiplayer-fabric/multiplayer-fabric

@@ -1,0 +1,41 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "https://v-sekai.github.io/cassie/vocab#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "cassie": "https://v-sekai.github.io/cassie/vocab#",
+
+    "PatchExport": "cassie:PatchExport",
+    "SurfacePatch": "cassie:SurfacePatch",
+
+    "label": {
+      "@id": "cassie:exportLabel",
+      "@type": "xsd:string"
+    },
+    "patches": {
+      "@id": "cassie:exportPatches",
+      "@container": "@list",
+      "@type": "cassie:SurfacePatch"
+    },
+
+    "verts": {
+      "@id": "cassie:patchVertices",
+      "@container": "@list",
+      "@type": "cassie:Vec3FlatTriple"
+    },
+    "faces": {
+      "@id": "cassie:patchFaces",
+      "@container": "@list",
+      "@type": "xsd:integer"
+    },
+    "sids": {
+      "@id": "cassie:patchStrokeRefs",
+      "@container": "@list",
+      "@type": "xsd:integer"
+    },
+
+    "x": { "@id": "cassie:x", "@type": "xsd:double" },
+    "y": { "@id": "cassie:y", "@type": "xsd:double" },
+    "z": { "@id": "cassie:z", "@type": "xsd:double" }
+  }
+}
