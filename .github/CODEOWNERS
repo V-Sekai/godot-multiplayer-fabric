@@ -295,3 +295,6 @@ SCsub                                         @godotengine/buildsystem
 # V-Sekai Lasso
 
 /modules/lasso/                               @fire
+# V-Sekai SQLite
+
+/modules/sqlite/                              @fire
