@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/v-sekai-multiplayer-fabric/proof-predictive-bvh.git
+	branch = main
+	commit = c9373f93a88d6c801a65945c552cc03195590652
+	parent = 31a4064569f31e3f8811b095964eb2b812cd72a1
+	cmdver = 0.1.0

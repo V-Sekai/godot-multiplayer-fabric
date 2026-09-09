@@ -832,7 +832,7 @@ void EditorNode3DGizmo::free() {
 	clear();
 
 	Node3DEditor::get_singleton()->remove_gizmo_bvh_node(bvh_node_id);
-	bvh_node_id = DynamicBVH::ID();
+	bvh_node_id = PredictiveBVH::ID();
 
 	valid = false;
 }

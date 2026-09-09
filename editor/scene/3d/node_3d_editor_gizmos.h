@@ -30,7 +30,7 @@
 
 #pragma once
 
-#include "core/math/dynamic_bvh.h"
+#include "core/math/predictive_bvh_adapter.h"
 #include "core/templates/hash_map.h"
 #include "scene/3d/camera_3d.h"
 #include "scene/3d/node_3d.h"
@@ -73,7 +73,7 @@ class EditorNode3DGizmo : public Node3DGizmo {
 	Vector<Instance> instances;
 	Node3D *spatial_node = nullptr;
 
-	DynamicBVH::ID bvh_node_id;
+	PredictiveBVH::ID bvh_node_id;
 
 	void _set_node_3d(Node *p_node) { set_node_3d(Object::cast_to<Node3D>(p_node)); }
 

@@ -1,0 +1,42 @@
+name: lake build
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: lake-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Default target = the bvh-codegen exe per lakefile.lean. This is the
+      # production-relevant signal: it's what writes predictive_bvh.h.
+      #
+      # use-mathlib-cache: false — Mathlib is pulled in transitively via
+      # truth_research_zk but we don't actually depend on its olean cache,
+      # and lean-action's auto-detection otherwise tries to fetch it
+      # through `lake exe cache get`, which has been intermittently broken
+      # upstream (corrupt leantar tarball as of 2026-04-25).
+      - name: lake build (default target)
+        uses: leanprover/lean-action@v1
+        with:
+          test: false
+          lint: false
+          use-mathlib-cache: true
+
+      # Library root: every module imported by PredictiveBVH.lean must
+      # typecheck. Aspirational research-tier modules live in
+      # multiplayer-fabric-predictive-bvh-research and are not on this gate.
+      - name: lake build PredictiveBVH (library root)
+        run: lake build PredictiveBVH

@@ -11290,16 +11290,16 @@ void Node3DEditor::remove_gizmo_plugin(Ref<EditorNode3DGizmoPlugin> p_plugin) {
 	_update_gizmos_menu();
 }
 
-DynamicBVH::ID Node3DEditor::insert_gizmo_bvh_node(Node3D *p_node, const AABB &p_aabb) {
+PredictiveBVH::ID Node3DEditor::insert_gizmo_bvh_node(Node3D *p_node, const AABB &p_aabb) {
 	return gizmo_bvh.insert(p_aabb, p_node);
 }
 
-void Node3DEditor::update_gizmo_bvh_node(DynamicBVH::ID p_id, const AABB &p_aabb) {
+void Node3DEditor::update_gizmo_bvh_node(PredictiveBVH::ID p_id, const AABB &p_aabb) {
 	gizmo_bvh.update(p_id, p_aabb);
 	gizmo_bvh.optimize_incremental(1);
 }
 
-void Node3DEditor::remove_gizmo_bvh_node(DynamicBVH::ID p_id) {
+void Node3DEditor::remove_gizmo_bvh_node(PredictiveBVH::ID p_id) {
 	gizmo_bvh.remove(p_id);
 }
 
