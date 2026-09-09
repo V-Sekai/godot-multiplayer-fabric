@@ -12,14 +12,14 @@ them only when the ROM model changes.
 
 ## Anatomy of a joint constraint
 
-Each clinical joint's range of motion is modelled as a **spherical ellipse** on the unit
+Each clinical joint's range of motion is modeled as a **spherical ellipse** on the unit
 sphere — flexion/extension (major axis) × lateral/abduction (minor axis), with per-side
 offsets — and fitted by the **minimal tapered Kusudama cone fan** (caps + tangent bands =
 the geodesic neighbourhood of the major-axis polyline). Round joints collapse to one
 covering cone; hinges become tapered fans offset toward flexion. The 11 arm/leg/foot/spine
 joints instead use real per-subject biomechanics fans from AddBiomechanics.
 
-`N` (cone count) is chosen to minimise a coverage-weighted cost `2·miss + over` (for a
+`N` (cone count) is chosen to minimize a coverage-weighted cost `2·miss + over` (for a
 *limit*, falsely rejecting a valid pose is worse than mildly over-allowing). The cone radius
 floor is `MIN_CONE_RADIUS = 5.5°` (~1.6× the solver's `SOFT_BAND`).
 

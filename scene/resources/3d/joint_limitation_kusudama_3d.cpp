@@ -610,7 +610,7 @@ Vector3 JointLimitationKusudama3D::_continuous_project(const Vector3 &p_point) c
 	// region boundary (never outside the hard limit).
 	//
 	// Procedure: project p onto the nearest limit cone's boundary circle; if that
-	// point falls inside a neighbouring tangent circle's forbidden lens, the real
+	// point falls inside a neighboring tangent circle's forbidden lens, the real
 	// boundary there is the tangent-circle arc, so re-project p onto it instead.
 	// The hand-off happens exactly at the tangent point (where the lens meets the
 	// cone), so it is seamless.
