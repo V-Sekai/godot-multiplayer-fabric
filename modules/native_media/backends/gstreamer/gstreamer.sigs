@@ -1,0 +1,47 @@
+# GStreamer / GLib function declarations consumed by the native_media
+# GStreamer backend. Fed to thirdparty/generate_stubs/generate_stubs.py which
+# emits a dlsym-backed dispatch table — no -lgstreamer at link time, no
+# gstreamer-1.0-dev headers needed at build time.
+#
+# Format: one C-style declaration per line. Comments start with '#'.
+
+# GLib core
+void g_free(gpointer mem);
+void g_error_free(GError *error);
+gchar* g_strdup_printf(const gchar *format, ...);
+gboolean g_str_has_prefix(const gchar *str, const gchar *prefix);
+gulong g_signal_connect_data(gpointer instance, const gchar *detailed_signal, GCallback c_handler, gpointer data, GClosureNotify destroy_data, gint connect_flags);
+
+# GStreamer core (libgstreamer-1.0.so.0)
+void gst_init(int *argc, char ***argv);
+GstElement* gst_parse_launch(const gchar *pipeline_description, GError **error);
+void gst_object_unref(gpointer object);
+GstStateChangeReturn gst_element_set_state(GstElement *element, GstState state);
+GstStateChangeReturn gst_element_get_state(GstElement *element, GstState *state, GstState *pending, GstClockTime timeout);
+GstElement* gst_bin_get_by_name(GstBin *bin, const gchar *name);
+GstPad* gst_element_get_static_pad(GstElement *element, const gchar *name);
+gboolean gst_element_query_duration(GstElement *element, GstFormat format, gint64 *duration);
+gboolean gst_element_seek_simple(GstElement *element, GstFormat format, GstSeekFlags seek_flags, gint64 seek_pos);
+GstCaps* gst_pad_get_current_caps(GstPad *pad);
+gboolean gst_pad_is_linked(GstPad *pad);
+gint gst_pad_link(GstPad *srcpad, GstPad *sinkpad);
+
+# Buffers + caps + structures
+GstBuffer* gst_buffer_new_wrapped_full(gint flags, gpointer data, gsize maxsize, gsize offset, gsize size, gpointer user_data, GCallback notify);
+gboolean gst_buffer_map(GstBuffer *buffer, GstMapInfo *info, GstMapFlags flags);
+void gst_buffer_unmap(GstBuffer *buffer, GstMapInfo *info);
+guint gst_caps_get_size(const GstCaps *caps);
+GstStructure* gst_caps_get_structure(const GstCaps *caps, guint index);
+void gst_caps_unref(GstCaps *caps);
+GstBuffer* gst_sample_get_buffer(GstSample *sample);
+GstCaps* gst_sample_get_caps(GstSample *sample);
+void gst_sample_unref(GstSample *sample);
+gboolean gst_structure_get_int(const GstStructure *structure, const gchar *fieldname, gint *value);
+gboolean gst_structure_get_fraction(const GstStructure *structure, const gchar *fieldname, gint *value_numerator, gint *value_denominator);
+const gchar* gst_structure_get_name(const GstStructure *structure);
+
+# AppSrc / AppSink symbols live in libgstapp-1.0.so.0, a separate shared
+# object that libgstreamer-1.0.so.0 does NOT depend on. They are declared in
+# gstreamerapp.sigs so the stub generator emits a distinct module with its own
+# dlopen handle — resolving them against the libgstreamer handle fails with
+# "undefined symbol". See gstreamerapp.sigs.

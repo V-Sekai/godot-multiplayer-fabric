@@ -1,0 +1,14 @@
+# GStreamer App library (libgstapp-1.0.so.0) function declarations the
+# native_media GStreamer backend consumes. These declarations stay apart from
+# gstreamer.sigs because the symbols live in libgstapp-1.0.so.0, a distinct
+# shared object that libgstreamer-1.0.so.0 does NOT link against. generate_stubs.py
+# emits one dlsym dispatch module per .sigs file, so this file forms its own
+# module (kModuleGstreamerapp) with its own dlopen handle for libgstapp.
+#
+# Format: one C-style declaration per line. Comments start with '#'.
+
+# AppSrc / AppSink (libgstapp-1.0.so.0)
+GstFlowReturn gst_app_src_push_buffer(GstAppSrc *appsrc, GstBuffer *buffer);
+GstFlowReturn gst_app_src_end_of_stream(GstAppSrc *appsrc);
+GstSample* gst_app_sink_try_pull_sample(GstAppSink *appsink, GstClockTime timeout);
+gboolean gst_app_sink_is_eos(GstAppSink *appsink);

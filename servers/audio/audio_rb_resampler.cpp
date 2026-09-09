@@ -33,6 +33,7 @@
 #include "core/math/audio_frame.h"
 #include "core/math/math_funcs_binary.h"
 #include "core/os/memory.h"
+#include "servers/audio/audio_server.h"
 
 int AudioRBResampler::get_channel_count() const {
 	if (!rb) {
@@ -119,6 +120,14 @@ uint32_t AudioRBResampler::_resample(AudioFrame *p_dest, int p_todo, int32_t p_i
 bool AudioRBResampler::mix(AudioFrame *p_dest, int p_frames) {
 	if (!rb) {
 		return false;
+	}
+
+	// The target rate tracks the live driver rate each mix. Movie Maker mode
+	// swaps the audio driver rate after the stream sets the resampler up, so a
+	// target captured once in setup() goes stale and pitches video playback wrong;
+	// AudioStreamPlaybackResampled reads the rate live for the same reason.
+	if (AudioServer::get_singleton()) {
+		target_mix_rate = uint32_t(AudioServer::get_singleton()->get_mix_rate());
 	}
 
 	int32_t increment = (src_mix_rate * MIX_FRAC_LEN * playback_speed) / target_mix_rate;

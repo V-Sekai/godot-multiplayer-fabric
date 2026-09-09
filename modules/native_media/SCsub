@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+Import("env_modules")
+
+env_native_media = env_modules.Clone()
+
+# NV12 -> RGBA compute shader (used on Vulkan / D3D12 / Metal via
+# RenderingDevice). The Compatibility (OpenGL) renderer uses
+# ycbcr_sampler_compat.gdshader (loaded at runtime, no SCons step needed).
+env_native_media.GLSL_HEADER("ycbcr_sampler.glsl")
+env_native_media.Depends(Glob("*.glsl.gen.h"), ["#glsl_builders.py"])
+
+# Module-level sources (abstraction layer + Godot Resource wrappers).
+env_native_media.add_source_files(env.modules_sources, "*.cpp")
+
+# Per-platform backend selection.
+platform = env["platform"]
+
+if platform == "windows":
+    env_native_media.add_source_files(env.modules_sources, "backends/mediafoundation/*.cpp")
+    # Core MF, plus D3D11 + DXGI for the zero-copy bridge (task #12).
+    mf_libs = ["mf", "mfplat", "mfreadwrite", "mfuuid", "ole32", "shlwapi", "propsys", "d3d11", "dxgi", "dxguid"]
+    if env.msvc:
+        # Module SCsubs run after SConstruct decorates LIBSUFFIX with the
+        # platform/target/arch tag, so a bare name in env["LIBS"] would resolve
+        # to e.g. "mfuuid.windows.editor.x86_64.lib" and fail to link. These are
+        # system import libraries — link them by their real ".lib" name through
+        # LINKFLAGS instead (works for both MSVC link and clang-cl lld-link).
+        env.Append(LINKFLAGS=[lib + ".lib" for lib in mf_libs])
+    else:
+        env.Append(LIBS=mf_libs)
+elif platform == "linuxbsd":
+    # GStreamer goes through thirdparty/generate_stubs/generate_stubs.py:
+    # dlopen at runtime, no -lgstreamer-1.0 at link time, no gstreamer-1.0-dev
+    # headers needed at build time. Vendored declarations live in
+    # backends/gstreamer/gst_decls.h. LGPL-clean dynamic loading.
+    #
+    # The dlsym dispatch table (gstreamer_stubs.{h,cc}) is generated at
+    # SConscript-parse time rather than via a build-time Command. A Command
+    # could not be reliably ordered before the TUs that #include the header:
+    # under `-j` with redirect_build_objects=no (CI's setting) the consuming
+    # objects scheduled concurrently with the generator and failed with
+    # "gstreamer_stubs.h: No such file". Generating here, synchronously, makes
+    # the files exist on disk before any object node is created — race-free.
+    import os
+    import subprocess
+    import sys
+
+    gst_dir = env.Dir("backends/gstreamer").srcnode().abspath
+    # One .sigs file per dlopened library: gstreamer.sigs -> libgstreamer-1.0,
+    # gstreamerapp.sigs -> libgstapp-1.0. generate_stubs.py emits one dlsym
+    # dispatch module per file, each with its own dlopen handle, so app symbols
+    # (libgstreamer links none of them) resolve from libgstapp rather than
+    # failing with "undefined symbol".
+    gst_sigs = [
+        os.path.join(gst_dir, "gstreamer.sigs"),
+        os.path.join(gst_dir, "gstreamerapp.sigs"),
+    ]
+    gst_stub_cc = os.path.join(gst_dir, "gstreamer_stubs.cc")
+    gen_stubs = env.File("#thirdparty/generate_stubs/generate_stubs.py").srcnode().abspath
+    # Regeneration runs only when the table is missing or older than a signature
+    # file, so incremental builds skip a needless rewrite (and recompile).
+    stale = not os.path.exists(gst_stub_cc) or any(
+        os.path.getmtime(sigs) > os.path.getmtime(gst_stub_cc) for sigs in gst_sigs
+    )
+    if stale:
+        subprocess.run(
+            [
+                sys.executable,
+                gen_stubs,
+                "-o",
+                gst_dir,
+                "-i",
+                gst_dir,
+                "-t",
+                "posix_stubs",
+                "-s",
+                "gstreamer_stubs",
+                "-p",
+                "modules/native_media/backends/gstreamer",
+                "-l",
+                "(::std::cerr)",
+                "-n",
+                "iostream",
+                "--macro-include",
+                "modules/native_media/backends/gstreamer/stubgen_compat.h",
+                *gst_sigs,
+            ],
+            check=True,
+        )
+    env_native_media.add_source_files(env.modules_sources, "backends/gstreamer/*.cpp")
+    env_native_media.add_source_files(env.modules_sources, "backends/gstreamer/gstreamer_stubs.cc")
+    env_native_media.Append(CPPDEFINES=["GSTREAMER_ENABLED"])
+    env.Append(LIBS=["dl"])
+else:
+    # Other platforms (macOS, iOS, Android, Web) are not yet supported.
+    # NativeMediaBackend::create() returns nullptr until a backend is added.
+    pass
