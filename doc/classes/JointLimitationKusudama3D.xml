@@ -24,14 +24,14 @@
 			<return type="float" />
 			<param index="0" name="angle" type="float" />
 			<description>
-				Clamps a twist [code]angle[/code] (radians) into [member twist_from]..[member twist_to]. Returns the angle unchanged if no twist limit is set.
+				Clamps a twist [param angle] (radians) into [member twist_from]..[member twist_to]. Returns the angle unchanged if no twist limit is set.
 			</description>
 		</method>
 		<method name="get_cone_axes" qualifiers="const">
 			<return type="Vector2" />
 			<param index="0" name="index" type="int" />
 			<description>
-				Returns the center of the cone at [code]index[/code] as two basis axes in [code][-1, 1][/code]: the right (X) and forward (Z) components of the unit center direction. The up (Y) component is implied. See [method set_cone_axes].
+				Returns the center of the cone at [param index] as two basis axes in [code][-1, 1][/code]: the right (X) and forward (Z) components of the unit center direction. The up (Y) component is implied. See [method set_cone_axes].
 			</description>
 		</method>
 		<method name="get_cone_center" qualifiers="const">
@@ -65,7 +65,7 @@
 			<param index="0" name="rotation" type="Quaternion" />
 			<param index="1" name="axis" type="Vector3" />
 			<description>
-				Decomposes [code]rotation[/code] into swing and twist about [code]axis[/code], clamps the twist into [member twist_from]..[member twist_to], and recomposes. The swing (bone direction) is left unchanged; the operation is idempotent and leaves an in-range twist untouched.
+				Decomposes [param rotation] into swing and twist about [param axis], clamps the twist into [member twist_from]..[member twist_to], and recomposes. The swing (bone direction) is left unchanged; the operation is idempotent and leaves an in-range twist untouched.
 			</description>
 		</method>
 		<method name="set_cone_axes">
@@ -73,7 +73,7 @@
 			<param index="0" name="index" type="int" />
 			<param index="1" name="axes" type="Vector2" />
 			<description>
-				Sets the center of the cone at [code]index[/code] from two basis axes in [code][-1, 1][/code] ([code]axes.x[/code] = right/X, [code]axes.y[/code] = forward/Z); the up (Y) component is derived so the center stays a unit direction in the forward hemisphere. Lets a cone center be authored as two axes instead of a [Vector3]. See [method get_cone_axes].
+				Sets the center of the cone at [param index] from two basis axes in [code][-1, 1][/code] ([code]axes.x[/code] = right/X, [code]axes.y[/code] = forward/Z); the up (Y) component is derived so the center stays a unit direction in the forward hemisphere. Lets a cone center be authored as two axes instead of a [Vector3]. See [method get_cone_axes].
 			</description>
 		</method>
 		<method name="set_cone_center">
@@ -110,21 +110,21 @@
 			<return type="Vector2" />
 			<param index="0" name="direction" type="Vector3" />
 			<description>
-				Normalizes a swing [code]direction[/code] to a unit-disk coordinate (per-axis normalized): magnitude [code]0[/code] at the range-of-motion center and [code]1[/code] on its boundary, with the direction encoding the azimuth. Use with [method swing_from_normalized] to retarget poses between range-of-motion sizes.
+				Normalizes a swing [param direction] to a unit-disk coordinate (per-axis normalized): magnitude [code]0[/code] at the range-of-motion center and [code]1[/code] on its boundary, with the direction encoding the azimuth. Use with [method swing_from_normalized] to retarget poses between range-of-motion sizes.
 			</description>
 		</method>
 		<method name="twist_from_normalized" qualifiers="const">
 			<return type="float" />
 			<param index="0" name="normalized" type="float" />
 			<description>
-				Maps a [code]normalized[/code] value in [code][0, 1][/code] to a twist angle between [member twist_from] and [member twist_to].
+				Maps a [param normalized] value in [code][0, 1][/code] to a twist angle between [member twist_from] and [member twist_to].
 			</description>
 		</method>
 		<method name="twist_to_normalized" qualifiers="const">
 			<return type="float" />
 			<param index="0" name="angle" type="float" />
 			<description>
-				Maps a twist [code]angle[/code] (radians) to [code][0, 1][/code] between [member twist_from] and [member twist_to].
+				Maps a twist [param angle] (radians) to [code][0, 1][/code] between [member twist_from] and [member twist_to].
 			</description>
 		</method>
 	</methods>

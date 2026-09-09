@@ -111,7 +111,7 @@ def aggregate_bone(cand):
 
 
 def main():
-    rows = [json.loads(l) for l in _open_lines(SRC) if l.strip()]
+    rows = [json.loads(line) for line in _open_lines(SRC) if line.strip()]
     rows = [r for r in rows if r.get("bones")]
     template = {}
     for sinew, godot in BONE_MAP.items():
