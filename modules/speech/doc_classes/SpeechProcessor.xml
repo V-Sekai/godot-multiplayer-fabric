@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SpeechProcessor" inherits="Node" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Low-level audio processing node that handles capture, resampling, encoding, denoising, and echo cancellation for voice chat.
+	</brief_description>
+	<description>
+		SpeechProcessor captures audio from the microphone via [AudioEffectCapture], resamples it with libsamplerate, applies RNNoise denoising with voice activity detection (VAD), performs AEC3 acoustic echo cancellation, and encodes the result with the Opus codec. Processed audio packets are emitted through the [signal speech_processed] signal. This node is used internally by [Speech] and typically does not need to be instantiated directly.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="compress_buffer">
+			<return type="Dictionary" />
+			<param index="0" name="pcm_byte_array" type="PackedByteArray" />
+			<param index="1" name="output_buffer" type="Dictionary" />
+			<description>
+				Encodes raw PCM audio data in [param pcm_byte_array] using the Opus codec and stores the compressed result in [param output_buffer]. Returns the [param output_buffer] dictionary with updated byte array and buffer size fields.
+			</description>
+		</method>
+		<method name="decompress_buffer">
+			<return type="PackedVector2Array" />
+			<param index="0" name="speech_decoder" type="SpeechDecoder" />
+			<param index="1" name="read_byte_buffer" type="PackedByteArray" />
+			<param index="2" name="read_size" type="int" />
+			<param index="3" name="write_vec2_array" type="PackedVector2Array" />
+			<description>
+				Decodes Opus-compressed audio using the given [param speech_decoder]. Reads [param read_size] bytes from [param read_byte_buffer], decodes them to 16-bit PCM mono, converts to stereo float pairs, and writes the result into [param write_vec2_array]. Returns the filled [PackedVector2Array].
+			</description>
+		</method>
+		<method name="encode_buffer">
+			<return type="Dictionary" />
+			<param index="0" name="pcm_buffer" type="PackedByteArray" />
+			<param index="1" name="output_buffer" type="PackedByteArray" />
+			<description>
+				Encodes raw PCM audio data in [param pcm_buffer] using the Opus codec. [param pcm_buffer] must be exactly [constant SPEECH_SETTING_PCM_BUFFER_SIZE] bytes. Returns a [Dictionary] with the keys [code]byte_array[/code] (the compressed data) and [code]buffer_size[/code] (the compressed size in bytes, or [code]-1[/code] on failure).
+			</description>
+		</method>
+		<method name="get_speech_decoder">
+			<return type="SpeechDecoder" />
+			<description>
+				Returns a new [SpeechDecoder] configured for decoding incoming Opus voice packets.
+			</description>
+		</method>
+		<method name="get_stats" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns a [Dictionary] of audio capture statistics, including discarded and pushed capture durations in seconds, capture ring buffer sizes, the number of capture calls, and the capture mix rate.
+			</description>
+		</method>
+		<method name="set_audio_input_stream_player">
+			<return type="bool" />
+			<param index="0" name="stream_player" type="Node" />
+			<description>
+				Assigns an [AudioStreamPlayer] node as the audio input source for capture. The [param stream_player] must have an [AudioEffectCapture] on its bus. Returns [code]true[/code] if the player was successfully assigned.
+			</description>
+		</method>
+		<method name="set_streaming_bus">
+			<return type="void" />
+			<param index="0" name="name" type="String" />
+			<description>
+				Sets the audio bus by [param name] to use for capturing microphone input. The bus should have an [AudioEffectCapture] effect attached.
+			</description>
+		</method>
+		<method name="start">
+			<return type="void" />
+			<description>
+				Starts audio capture and processing. Enables the internal audio processing pipeline including resampling, denoising, echo cancellation, and Opus encoding.
+			</description>
+		</method>
+		<method name="stop">
+			<return type="void" />
+			<description>
+				Stops audio capture and processing. Disables the internal audio processing pipeline.
+			</description>
+		</method>
+		<method name="test_process_mono_audio_frames">
+			<return type="void" />
+			<param index="0" name="mono_frames" type="PackedFloat32Array" />
+			<param index="1" name="input_sample_rate" type="int" />
+			<description>
+				Feeds [param mono_frames] sampled at [param input_sample_rate] directly into the voice processing pipeline, resampling to [constant SPEECH_SETTING_VOICE_SAMPLE_RATE] as needed. Intended for testing the capture pipeline without a microphone.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="speech_processed">
+			<param index="0" name="packet" type="Dictionary" />
+			<description>
+				Emitted when a frame of audio has been captured and processed. The [param packet] dictionary contains the compressed byte array and buffer size for the encoded Opus packet.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="SPEECH_SETTING_CHANNEL_COUNT" value="1">
+			The number of audio channels used for capture and encoding. Mono (1 channel) is used for voice.
+		</constant>
+		<constant name="SPEECH_SETTING_MILLISECONDS_PER_PACKET" value="20">
+			The duration of each audio packet in milliseconds.
+		</constant>
+		<constant name="SPEECH_SETTING_BUFFER_BYTE_COUNT" value="2">
+			The number of bytes per PCM sample (16-bit = 2 bytes).
+		</constant>
+		<constant name="SPEECH_SETTING_SAMPLE_RATE" value="48000">
+			The audio sample rate in Hz used for Opus encoding.
+		</constant>
+		<constant name="SPEECH_SETTING_APPLICATION" value="2049">
+			The Opus application mode. Corresponds to [code]OPUS_APPLICATION_AUDIO[/code].
+		</constant>
+		<constant name="SPEECH_SETTING_BUFFER_FRAME_COUNT" value="960">
+			The number of audio frames per packet, derived from sample rate and packet duration.
+		</constant>
+		<constant name="SPEECH_SETTING_INTERNAL_BUFFER_SIZE" value="15360">
+			The size of the internal buffer in bytes used for Opus encoding output.
+		</constant>
+		<constant name="SPEECH_SETTING_VOICE_SAMPLE_RATE" value="48000">
+			The sample rate in Hz used for voice processing.
+		</constant>
+		<constant name="SPEECH_SETTING_VOICE_BUFFER_FRAME_COUNT" value="960">
+			The number of audio frames per voice processing buffer.
+		</constant>
+		<constant name="SPEECH_SETTING_PCM_BUFFER_SIZE" value="1920">
+			The total PCM buffer size in bytes, computed as frame count multiplied by bytes per sample and channel count.
+		</constant>
+		<constant name="SPEECH_SETTING_MILLISECONDS_PER_SECOND" value="1000">
+			Constant for converting between seconds and milliseconds.
+		</constant>
+		<constant name="SPEECH_SETTING_VOICE_PACKET_SAMPLE_RATE" value="48000">
+			The sample rate in Hz used for voice packet playback.
+		</constant>
+		<constant name="SPEECH_SETTING_PACKET_DELTA_TIME" value="0">
+			The time delta per packet in seconds, computed as milliseconds per packet divided by milliseconds per second. Exposed as a float at runtime.
+		</constant>
+	</constants>
+</class>

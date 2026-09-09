@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SpeechDecoder" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Opus audio decoder for decompressing received voice chat packets.
+	</brief_description>
+	<description>
+		SpeechDecoder wraps an Opus decoder instance used to decompress incoming voice packets from remote peers. Each connected player should have its own SpeechDecoder to maintain independent decoder state. Instances are created via [method Speech.get_speech_decoder] or automatically when calling [method Speech.add_player_audio].
+	</description>
+	<tutorials>
+	</tutorials>
+</class>

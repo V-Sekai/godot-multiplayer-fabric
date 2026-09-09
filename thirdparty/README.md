@@ -529,6 +529,12 @@ Patches:
 - `0006-backport-upstream-commit-63765d1.patch` (GH-118393)
 
 
+## jitter_buffer
+
+- Upstream: V-Sekai speech module (Lean 4 verified jitter buffer)
+- License: MIT
+
+
 ## libbacktrace
 
 - Upstream: https://github.com/ianlancetaylor/libbacktrace
@@ -603,6 +609,16 @@ Files extracted from upstream source:
 - `src/*.{c,h}`
 - `include/ogg/*.h` in `ogg/` (run `configure` to generate `config_types.h`)
 - `COPYING`
+
+
+## libsamplerate
+
+- Upstream: https://github.com/libsndfile/libsamplerate
+- Version: 0.2.2
+- License: BSD-2-Clause
+
+Sample rate converter used by the speech module for resampling between
+audio capture rate and Opus codec rate (48 kHz).
 
 
 ## libpng
@@ -920,6 +936,18 @@ Additional:
 - Update `openxrLoaderVersion` in `platform/android/java/app/config.gradle`
 
 
+## opus_speech
+
+- Upstream: https://github.com/xiph/opus
+- Version: 1.6.1
+- License: BSD-3-Clause
+
+Opus codec with OSCE (Opus Speech Coding Enhancement), DRED (Deep Redundancy),
+and Deep PLC (Packet Loss Concealment) via DNN. Used by the speech module for
+VoIP encoding/decoding. Named `opus_speech` to avoid conflict with any future
+engine-level Opus integration.
+
+
 ## pcre2
 
 - Upstream: http://www.pcre.org
@@ -947,6 +975,16 @@ Files extracted from upstream source:
 
 - `Recast/` folder without `CMakeLists.txt`
 - `License.txt`
+
+
+## rnnoise
+
+- Upstream: https://github.com/xiph/rnnoise
+- Version: 0.2
+- License: BSD-3-Clause
+
+Recurrent neural network-based noise suppression. Provides VAD (voice
+activity detection) and real-time noise reduction for the speech module.
 
 
 ## re-spirv

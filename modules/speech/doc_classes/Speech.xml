@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="Speech" inherits="Node" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Multiplayer voice chat node that manages audio capture, compression, transmission, and playback.
+	</brief_description>
+	<description>
+		Speech is the high-level VoIP node for multiplayer voice communication. It captures microphone input via [SpeechProcessor], compresses audio with Opus, and transmits packets to remote peers. On the receiving side, it manages per-player jitter buffers, decodes incoming voice packets, and feeds decoded audio into [AudioStreamGenerator] playback streams. It also provides adaptive jitter buffering with configurable speedup and slowdown thresholds to maintain smooth playback.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_player_audio">
+			<return type="void" />
+			<param index="0" name="player_id" type="int" />
+			<param index="1" name="audio_stream_player" type="Node" />
+			<description>
+				Registers an audio stream player for the given [param player_id]. The [param audio_stream_player] will be used to play back decoded voice audio received from that remote peer. A jitter buffer and [SpeechDecoder] are created automatically for the player.
+			</description>
+		</method>
+		<method name="attempt_to_feed_stream">
+			<return type="void" />
+			<param index="0" name="skip_count" type="int" />
+			<param index="1" name="decoder" type="SpeechDecoder" />
+			<param index="2" name="audio_stream_player" type="Node" />
+			<param index="3" name="jitter_buffer" type="Array" />
+			<param index="4" name="playback_stats" type="PlaybackStats" />
+			<param index="5" name="player_dict" type="Dictionary" />
+			<param index="6" name="process_delta_time" type="float" />
+			<description>
+				Decodes packets from the [param jitter_buffer] and pushes audio frames into the [param audio_stream_player]'s playback stream. Uses [param decoder] to decompress Opus packets, [param skip_count] to drop stale packets, and [param playback_stats] to record buffer metrics. The [param player_dict] holds per-player state, and [param process_delta_time] is the frame delta used for timing calculations.
+			</description>
+		</method>
+		<method name="calc_playback_ring_buffer_length">
+			<return type="int" />
+			<param index="0" name="generator" type="AudioStreamGenerator" />
+			<description>
+				Calculates the playback ring buffer length in frames for the given [AudioStreamGenerator], based on its mix rate and buffer length. Returns the computed size as a power-of-two aligned value.
+			</description>
+		</method>
+		<method name="clear_all_player_audio">
+			<return type="void" />
+			<description>
+				Removes all registered player audio entries, freeing their decoders, jitter buffers, and playback state.
+			</description>
+		</method>
+		<method name="clear_skipped_audio_packets">
+			<return type="void" />
+			<description>
+				Resets the skipped audio packet counter to zero.
+			</description>
+		</method>
+		<method name="copy_and_clear_buffers">
+			<return type="Array" />
+			<description>
+				Copies all pending compressed input audio buffers into an [Array] and clears the internal buffer queue. Each element in the returned array is a [PackedByteArray] containing one Opus-compressed audio packet.
+			</description>
+		</method>
+		<method name="decompress_buffer">
+			<return type="PackedVector2Array" />
+			<param index="0" name="decoder" type="SpeechDecoder" />
+			<param index="1" name="read_array" type="PackedByteArray" />
+			<param index="2" name="read_size" type="int" />
+			<param index="3" name="write_array" type="PackedVector2Array" />
+			<description>
+				Decodes an Opus-compressed audio buffer using the given [param decoder]. Reads [param read_size] bytes from [param read_array], decodes them to PCM, and writes the resulting stereo sample pairs into [param write_array]. Returns the filled [PackedVector2Array].
+			</description>
+		</method>
+		<method name="end_recording">
+			<return type="bool" />
+			<description>
+				Stops capturing audio from the microphone and halts the speech processor. Returns [code]true[/code] if recording was successfully stopped.
+			</description>
+		</method>
+		<method name="get_playback_stats">
+			<return type="Dictionary" />
+			<param index="0" name="speech_stat" type="Dictionary" />
+			<description>
+				Returns a [Dictionary] of playback statistics for all registered players, merged with the capture statistics in [param speech_stat]. Each player entry includes jitter buffer size, playback ring buffer usage, and timing information.
+			</description>
+		</method>
+		<method name="get_skipped_audio_packets">
+			<return type="int" />
+			<description>
+				Returns the number of audio packets that were skipped due to buffer overflow since the last call to [method clear_skipped_audio_packets].
+			</description>
+		</method>
+		<method name="get_speech_decoder">
+			<return type="SpeechDecoder" />
+			<description>
+				Creates and returns a new [SpeechDecoder] instance configured for the current audio settings. Each remote peer should have its own decoder to maintain independent Opus decoder state.
+			</description>
+		</method>
+		<method name="get_stats">
+			<return type="Dictionary" />
+			<description>
+				Returns a [Dictionary] containing capture-side statistics from the [SpeechProcessor], including sample rates, buffer sizes, and audio capture metrics.
+			</description>
+		</method>
+		<method name="on_received_audio_packet">
+			<return type="void" />
+			<param index="0" name="peer_id" type="int" />
+			<param index="1" name="sequence_id" type="int" />
+			<param index="2" name="packet" type="PackedByteArray" />
+			<description>
+				Handles an incoming Opus-compressed voice [param packet] from the remote peer identified by [param peer_id]. The [param sequence_id] is used for ordering packets in the jitter buffer. The packet is queued for decoding and playback on the next process frame.
+			</description>
+		</method>
+		<method name="remove_player_audio">
+			<return type="void" />
+			<param index="0" name="player_id" type="int" />
+			<description>
+				Unregisters the audio stream player and associated resources for the given [param player_id], removing the player's jitter buffer and decoder.
+			</description>
+		</method>
+		<method name="set_audio_input_stream_player">
+			<return type="bool" />
+			<param index="0" name="player" type="Node" />
+			<description>
+				Assigns an [AudioStreamPlayer] node as the microphone input source. The [param player] must be an [AudioStreamPlayer] with an audio capture effect attached. Returns [code]true[/code] if the player was successfully assigned.
+			</description>
+		</method>
+		<method name="set_streaming_bus">
+			<return type="void" />
+			<param index="0" name="bus" type="String" />
+			<description>
+				Sets the audio bus name used for capturing microphone input. The [param bus] must have an [AudioEffectCapture] attached for audio capture to work.
+			</description>
+		</method>
+		<method name="start_recording">
+			<return type="bool" />
+			<description>
+				Begins capturing audio from the microphone and starts the speech processor. Returns [code]true[/code] if recording was successfully started.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="BUFFER_DELAY_THRESHOLD" type="float" setter="set_buffer_delay_threshold" getter="get_buffer_delay_threshold" default="0.1">
+			The maximum allowed delay in seconds before the playback buffer is considered too far behind and corrective action is taken.
+		</member>
+		<member name="DEBUG" type="bool" setter="set_debug" getter="get_debug" default="false">
+			If [code]true[/code], enables verbose debug logging for voice chat operations including jitter buffer state and packet statistics.
+		</member>
+		<member name="JITTER_BUFFER_SLOWDOWN" type="float" setter="set_jitter_buffer_slowdown" getter="get_jitter_buffer_slowdown" default="6.0">
+			The jitter buffer size threshold below which playback pitch is reduced to allow the buffer to refill and prevent underruns.
+		</member>
+		<member name="JITTER_BUFFER_SPEEDUP" type="float" setter="set_jitter_buffer_speedup" getter="get_jitter_buffer_speedup" default="12.0">
+			The jitter buffer size threshold above which playback pitch is increased to drain excess buffered packets and reduce latency.
+		</member>
+		<member name="MAX_JITTER_BUFFER_SIZE" type="int" setter="set_max_jitter_buffer_size" getter="get_max_jitter_buffer_size" default="16">
+			The maximum number of packets that can be held in a player's jitter buffer. Packets arriving when the buffer is full are discarded.
+		</member>
+		<member name="STREAM_SPEEDUP_PITCH" type="float" setter="set_stream_speedup_pitch" getter="get_stream_speedup_pitch" default="1.5">
+			The pitch scale applied to the audio stream player when the jitter buffer exceeds [member JITTER_BUFFER_SPEEDUP], causing playback to speed up and drain the buffer.
+		</member>
+		<member name="STREAM_STANDARD_PITCH" type="float" setter="set_stream_standard_pitch" getter="get_stream_standard_pitch" default="1.0">
+			The default pitch scale applied to the audio stream player during normal playback when the jitter buffer is within acceptable bounds.
+		</member>
+		<member name="blank_packet" type="PackedVector2Array" setter="set_blank_packet" getter="get_blank_packet">
+			A pre-allocated silent audio packet used to fill the playback stream when no voice data is available, preventing audio underruns.
+		</member>
+		<member name="packets_received_this_frame" type="int" setter="set_packets_received_this_frame" getter="get_packets_received_this_frame" default="0">
+			The number of voice packets received during the current process frame. Reset each frame during processing.
+		</member>
+		<member name="playback_ring_buffer_length" type="int" setter="set_playback_ring_buffer_length" getter="get_playback_ring_buffer_length" default="0">
+			The length of the playback ring buffer in frames, computed from the [AudioStreamGenerator] settings. Used to track buffer fill level during playback.
+		</member>
+		<member name="player_audio" type="Dictionary" setter="set_player_audio" getter="get_player_audio">
+			A [Dictionary] mapping peer IDs to their playback state, including the audio stream player, [SpeechDecoder], jitter buffer, and [PlaybackStats] for each connected player.
+		</member>
+		<member name="uncompressed_audio" type="PackedVector2Array" setter="set_uncompressed_audio" getter="get_uncompressed_audio">
+			Holds the most recently decoded uncompressed audio samples as stereo pairs. Can be used to access raw PCM data for visualization or analysis.
+		</member>
+	</members>
+</class>
