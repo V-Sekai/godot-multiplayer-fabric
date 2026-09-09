@@ -396,3 +396,5 @@ $RECYCLE.BIN/
 *.msp
 *.lnk
 *.generated.props
+
+.lake/
