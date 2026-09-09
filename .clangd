@@ -8,6 +8,9 @@ CompileFlags:
   Add:
     # Some thirdparty includes seem to require a high -ferror-limit to pass checks.
     - -ferror-limit=100
+    # OTel WAL uses GodotSQLite and its spmemvfs dependency.
+    - -Imodules/sqlite/thirdparty
+    - -Imodules/sqlite/src
 
 Diagnostics:
   Includes:

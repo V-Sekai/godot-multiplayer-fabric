@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="OTelLog" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		A single structured log record.
+	</brief_description>
+	<description>
+		Represents one OTLP log record; attach it to a trace via [member trace_id] and [member span_id].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_attribute">
+			<return type="void" />
+			<param index="0" name="key" type="String" />
+			<param index="1" name="value" type="Variant" />
+			<description>
+				Adds or replaces the attribute [param key] with [param value].
+			</description>
+		</method>
+		<method name="to_otlp_dict" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the record as an OTLP-format Dictionary.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="attributes" type="Dictionary" setter="set_attributes" getter="get_attributes" default="{}">
+		</member>
+		<member name="body" type="Variant" setter="set_body" getter="get_body" default="null">
+		</member>
+		<member name="observed_time_unix_nano" type="int" setter="set_observed_time_unix_nano" getter="get_observed_time_unix_nano" default="0">
+		</member>
+		<member name="severity_number" type="int" setter="set_severity_number" getter="get_severity_number" enum="OTelLog.SeverityNumber" default="0">
+		</member>
+		<member name="severity_text" type="String" setter="set_severity_text" getter="get_severity_text" default="&quot;&quot;">
+		</member>
+		<member name="span_id" type="String" setter="set_span_id" getter="get_span_id" default="&quot;&quot;">
+		</member>
+		<member name="time_unix_nano" type="int" setter="set_time_unix_nano" getter="get_time_unix_nano" default="0">
+		</member>
+		<member name="trace_id" type="String" setter="set_trace_id" getter="get_trace_id" default="&quot;&quot;">
+		</member>
+	</members>
+	<constants>
+		<constant name="SEVERITY_NUMBER_UNSPECIFIED" value="0" enum="SeverityNumber">
+			Severity not specified.
+		</constant>
+		<constant name="SEVERITY_NUMBER_TRACE" value="1" enum="SeverityNumber">
+			Finest trace-level severity.
+		</constant>
+		<constant name="SEVERITY_NUMBER_DEBUG" value="5" enum="SeverityNumber">
+			Debug-level severity.
+		</constant>
+		<constant name="SEVERITY_NUMBER_INFO" value="9" enum="SeverityNumber">
+			Informational severity.
+		</constant>
+		<constant name="SEVERITY_NUMBER_WARN" value="13" enum="SeverityNumber">
+			Warning severity.
+		</constant>
+		<constant name="SEVERITY_NUMBER_ERROR" value="17" enum="SeverityNumber">
+			Error severity.
+		</constant>
+		<constant name="SEVERITY_NUMBER_FATAL" value="21" enum="SeverityNumber">
+			Fatal-error severity.
+		</constant>
+	</constants>
+</class>

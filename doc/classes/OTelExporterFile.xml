@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="OTelExporterFile" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Writes OTel signal batches to local JSON files.
+	</brief_description>
+	<description>
+		Exports spans, metrics, and logs from an [OTelState] to files under [member output_directory].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="ensure_directory_exists">
+			<return type="int" enum="Error" />
+			<description>
+				Creates [member output_directory] if it does not already exist.
+			</description>
+		</method>
+		<method name="export_logs">
+			<return type="int" enum="Error" />
+			<param index="0" name="state" type="OTelState" />
+			<description>
+				Writes all logs in [param state] to a file; returns an [enum Error].
+			</description>
+		</method>
+		<method name="export_metrics">
+			<return type="int" enum="Error" />
+			<param index="0" name="state" type="OTelState" />
+			<description>
+				Writes all metrics in [param state] to a file; returns an [enum Error].
+			</description>
+		</method>
+		<method name="export_traces">
+			<return type="int" enum="Error" />
+			<param index="0" name="state" type="OTelState" />
+			<description>
+				Writes all spans in [param state] to a file; returns an [enum Error].
+			</description>
+		</method>
+		<method name="generate_filename" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="type" type="String" />
+			<description>
+				Returns a filename for [param type] ("traces", "metrics", or "logs") using [member filename_prefix] and the current [member mode].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="filename_prefix" type="String" setter="set_filename_prefix" getter="get_filename_prefix" default="&quot;otel&quot;">
+		</member>
+		<member name="mode" type="int" setter="set_mode" getter="get_mode" enum="OTelExporterFile.ExportMode" default="2">
+		</member>
+		<member name="output_directory" type="String" setter="set_output_directory" getter="get_output_directory" default="&quot;user://otel_traces&quot;">
+		</member>
+		<member name="pretty_print" type="bool" setter="set_pretty_print" getter="get_pretty_print" default="true">
+		</member>
+	</members>
+	<constants>
+		<constant name="EXPORT_MODE_APPEND" value="0" enum="ExportMode">
+			Appends new records to an existing file.
+		</constant>
+		<constant name="EXPORT_MODE_OVERWRITE" value="1" enum="ExportMode">
+			Overwrites the file on every export.
+		</constant>
+		<constant name="EXPORT_MODE_TIMESTAMPED" value="2" enum="ExportMode">
+			Creates a new timestamped file on every export.
+		</constant>
+	</constants>
+</class>

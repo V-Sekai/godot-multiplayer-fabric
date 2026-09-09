@@ -9,7 +9,10 @@ jobs:
   # First stage: Only static checks, fast and prevent expensive builds from running.
 
   static-checks:
-    if: ${{ !vars.DISABLE_GODOT_CI || github.run_attempt > 1 || github.event_name == 'workflow_dispatch' }}
+    # Skip push events on non-default branches — pull_request covers those.
+    if: |
+      (github.event_name != 'push' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) &&
+      (!vars.DISABLE_GODOT_CI || github.run_attempt > 1 || github.event_name == 'workflow_dispatch')
     name: 📊 Static checks
     uses: ./.github/workflows/static_checks.yml
 

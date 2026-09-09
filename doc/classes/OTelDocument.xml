@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="OTelDocument" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Serializes and deserializes OTel signal batches to OTLP JSON.
+	</brief_description>
+	<description>
+		Converts spans, metrics, and logs between [OTelState] containers and OTLP/HTTP JSON payloads.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="build_log_payload">
+			<return type="Dictionary" />
+			<param index="0" name="resource" type="OTelResource" />
+			<param index="1" name="scope" type="OTelScope" />
+			<param index="2" name="logs" type="Array" />
+			<description>
+				Returns an OTLP-format Dictionary for the given resource, scope, and log array.
+			</description>
+		</method>
+		<method name="build_metric_payload">
+			<return type="Dictionary" />
+			<param index="0" name="resource" type="OTelResource" />
+			<param index="1" name="scope" type="OTelScope" />
+			<param index="2" name="metrics" type="Array" />
+			<description>
+				Returns an OTLP-format Dictionary for the given resource, scope, and metric array.
+			</description>
+		</method>
+		<method name="build_trace_payload">
+			<return type="Dictionary" />
+			<param index="0" name="resource" type="OTelResource" />
+			<param index="1" name="scope" type="OTelScope" />
+			<param index="2" name="spans" type="OTelSpan[]" />
+			<description>
+				Returns an OTLP-format Dictionary for the given resource, scope, and span array.
+			</description>
+		</method>
+		<method name="deserialize_logs">
+			<return type="OTelState" />
+			<param index="0" name="json" type="String" />
+			<description>
+				Parses an OTLP JSON string and returns an [OTelState] containing the decoded log records.
+			</description>
+		</method>
+		<method name="deserialize_metrics">
+			<return type="OTelState" />
+			<param index="0" name="json" type="String" />
+			<description>
+				Parses an OTLP JSON string and returns an [OTelState] containing the decoded metrics.
+			</description>
+		</method>
+		<method name="deserialize_traces">
+			<return type="OTelState" />
+			<param index="0" name="json" type="String" />
+			<description>
+				Parses an OTLP JSON string and returns an [OTelState] containing the decoded spans.
+			</description>
+		</method>
+		<method name="serialize_logs">
+			<return type="String" />
+			<param index="0" name="state" type="OTelState" />
+			<description>
+				Serializes all logs in [param state] to an OTLP JSON string.
+			</description>
+		</method>
+		<method name="serialize_metrics">
+			<return type="String" />
+			<param index="0" name="state" type="OTelState" />
+			<description>
+				Serializes all metrics in [param state] to an OTLP JSON string.
+			</description>
+		</method>
+		<method name="serialize_traces">
+			<return type="String" />
+			<param index="0" name="state" type="OTelState" />
+			<description>
+				Serializes all spans in [param state] to an OTLP JSON string.
+			</description>
+		</method>
+	</methods>
+</class>
