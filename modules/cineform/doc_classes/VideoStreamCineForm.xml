@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="VideoStreamCineForm" inherits="VideoStream" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A [VideoStream] resource for CineForm video.
+	</brief_description>
+	<description>
+		A [VideoStream] resource that plays back CineForm video from a Matroska file, as written by the CineForm [MovieWriter]. Pass it to a [VideoStreamPlayer] to play it.
+		Every CineForm frame is a keyframe, so seeking does not decode the frames before the target. Playback requires an x86 CPU.
+		A Matroska file can carry any codec. This resource claims a file only if its video track is CineForm, so a [code].mkv[/code] holding something else is left to another loader.
+	</description>
+	<tutorials>
+	</tutorials>
+</class>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="VideoStreamPlaybackCineForm" inherits="VideoStreamPlayback" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Plays back a [VideoStreamCineForm].
+	</brief_description>
+	<description>
+		The [VideoStreamPlayback] a [VideoStreamCineForm] creates. It is not meant to be instantiated directly; use [VideoStreamPlayer] with a [VideoStreamCineForm] instead.
+	</description>
+	<tutorials>
+	</tutorials>
+</class>
