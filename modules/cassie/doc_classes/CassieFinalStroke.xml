@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieFinalStroke" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Beautified, immutable stroke committed to the sketch graph.
+	</brief_description>
+	<description>
+		Holds a [Curve3D] and helpers for projecting candidate intersection positions onto that curve. Graph-integrated methods (intersection insertion, segment mending, control-point extraction per segment) are deferred to the Tier-4 GDScript [code]sketch_graph.gd[/code] wiring.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="closest_point" qualifiers="const">
+			<return type="Vector3" />
+			<param index="0" name="position" type="Vector3" />
+			<description>
+				Returns the closest point on this stroke's curve to [param position].
+			</description>
+		</method>
+		<method name="get_constraint" qualifiers="const">
+			<return type="CassieIntersectionConstraint" />
+			<param index="0" name="position" type="Vector3" />
+			<param index="1" name="snap_to_existing_node_threshold" type="float" />
+			<description>
+				Builds an intersection constraint at the curve's closest point to [param position]. When the closest point is within [param snap_to_existing_node_threshold] of an internal anchor, snap-to-node is recorded.
+			</description>
+		</method>
+		<method name="get_curve" qualifiers="const">
+			<return type="Curve3D" />
+			<description>
+			</description>
+		</method>
+		<method name="get_input_samples" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+			</description>
+		</method>
+		<method name="is_closed_loop" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when the stroke was committed as a closed loop.
+			</description>
+		</method>
+		<method name="set_curve">
+			<return type="void" />
+			<param index="0" name="curve" type="Curve3D" />
+			<param index="1" name="closed_loop" type="bool" default="false" />
+			<description>
+				Replaces the underlying curve and closed-loop flag.
+			</description>
+		</method>
+		<method name="set_input_samples">
+			<return type="void" />
+			<param index="0" name="samples" type="PackedVector3Array" />
+			<description>
+			</description>
+		</method>
+		<method name="split_at_constraints" qualifiers="static">
+			<return type="CassieFinalStroke[]" />
+			<param index="0" name="stroke" type="CassieFinalStroke" />
+			<param index="1" name="constraints" type="CassieIntersectionConstraint[]" />
+			<param index="2" name="snap_threshold" type="float" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="id" type="int" setter="set_id" getter="get_id" default="-1">
+			Stable identifier assigned by the sketch graph.
+		</member>
+	</members>
+</class>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieIntersectionConstraint" inherits="CassieConstraint" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Snap from a new stroke onto an existing [CassieFinalStroke].
+	</brief_description>
+	<description>
+		Records the existing stroke, the point on its curve where the intersection lies, and whether the intersection coincides with an existing graph node.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_intersected_stroke" qualifiers="const">
+			<return type="CassieFinalStroke" />
+			<description>
+			</description>
+		</method>
+		<method name="get_is_at_node" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="get_old_curve_offset" qualifiers="const">
+			<return type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="get_old_curve_position" qualifiers="const">
+			<return type="Vector3" />
+			<description>
+			</description>
+		</method>
+		<method name="get_old_curve_tangent" qualifiers="const">
+			<return type="Vector3" />
+			<description>
+			</description>
+		</method>
+		<method name="set_intersected_stroke">
+			<return type="void" />
+			<param index="0" name="stroke" type="CassieFinalStroke" />
+			<description>
+			</description>
+		</method>
+		<method name="set_is_at_node">
+			<return type="void" />
+			<param index="0" name="value" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="set_old_curve_offset">
+			<return type="void" />
+			<param index="0" name="offset" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="set_old_curve_position">
+			<return type="void" />
+			<param index="0" name="position" type="Vector3" />
+			<description>
+			</description>
+		</method>
+		<method name="set_old_curve_tangent">
+			<return type="void" />
+			<param index="0" name="tangent" type="Vector3" />
+			<description>
+			</description>
+		</method>
+	</methods>
+</class>

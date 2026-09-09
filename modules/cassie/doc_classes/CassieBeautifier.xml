@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieBeautifier" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Single-call entry point that runs the full CASSIE beautify pipeline.
+	</brief_description>
+	<description>
+		Takes a raw [CassieInputStroke] and a [CassieSketchContext] (existing strokes + mirror plane), runs RDP simplification and Schneider's recursive cubic Bezier fitter, detects intersection / mirror constraints, and resolves the constrained system via [CassieConstraintSolver].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="beautify">
+			<return type="Dictionary" />
+			<param index="0" name="stroke" type="CassieInputStroke" />
+			<param index="1" name="context" type="CassieSketchContext" />
+			<param index="2" name="params" type="CassieBeautifierParams" />
+			<param index="3" name="fit_to_constraints" type="bool" />
+			<param index="4" name="mirror" type="bool" />
+			<description>
+				Returns a [Dictionary] with at least the keys: [code]curve[/code] (a [Curve3D] or [code]null[/code]), [code]intersections[/code], [code]mirror_constraints[/code], [code]applied_anchors[/code], [code]rejected_count[/code], [code]planar[/code], [code]is_closed_loop[/code], [code]is_valid[/code], and [code]is_short_or_linear[/code]. When [param fit_to_constraints] is [code]false[/code] the solver step is skipped and only the fitted curve is returned.
+			</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,96 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "https://v-sekai.github.io/cassie/vocab#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "cassie": "https://v-sekai.github.io/cassie/vocab#",
+
+    "RawSession": "cassie:RawSession",
+    "Stroke": "cassie:Stroke",
+    "Patch": "cassie:Patch",
+    "SketchEvent": "cassie:SketchEvent",
+    "PositionConstraint": "cassie:PositionConstraint",
+
+    "sketchSystem": {
+      "@id": "cassie:sketchSystem",
+      "@type": "xsd:integer"
+    },
+    "sketchModel": {
+      "@id": "cassie:sketchModel",
+      "@type": "xsd:integer"
+    },
+    "interactionMode": {
+      "@id": "cassie:interactionMode",
+      "@type": "xsd:integer"
+    },
+    "systemStates": {
+      "@id": "cassie:systemStates",
+      "@container": "@list",
+      "@type": "cassie:SketchEvent"
+    },
+    "allSketchedStrokes": {
+      "@id": "cassie:strokes",
+      "@container": "@list",
+      "@type": "cassie:Stroke"
+    },
+    "allCreatedPatches": {
+      "@id": "cassie:patches",
+      "@container": "@list",
+      "@type": "cassie:Patch"
+    },
+
+    "id": { "@id": "cassie:id", "@type": "xsd:integer" },
+    "ctrlPts": {
+      "@id": "cassie:controlPoints",
+      "@container": "@list",
+      "@type": "cassie:Vec3"
+    },
+    "inputSamples": {
+      "@id": "cassie:inputSamples",
+      "@container": "@list",
+      "@type": "cassie:Vec3"
+    },
+    "appliedPositionConstraints": {
+      "@id": "cassie:appliedConstraints",
+      "@container": "@list",
+      "@type": "cassie:PositionConstraint"
+    },
+    "rejectedPositionConstraints": {
+      "@id": "cassie:rejectedConstraints",
+      "@container": "@list",
+      "@type": "cassie:PositionConstraint"
+    },
+    "onSurface":  { "@id": "cassie:onSurface",  "@type": "xsd:boolean" },
+    "planar":     { "@id": "cassie:planar",     "@type": "xsd:boolean" },
+    "closedLoop": { "@id": "cassie:closedLoop", "@type": "xsd:boolean" },
+
+    "foundByAlgo": { "@id": "cassie:foundByAlgo", "@type": "xsd:boolean" },
+    "strokesID": {
+      "@id": "cassie:strokeRefs",
+      "@container": "@list",
+      "@type": "xsd:integer"
+    },
+
+    "time":            { "@id": "cassie:time",           "@type": "xsd:double" },
+    "interactionType": { "@id": "cassie:interactionType","@type": "xsd:integer" },
+    "elementID":       { "@id": "cassie:elementRef",    "@type": "xsd:integer" },
+    "mirroring":       { "@id": "cassie:mirroring",     "@type": "xsd:boolean" },
+    "headPos":         { "@id": "cassie:headPosition",  "@type": "cassie:Vec3" },
+    "headRot":         { "@id": "cassie:headRotation",  "@type": "cassie:Quat" },
+    "primaryHandPos":  { "@id": "cassie:primaryHandPosition", "@type": "cassie:Vec3" },
+    "canvasPos":       { "@id": "cassie:canvasPosition","@type": "cassie:Vec3" },
+    "canvasRot":       { "@id": "cassie:canvasRotation","@type": "cassie:Quat" },
+    "canvasScale":     { "@id": "cassie:canvasScale",   "@type": "xsd:double" },
+
+    "position":         { "@id": "cassie:position", "@type": "cassie:Vec3" },
+    "isAtExistingNode": { "@id": "cassie:isAtExistingNode", "@type": "xsd:boolean" },
+    "isAtNewEndpoint":  { "@id": "cassie:isAtNewEndpoint",  "@type": "xsd:boolean" },
+    "isIntersection":   { "@id": "cassie:isIntersection",   "@type": "xsd:boolean" },
+    "alignTangents":    { "@id": "cassie:alignTangents",    "@type": "xsd:boolean" },
+
+    "x": { "@id": "cassie:x", "@type": "xsd:double" },
+    "y": { "@id": "cassie:y", "@type": "xsd:double" },
+    "z": { "@id": "cassie:z", "@type": "xsd:double" },
+    "w": { "@id": "cassie:w", "@type": "xsd:double" }
+  }
+}

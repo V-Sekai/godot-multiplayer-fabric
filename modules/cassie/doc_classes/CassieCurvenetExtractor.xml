@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieCurvenetExtractor" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Mesh-to-curvenet auto-extractor — Step 1.0 of the Pixar curvenet rig.
+	</brief_description>
+	<description>
+		Three passes: per-edge feature scoring (dihedral angle + boundary-edge boost), adaptive thresholding (log-sweep over top-K to hit [code]target_curve_count[/code]), and graph simplification via [code]cassie_rdp_reduce[/code] + [code]cassie_fit_curve[/code]. Emits the same Dictionary shape that [method CassieCurvenet.build_from_graph] consumes.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="extract" qualifiers="static">
+			<return type="CassieCurvenet" />
+			<param index="0" name="patch" type="CassieSurfacePatch" />
+			<param index="1" name="target_curve_count" type="int" default="200" />
+			<param index="2" name="rdp_error" type="float" default="0.001" />
+			<param index="3" name="fit_error" type="float" default="0.01" />
+			<param index="4" name="curvature_weight" type="float" default="0.0" />
+			<description>
+				Convenience wrapper: extracts the graph data, populates a fresh [CassieCurvenet], binds it to [param patch], updates the rest pose, and runs [method CassieCurvenet.compute_orientations]. Returns the ready-to-use curvenet.
+			</description>
+		</method>
+		<method name="extract_graph_data" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="patch" type="CassieSurfacePatch" />
+			<param index="1" name="target_curve_count" type="int" default="200" />
+			<param index="2" name="rdp_error" type="float" default="0.001" />
+			<param index="3" name="fit_error" type="float" default="0.01" />
+			<param index="4" name="curvature_weight" type="float" default="0.0" />
+			<description>
+				Returns the graph-data Dictionary with keys [code]"curves"[/code] (TypedArray of [CassieFinalStroke]) and [code]"nodes"[/code] (Array of [code]{ "id", "position", "incident_curve_ids" }[/code]). Every curve's start endpoint shows up in exactly one node's [code]incident_curve_ids[/code], same for its end endpoint — the invariant [method CassieCurvenet.compute_orientations] relies on.
+			</description>
+		</method>
+	</methods>
+</class>

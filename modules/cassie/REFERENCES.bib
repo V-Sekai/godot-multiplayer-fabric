@@ -1,0 +1,502 @@
+% CASSIE module — bibliography of cited algorithms and prior art.
+
+% =============================================================================
+% CASSIE / curvenet rig algorithm
+% =============================================================================
+
+@inproceedings{yu2021cassie,
+  author    = {Yu, Emilie and Arora, Rahul and Stanko, Tibor and
+               B{\ae}rentzen, Jakob Andreas and Singh, Karan and Bousseau,
+               Adrien},
+  title     = {CASSIE: Curve and Surface Sketching in Immersive
+               Environments},
+  booktitle = {Proceedings of the 2021 CHI Conference on Human Factors
+               in Computing Systems (CHI '21)},
+  pages     = {1--14},
+  year      = {2021},
+  publisher = {ACM},
+  doi       = {10.1145/3411764.3445158},
+  note      = {VR mid-air sketching → connected curve-network armature
+               → C0-continuous surface patches. The Godot port follows
+               the same curve-then-surface pipeline.}
+}
+
+@article{degoes2022profile,
+  author    = {de Goes, Fernando and Sheffler, William and Fleischer, Kurt},
+  title     = {Character Articulation through Profile Curves},
+  journal   = {ACM Transactions on Graphics},
+  volume    = {41},
+  number    = {4},
+  pages     = {1--14},
+  year      = {2022},
+  publisher = {ACM},
+  doi       = {10.1145/3528223.3530060},
+  note      = {Surface-deformation algorithm CASSIE's harmonic profile
+               mover implements (cassie_surface_patch.h,
+               cassie_curvenet_extractor.h).}
+}
+
+@inproceedings{nguyen2023shaping,
+  author    = {Nguyen, Duc and Talbot, Jeremie and Sheffler, William and
+               Hessler, Mark and Fleischer, Kurt and de Goes, Fernando},
+  title     = {Shaping the Elements: Curvenet Animation Controls in
+               Pixar's Elemental},
+  booktitle = {ACM SIGGRAPH 2023 Talks},
+  year      = {2023},
+  publisher = {ACM},
+  doi       = {10.1145/3587421.3595415},
+  note      = {Production deployment of the curvenet rig at Pixar (the
+               film Elemental). Extends de Goes 2022 with per-knot
+               surface-aligned manipulators that CASSIE's Pose mode
+               mirrors.}
+}
+
+% =============================================================================
+% Optimal multi-polygon triangulation (thirdparty/multipolygon_triangulator)
+% =============================================================================
+
+@article{zou2013triangulating,
+  author  = {Zou, Ming and Ju, Tao and Carr, Nathan},
+  title   = {An Algorithm for Triangulating Multiple {3D} Polygons},
+  journal = {Computer Graphics Forum},
+  volume  = {32},
+  number  = {5},
+  pages   = {157--166},
+  year    = {2013},
+  doi     = {10.1111/cgf.12182},
+  note    = {DMWT (Discrete Minimum Weight Triangulation) — implemented
+             under thirdparty/multipolygon_triangulator/. The MingCurve
+             adaptation in that tree was authored by Tibor Stanko and
+             Emilie Yu as part of yu2021cassie. MPL-2.0.}
+}
+
+% =============================================================================
+% Geometric algorithm libraries (Geogram — historical Delaunay backend)
+% =============================================================================
+
+@misc{geogram,
+  author       = {L{\'e}vy, Bruno},
+  title        = {Geogram: a Programming Library of Geometric Algorithms},
+  howpublished = {\url{https://github.com/BrunoLevy/geogram}},
+  note         = {Software, INRIA Nancy / Loria. Provided CASSIE's
+                  3D Delaunay backend through Track 3; Track 4 swapped
+                  it for Godot's R128 fixed-point Delaunay3D so
+                  sub-centimetre-scale sketches stay robust. Header
+                  shim kept at modules/cassie/src/delaunay_geogram.h
+                  in case the dependency is reintroduced.}
+}
+
+% =============================================================================
+% Wahba's problem + rotation alignment (cassie_polar / cassie_curvenet)
+% =============================================================================
+
+@article{wahba1965problem,
+  author  = {Wahba, Grace},
+  title   = {A Least Squares Estimate of Satellite Attitude},
+  journal = {SIAM Review},
+  volume  = {7},
+  number  = {3},
+  pages   = {409},
+  year    = {1965},
+  doi     = {10.1137/1007077},
+  note    = {Statement of Wahba's problem: minimize
+             $\sum_i w_i \|R p_i - q_i\|^2$ over $R \in SO(3)$.
+             cassie_polar.cpp's wahba_align solves the 4-tangent
+             fixture form.}
+}
+
+@article{soderkvist1993procrustes,
+  author  = {S{\"o}derkvist, Inge},
+  title   = {Perturbation Analysis of the Orthogonal Procrustes Problem},
+  journal = {BIT Numerical Mathematics},
+  volume  = {33},
+  pages   = {687--694},
+  year    = {1993},
+  doi     = {10.1007/BF01990544},
+  note    = {Procrustes / polar-decomposition framing of Wahba.
+             Cited from modules/cassie/lean/CassieAvbd/PolarDecomp.lean.}
+}
+
+@article{markley1988attitude,
+  author  = {Markley, F. Landis},
+  title   = {Attitude Determination Using Vector Observations and the
+             Singular Value Decomposition},
+  journal = {Journal of the Astronautical Sciences},
+  volume  = {36},
+  number  = {3},
+  pages   = {245--258},
+  year    = {1988},
+  note    = {SVD-based q-method solution to Wahba. CASSIE's
+             Eigen-era wahba_align used this before Track 5 swapped
+             to polar decomposition.}
+}
+
+@article{theobald2005qcp,
+  author  = {Theobald, Douglas L.},
+  title   = {Rapid Calculation of RMSDs Using a Quaternion-Based
+             Characteristic Polynomial},
+  journal = {Acta Crystallographica Section A},
+  volume  = {61},
+  number  = {4},
+  pages   = {478--480},
+  year    = {2005},
+  doi     = {10.1107/S0108767305015266},
+  note    = {QCP: 4×4 K-matrix maximum-eigenvalue approach to Wahba.
+             CASSIE used this in Track 5 before switching to
+             closed-form polar decomposition (quaternion → Basis
+             extraction has two singularities).}
+}
+
+% =============================================================================
+% Polar decomposition + 3x3 symmetric eigendecomp
+% =============================================================================
+
+@article{higham1986polar,
+  author  = {Higham, Nicholas J.},
+  title   = {Computing the Polar Decomposition---with Applications},
+  journal = {SIAM Journal on Scientific and Statistical Computing},
+  volume  = {7},
+  number  = {4},
+  pages   = {1160--1174},
+  year    = {1986},
+  doi     = {10.1137/0907079},
+  note    = {Polar decomposition algorithms. cassie_polar.cpp uses the
+             $R = H \cdot (H^T H)^{-1/2}$ form with closed-form
+             symmetric eigendecomp.}
+}
+
+@article{smith1961eigenvalues,
+  author  = {Smith, Oliver K.},
+  title   = {Eigenvalues of a Symmetric 3 $\times$ 3 Matrix},
+  journal = {Communications of the ACM},
+  volume  = {4},
+  number  = {4},
+  pages   = {168},
+  year    = {1961},
+  doi     = {10.1145/355578.366316},
+  note    = {Trigonometric substitution for the characteristic-cubic
+             roots — used by cassie_polar's
+             eigendecompose_3x3_symmetric.}
+}
+
+@misc{connelly2008symmetric,
+  author       = {Connelly, R.},
+  title        = {Closed-form Eigenvalues of a Symmetric 3x3 Matrix},
+  year         = {2008},
+  howpublished = {(short note expanding Smith 1961's numerics)},
+  note         = {Numerically stable variant of Smith 1961's
+                  trig-substitution method.}
+}
+
+% =============================================================================
+% Error-free transforms (df32 accumulation in SpmvDf32 / DotReduceSerial)
+% =============================================================================
+
+@article{dekker1971floating,
+  author  = {Dekker, T. J.},
+  title   = {A Floating-Point Technique for Extending the Available
+             Precision},
+  journal = {Numerische Mathematik},
+  volume  = {18},
+  pages   = {224--242},
+  year    = {1971},
+  doi     = {10.1007/BF01397083},
+  note    = {two\_sum / two\_prod error-free transforms. Used in
+             Cloth.SlangCodegen.SpmvDf32 and DotReduceSerial for
+             df32 (double-float pair) accumulation.}
+}
+
+@book{knuth1997seminumerical,
+  author    = {Knuth, Donald E.},
+  title     = {The Art of Computer Programming, Volume 2:
+               Seminumerical Algorithms},
+  edition   = {3rd},
+  publisher = {Addison-Wesley},
+  year      = {1997},
+  isbn      = {9780201896848},
+  note      = {Section 4.2.2 covers the same EFTs as Dekker 1971.}
+}
+
+@book{higham2002accuracy,
+  author    = {Higham, Nicholas J.},
+  title     = {Accuracy and Stability of Numerical Algorithms},
+  edition   = {2nd},
+  publisher = {SIAM},
+  year      = {2002},
+  isbn      = {9780898715217},
+  note      = {Floating-point error analysis. Source of the
+               ``~7$\cdot\varepsilon$ per row'' /
+               ``~7$\cdot\varepsilon^2$ after df'' bounds in
+               SpmvDf32 / DotReduceSerial docstrings.}
+}
+
+% =============================================================================
+% Conjugate Gradient + sparse solvers (cassie_pcg / harmonic deform)
+% =============================================================================
+
+@article{hestenes1952cg,
+  author  = {Hestenes, Magnus R. and Stiefel, Eduard},
+  title   = {Methods of Conjugate Gradients for Solving Linear Systems},
+  journal = {Journal of Research of the National Bureau of Standards},
+  volume  = {49},
+  number  = {6},
+  pages   = {409--436},
+  year    = {1952},
+  doi     = {10.6028/jres.049.044},
+  note    = {The CG algorithm. cassie\_pcg::solve\_sparse implements
+             the Jacobi-preconditioned variant; the CgUbershader runs
+             the same iteration on GPU.}
+}
+
+% =============================================================================
+% AVBD / Vertex Block Descent simulation kernels
+% =============================================================================
+
+@article{giles2025avbd,
+  author    = {Giles, Chris and Arrieta D{\'i}az, E. and Yuksel, Cem},
+  title     = {Augmented Vertex Block Descent},
+  journal   = {ACM Transactions on Graphics},
+  volume    = {44},
+  number    = {4},
+  pages     = {1--12},
+  year      = {2025},
+  publisher = {ACM},
+  doi       = {10.1145/3731195},
+  note      = {AVBD — the algorithm Cloth.Avbd's
+               AttachmentDualUpdate, SpringForce, and AttachmentProject
+               kernels port to Slang. Adds an augmented-Lagrangian
+               penalty so the constrained Hessian stays SPD;
+               cassie_pcg relies on that for the inner solve.}
+}
+
+@inproceedings{macklin2016xpbd,
+  author    = {Macklin, Miles and M{\"u}ller, Matthias and Chentanez, Nuttapong},
+  title     = {XPBD: Position-Based Simulation of Compliant Constrained
+               Dynamics},
+  booktitle = {Proceedings of the 9th International Conference on
+               Motion in Games (MIG '16)},
+  pages     = {49--54},
+  year      = {2016},
+  publisher = {ACM},
+  doi       = {10.1145/2994258.2994272},
+  note      = {Position-based dynamics with compliance. The
+               augmented-Lagrangian path AVBD extends.}
+}
+
+% =============================================================================
+% Slang shader language + Lean 4
+% =============================================================================
+
+@inproceedings{he2018slang,
+  author    = {He, Yong and Foley, Tim and Tatarchuk, Natalya
+               and Fatahalian, Kayvon and Hanrahan, Pat},
+  title     = {Slang: Language Mechanisms for Extensible Real-Time
+               Shading Systems},
+  booktitle = {ACM SIGGRAPH 2018 Technical Papers},
+  year      = {2018},
+  publisher = {ACM},
+  doi       = {10.1145/3197517.3201380},
+  note      = {Slang language design. CASSIE's GPU + CPU kernels are
+               emitted as Slang source by LeanSlang and compiled by
+               slangc to SPIR-V (GPU) and C++ (CPU).}
+}
+
+@inproceedings{bickford2025slang,
+  author    = {Bickford, Nia and Lorach, Tristan and Hebert, Chris},
+  title     = {Hands-On Class: Introduction to Slang: The Next
+               Generation Shading Language},
+  booktitle = {Proceedings of the Special Interest Group on Computer
+               Graphics and Interactive Techniques Conference Labs
+               (SIGGRAPH Labs '25)},
+  year      = {2025},
+  publisher = {ACM},
+  doi       = {10.1145/3721251.3742860},
+  note      = {Walkthrough of the current Slang feature set as the
+               open-governance Khronos shading language — subgroup
+               ops, atomic floats, generics.}
+}
+
+@inproceedings{demoura2021lean4,
+  author    = {de Moura, Leonardo and Ullrich, Sebastian},
+  title     = {The Lean 4 Theorem Prover and Programming Language},
+  booktitle = {Automated Deduction -- CADE 28},
+  pages     = {625--635},
+  year      = {2021},
+  publisher = {Springer},
+  doi       = {10.1007/978-3-030-79876-5_37},
+  note      = {Lean 4 — the language CASSIE's Slang codegen and
+               algorithm specs are written in. PolarDecomp.lean pins
+               polar-decomposition fixture invariants via
+               \texttt{native\_decide}.}
+}
+
+% =============================================================================
+% System architecture
+% =============================================================================
+
+@misc{maccarthaigh_constant_work,
+  author       = {Mac C{\'a}rthaigh, Colm},
+  title        = {Reliability, constant work, and a good cup of coffee},
+  howpublished = {\url{https://aws.amazon.com/builders-library/reliability-and-constant-work/}},
+  publisher    = {Amazon Web Services Builders' Library},
+  note         = {Constant-work systems do the same amount of work
+                  regardless of input state — no early exits, no
+                  branches on "is it converged?", no scaling of work
+                  with load. Predictable wall time replaces
+                  best-case-fast / worst-case-slow variance. The
+                  CgUbershader's fixed iter count follows this pattern:
+                  every solve dispatches the same N kernels with the
+                  same dispatch shapes regardless of how fast the
+                  residual would have converged. Real-time graphics
+                  (Quest 3 90Hz) needs predictability, not minimum
+                  average cost.}
+}
+
+% =============================================================================
+% Linear algebra libraries CASSIE used / no longer uses
+% =============================================================================
+
+@misc{eigen,
+  author       = {Guennebaud, Ga{\"e}l and Jacob, Beno{\^i}t and others},
+  title        = {Eigen v3},
+  year         = {2010},
+  howpublished = {\url{http://eigen.tuxfamily.org}},
+  note         = {C++ template library for linear algebra. Track 5
+                  removed CASSIE's dependency on Eigen
+                  (\texttt{SimplicialLDLT}, \texttt{FullPivLU},
+                  \texttt{JacobiSVD}, \texttt{SelfAdjointEigenSolver},
+                  \texttt{LDLT}) in favor of in-tree primitives;
+                  \texttt{thirdparty/eigen} stays for other modules.}
+}
+
+% =============================================================================
+% MAS preconditioner port (ENG-62)
+% =============================================================================
+
+@article{wu2022mas,
+  author    = {Wu, Botao and Wang, Zhendong and Wang, Huamin},
+  title     = {A {GPU-Based} Multilevel Additive {Schwarz} Preconditioner
+               for Cloth and Deformable Body Simulation},
+  journal   = {ACM Trans. Graph.},
+  volume    = {41},
+  number    = {4},
+  articleno = {63},
+  pages     = {1--14},
+  year      = {2022},
+  doi       = {10.1145/3528223.3530085},
+  url       = {https://wanghmin.github.io/publication/wu-2022-gbm/Wu-2022-GBM.pdf},
+  note      = {Multilevel additive Schwarz (MAS) preconditioner for
+                ill-conditioned cloth and deformable-body PCG. Source
+                of the algorithm CASSIE ports in
+                \texttt{modules/cassie/lean/CassieAvbd/MasPreconditioner.lean}
+                + \texttt{modules/cassie/src/solver/slang_dispatch/cassie_mas_gpu.\{h,cpp\}}.
+                Reports 4x PCG speedup over Jacobi on cloth meshes
+                76K--467K vertices. Linear ENG-62.}
+}
+
+% =============================================================================
+% Vertex normal weighting + deformation-gradient normal transfer (ENG-65)
+% =============================================================================
+
+@article{max1999weights,
+  author  = {Max, Nelson},
+  title   = {Weights for Computing Vertex Normals from Facet Normals},
+  journal = {Journal of Graphics Tools},
+  volume  = {4},
+  number  = {2},
+  pages   = {1--6},
+  year    = {1999},
+  doi     = {10.1080/10867651.1999.10487501},
+  note    = {Proves angle-weighted averaging is the optimal per-vertex
+             normal weighting --- independent of triangulation, robust
+             to slivers, converges to the true surface normal as the
+             mesh refines. CASSIE uses this as the fallback when the
+             source mesh's \texttt{ARRAY\_NORMAL} is absent (Linear
+             ENG-65 phase 1).}
+}
+
+@article{sumner2004deformation,
+  author  = {Sumner, Robert W. and Popovi{\'c}, Jovan},
+  title   = {Deformation Transfer for Triangle Meshes},
+  journal = {ACM Trans. Graph.},
+  volume  = {23},
+  number  = {3},
+  pages   = {399--405},
+  year    = {2004},
+  doi     = {10.1145/1015706.1015736},
+  note    = {Per-face deformation gradient J = $\partial x_{def} /
+             \partial x_{rest}$; deformed face normal is
+             $J^{-T} \cdot n_{rest}$ normalized. CASSIE
+             transfers captured rest normals through J at deform time
+             to preserve split-normal / smoothing-group intent that
+             pure recomputation would erase (ENG-65 phase 1, step 7).
+             Per-vertex normal = $J^{-T}$ applied to the captured rest
+             vertex normal, averaged angle-weighted (Max 1999) over
+             incident faces.}
+}
+
+% =============================================================================
+% Robust skin weight transfer (reserved for cross-topology bind)
+% =============================================================================
+
+@inproceedings{abdrashitov2023robust,
+  author    = {Abdrashitov, Rinat and Raichstat, Kim and Monsen, Jared
+                and Hill, David},
+  title     = {Robust Skin Weights Transfer via Weight Inpainting},
+  booktitle = {SIGGRAPH Asia 2023 Technical Communications},
+  year      = {2023},
+  doi       = {10.1145/3610543.3626180},
+  note      = {Biharmonic-energy inpainting ($Q = -L + L M^{-1} L$)
+             with constrained-least-squares fixed values at matched
+             vertices. Solves the cross-topology data-transfer
+             problem (skin weights from a body mesh to a garment
+             with totally different topology). NOT used in the
+             CASSIE per-frame deform: we have full 1:1 vertex
+             correspondence between rest and deformed states, so
+             inpainting solves a problem we do not have. Reserved
+             for a future bind-time use case where the CASSIE
+             working mesh is a different topology from a high-LOD
+             source sculpt and rest normals / skin weights need to
+             cross over. Reference Python implementation at
+             \texttt{E:/godot-robust-skin-weights-transfer}.}
+}
+
+% =============================================================================
+% Skin-weight bake (CASSIE per-frame -> Skeleton3D, ENG-66 + ENG-67)
+% =============================================================================
+
+@inproceedings{mancewicz2014deltamush,
+  author    = {Mancewicz, Joe and Derksen, Matt L. and Rijpkema, Hans
+                and Wilson, Cyrus A.},
+  title     = {Delta Mush: Smoothing Deformations While Preserving Detail},
+  booktitle = {Proceedings of the Fourth Symposium on Digital Production
+                (DigiPro '14)},
+  pages     = {7--11},
+  year      = {2014},
+  doi       = {10.1145/2633374.2633376},
+  note      = {Iterative Laplacian smoothing pass applied after
+                standard skinning to recover volume preservation
+                lost in linear blend (the candy-wrapper and elbow
+                collapse artifacts). Iterations on the smoothing
+                Laplacian make per-frame cost non-trivial. CASSIE
+                does not need this for the initial bake (ENG-66);
+                listed as deferred polish for severe-LBS-artifact
+                cases.}
+}
+
+@inproceedings{le2019direct,
+  author    = {Le, Binh Huy and Lewis, J. P.},
+  title     = {Direct Delta Mush Skinning and Variants},
+  booktitle = {ACM SIGGRAPH 2019 Technical Papers},
+  year      = {2019},
+  doi       = {10.1145/3306346.3322982},
+  note    = {Single-pass variant of Mancewicz 2014: precompute the
+                converged-iteration Laplacian filter once, apply
+                directly per frame. Eliminates the iter loop. EA's
+                Unity demo at
+                \url{https://github.com/V-Sekai/unity-mesh-deform-direct-delta-mush}
+                is a port we can crib from when LBS artifacts in the
+                CASSIE bake become animator-visible. Not part of
+                ENG-66's initial bake; queued as a follow-up if/when
+                truncation + LBS rigidity show up in production.}
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieSurfaceConstraint" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Marks that a stroke was drawing on a surface patch.
+	</brief_description>
+	<description>
+		Dual-phase constraint with an entry [member start_position] and an optional exit [member end_position] when the user left the patch mid-stroke. Not a [CassieConstraint] subclass — surface intent is treated separately from intersection and mirror constraints.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="has_left_mid_stroke" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] once [method leave] has been called.
+			</description>
+		</method>
+		<method name="leave">
+			<return type="void" />
+			<param index="0" name="position" type="Vector3" />
+			<description>
+				Marks the stroke as having left the surface at [param position] and records the exit point.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="end_position" type="Vector3" setter="set_end_position" getter="get_end_position" default="Vector3(0, 0, 0)">
+			Position where the stroke left the patch, only valid after [method leave].
+		</member>
+		<member name="patch_id" type="int" setter="set_patch_id" getter="get_patch_id" default="-1">
+			Identifier of the surface patch the stroke entered.
+		</member>
+		<member name="start_position" type="Vector3" setter="set_start_position" getter="get_start_position" default="Vector3(0, 0, 0)">
+			Position where the stroke entered the patch.
+		</member>
+	</members>
+</class>

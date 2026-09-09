@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassiePath3D" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A 3D polyline with a surface normal stored per point.
+	</brief_description>
+	<description>
+		Stores a sequence of 3D positions and corresponding surface normals. Normals guide the triangulation direction in [CassieTriangulator] and [CassieSurface]: they indicate which side of the surface the patch should face.
+
+		The typical workflow before triangulating a sketched curve:
+		[codeblock]
+		var path := CassiePath3D.new()
+		for pt in raw_stroke_points:
+		    path.add_point(pt, Vector3.UP)
+
+		# Reduce jitter from freehand input
+		path.beautify_taubin(0.5, -0.53, 5)
+
+		# Normalize spacing so the triangulator sees uniform boundary density
+		path.resample_uniform(30)
+
+		var surface := CassieSurface.new()
+		surface.add_boundary_path(path)
+		var mesh := surface.generate_surface()
+		[/codeblock]
+
+		Inherits [Resource], so paths can be saved to disk and reloaded.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_point">
+			<return type="void" />
+			<param index="0" name="position" type="Vector3" />
+			<param index="1" name="normal" type="Vector3" default="Vector3(0, 1, 0)" />
+			<description>
+				Appends a point at [param position] with surface normal [param normal]. The normal defaults to [code]Vector3(0, 1, 0)[/code]; pass a measured surface normal when available for better triangulation results.
+			</description>
+		</method>
+		<method name="beautify_laplacian">
+			<return type="void" />
+			<param index="0" name="lambda" type="float" default="0.5" />
+			<param index="1" name="iterations" type="int" default="5" />
+			<description>
+				Smooths the path with uniform Laplacian relaxation. Each iteration moves every interior point toward the average of its two neighbors by [param lambda]. Shrinks the curve slightly with each pass; use [method beautify_taubin] to avoid shrinkage.
+			</description>
+		</method>
+		<method name="beautify_taubin">
+			<return type="void" />
+			<param index="0" name="lambda" type="float" default="0.5" />
+			<param index="1" name="mu" type="float" default="-0.53" />
+			<param index="2" name="iterations" type="int" default="5" />
+			<description>
+				Smooths the path with Taubin λ/μ smoothing. Alternates between a forward pass (step size [param lambda]) and a backward pass (step size [param mu], which must be negative) to reduce the shrinkage that plain Laplacian smoothing produces. The defaults [code]λ=0.5[/code], [code]μ=-0.53[/code] match the CASSIE paper.
+			</description>
+		</method>
+		<method name="clear_points">
+			<return type="void" />
+			<description>
+				Removes all points and normals.
+			</description>
+		</method>
+		<method name="get_average_segment_length" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns the mean distance between consecutive points. Useful for choosing a [code]target_edge_length[/code] that matches the curve's current spacing.
+			</description>
+		</method>
+		<method name="get_normals" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+				Returns a copy of all stored normals, one per point in the same order as [method get_points].
+			</description>
+		</method>
+		<method name="get_point_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of points in the path.
+			</description>
+		</method>
+		<method name="get_point_normal" qualifiers="const">
+			<return type="Vector3" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the surface normal at [param index].
+			</description>
+		</method>
+		<method name="get_point_position" qualifiers="const">
+			<return type="Vector3" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the position at [param index].
+			</description>
+		</method>
+		<method name="get_points" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+				Returns a copy of all point positions.
+			</description>
+		</method>
+		<method name="get_sample_normals" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<param index="0" name="count" type="int" />
+			<description>
+				Returns [param count] normals sampled at evenly spaced arc-length positions along the path. Does not modify the stored normals.
+			</description>
+		</method>
+		<method name="get_sample_points" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<param index="0" name="count" type="int" />
+			<description>
+				Returns [param count] positions sampled at evenly spaced arc-length positions along the path. Does not modify the stored points.
+			</description>
+		</method>
+		<method name="get_total_length" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns the sum of all segment lengths (the polyline arc length).
+			</description>
+		</method>
+		<method name="insert_point">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="position" type="Vector3" />
+			<param index="2" name="normal" type="Vector3" default="Vector3(0, 1, 0)" />
+			<description>
+				Inserts a point before [param index], shifting all subsequent points up by one.
+			</description>
+		</method>
+		<method name="remove_point">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Removes the point at [param index].
+			</description>
+		</method>
+		<method name="resample_uniform">
+			<return type="void" />
+			<param index="0" name="target_count" type="int" />
+			<description>
+				Replaces the current points with [param target_count] points at uniform arc-length spacing. Normals are interpolated to match. Use this before triangulating to avoid quality problems from uneven boundary sampling.
+			</description>
+		</method>
+		<method name="set_point_normal">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="normal" type="Vector3" />
+			<description>
+				Sets the surface normal at [param index].
+			</description>
+		</method>
+		<method name="set_point_position">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="position" type="Vector3" />
+			<description>
+				Sets the position at [param index].
+			</description>
+		</method>
+		<method name="smooth_normals">
+			<return type="void" />
+			<description>
+				Averages each normal with its neighbors to reduce sharp normal discontinuities along the path.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="closed" type="bool" setter="set_closed" getter="is_path_closed" default="false">
+			When [code]true[/code], the path is treated as a closed loop: the last point connects back to the first. Set this before passing the path to [CassieSurface] if the boundary is a closed curve.
+		</member>
+	</members>
+</class>

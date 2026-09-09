@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieSketcher" inherits="Node3D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_sample">
+			<return type="void" />
+			<param index="0" name="stroke_id" type="int" />
+			<param index="1" name="local_position" type="Vector3" />
+			<param index="2" name="pressure" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="apply_remote_samples">
+			<return type="Dictionary" />
+			<param index="0" name="packet" type="PackedByteArray" />
+			<description>
+			</description>
+		</method>
+		<method name="begin_stroke">
+			<return type="int" />
+			<param index="0" name="local_position" type="Vector3" />
+			<param index="1" name="pressure" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="clear">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="commit_stroke">
+			<return type="Dictionary" />
+			<param index="0" name="stroke_id" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="encode_stroke_packet">
+			<return type="PackedByteArray" />
+			<param index="0" name="stroke_id" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_beautifier_params" qualifiers="const">
+			<return type="CassieBeautifierParams" />
+			<description>
+			</description>
+		</method>
+		<method name="get_committed_strokes" qualifiers="const">
+			<return type="CassieFinalStroke[]" />
+			<description>
+			</description>
+		</method>
+		<method name="get_sketch_context" qualifiers="const">
+			<return type="CassieSketchContext" />
+			<description>
+			</description>
+		</method>
+		<method name="get_sketch_graph" qualifiers="const">
+			<return type="CassieSketchGraph" />
+			<description>
+			</description>
+		</method>
+		<method name="get_surface_manager" qualifiers="const">
+			<return type="CassieSurfaceManager" />
+			<description>
+			</description>
+		</method>
+		<method name="set_beautifier_params">
+			<return type="void" />
+			<param index="0" name="params" type="CassieBeautifierParams" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="async_triangulation" type="bool" setter="set_async_triangulation" getter="get_async_triangulation" default="false">
+		</member>
+		<member name="peer_id" type="int" setter="set_peer_id" getter="get_peer_id" default="0">
+		</member>
+		<member name="sample_dt" type="float" setter="set_sample_dt" getter="get_sample_dt" default="0.016666668">
+		</member>
+	</members>
+	<signals>
+		<signal name="patch_added">
+			<param index="0" name="patch" type="CassieSurfacePatch" />
+			<description>
+			</description>
+		</signal>
+		<signal name="patch_removed">
+			<param index="0" name="patch" type="CassieSurfacePatch" />
+			<description>
+			</description>
+		</signal>
+		<signal name="stroke_committed">
+			<param index="0" name="final_stroke" type="CassieFinalStroke" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+</class>

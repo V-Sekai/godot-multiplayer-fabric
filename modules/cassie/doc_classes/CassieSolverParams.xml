@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieSolverParams" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Parameter bundle for [CassieConstraintSolver].
+	</brief_description>
+	<description>
+		Thresholds and weights controlling the greedy KKT solver: fidelity vs constraint balance, proximity tolerances, and feature gates such as planarity.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="angular_proximity_threshold" type="float" setter="set_angular_proximity_threshold" getter="get_angular_proximity_threshold" default="0.5">
+			Angle in radians within which the solver treats two tangent directions as parallel for alignment and ortho-snap purposes.
+		</member>
+		<member name="avbd_max_iter" type="int" setter="set_avbd_max_iter" getter="get_avbd_max_iter" default="24">
+		</member>
+		<member name="avbd_rho" type="float" setter="set_avbd_rho" getter="get_avbd_rho" default="10.0">
+		</member>
+		<member name="avbd_tol" type="float" setter="set_avbd_tol" getter="get_avbd_tol" default="1e-08">
+		</member>
+		<member name="min_distance_between_anchors" type="float" setter="set_min_distance_between_anchors" getter="get_min_distance_between_anchors" default="0.01">
+			Minimum chord distance between adjacent control anchors. Subdivisions closer than this are merged.
+		</member>
+		<member name="mu_fidelity" type="float" setter="set_mu_fidelity" getter="get_mu_fidelity" default="0.7">
+			Blend between fidelity (1.0) and constraint-energy (0.0) in the greedy outer-loop objective. Lower values favor constraint satisfaction.
+		</member>
+		<member name="on_surface_weight" type="float" setter="set_on_surface_weight" getter="get_on_surface_weight" default="0.0">
+		</member>
+		<member name="planarity_allowed" type="bool" setter="set_planarity_allowed" getter="get_planarity_allowed" default="true">
+			When [code]true[/code], the solver tries to fit a plane through the control points and add a planarity soft constraint when the fit residual is below [member proximity_threshold].
+		</member>
+		<member name="proximity_threshold" type="float" setter="set_proximity_threshold" getter="get_proximity_threshold" default="0.02">
+			Distance under which the solver considers two positions coincident. Used for planarity detection and constraint normalization.
+		</member>
+		<member name="use_avbd" type="bool" setter="set_use_avbd" getter="get_use_avbd" default="false">
+		</member>
+		<member name="w_p" type="float" setter="set_w_p" getter="get_w_p" default="0.5">
+			Weight of the fidelity term for control-point position displacement.
+		</member>
+		<member name="w_t" type="float" setter="set_w_t" getter="get_w_t" default="0.5">
+			Weight of the fidelity term for inter-anchor tangent variation.
+		</member>
+	</members>
+</class>

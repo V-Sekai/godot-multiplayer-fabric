@@ -1,0 +1,38 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "https://v-sekai.github.io/cassie/vocab#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "cassie": "https://v-sekai.github.io/cassie/vocab#",
+
+    "StrokesExport": "cassie:StrokesExport",
+    "TessellatedStroke": "cassie:TessellatedStroke",
+
+    "strokes": {
+      "@id": "cassie:exportStrokes",
+      "@container": "@list",
+      "@type": "cassie:TessellatedStroke"
+    },
+    "pts": {
+      "@id": "cassie:strokeSamples",
+      "@container": "@list",
+      "@type": "cassie:Vec3FlatTriple"
+    },
+    "mirrored": {
+      "@id": "cassie:isMirrorTwin",
+      "@type": "xsd:boolean"
+    },
+    "id": {
+      "@id": "cassie:id",
+      "@type": "xsd:integer"
+    },
+    "sourceId": {
+      "@id": "cassie:mirrorSourceId",
+      "@type": "xsd:integer"
+    },
+    "mirrorPlaneX": {
+      "@id": "cassie:mirrorPlaneX",
+      "@type": "xsd:double"
+    }
+  }
+}

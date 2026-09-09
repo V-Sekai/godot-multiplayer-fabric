@@ -1,0 +1,52 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "https://v-sekai.github.io/cassie/vocab#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "cassie": "https://v-sekai.github.io/cassie/vocab#",
+
+    "SketchGraph": "cassie:SketchGraph",
+    "GraphStroke": "cassie:GraphStroke",
+    "GraphSegment": "cassie:GraphSegment",
+    "GraphNode": "cassie:GraphNode",
+
+    "strokes": {
+      "@id": "cassie:graphStrokes",
+      "@container": "@list",
+      "@type": "cassie:GraphStroke"
+    },
+    "segments": {
+      "@id": "cassie:graphSegments",
+      "@container": "@list",
+      "@type": "cassie:GraphSegment"
+    },
+    "nodes": {
+      "@id": "cassie:graphNodes",
+      "@container": "@list",
+      "@type": "cassie:GraphNode"
+    },
+
+    "id": {
+      "@id": "cassie:id",
+      "@type": "xsd:integer"
+    },
+    "stroke_id": {
+      "@id": "cassie:strokeRef",
+      "@type": "xsd:integer"
+    },
+    "ctrl_pts": {
+      "@id": "cassie:bezierSegmentControlPoints",
+      "@container": "@list",
+      "@type": "cassie:BezierSegment"
+    },
+    "neighbor_edges": {
+      "@id": "cassie:nodeIncidentSegments",
+      "@container": "@list",
+      "@type": "xsd:integer"
+    },
+    "position": {
+      "@id": "cassie:nodePosition",
+      "@type": "cassie:Vec3FlatTriple"
+    }
+  }
+}

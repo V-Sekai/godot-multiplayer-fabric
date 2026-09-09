@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieBeautifierParams" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Threshold bundle for the CASSIE beautifier pipeline.
+	</brief_description>
+	<description>
+		Defaults match the Unity CASSIEParameters constants. Tune [member bezier_fitting_error] and [member rdp_error] to control fit smoothness, and [member mu_fidelity] / [member proximity_threshold] to tune how aggressively constraints overrule fidelity in the solver outer loop.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_max_beziers_for_solver" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_project_on_surface" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="get_project_to_mirror_distance_threshold" qualifiers="const">
+			<return type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="get_project_to_surface_distance_threshold" qualifiers="const">
+			<return type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="get_snap_to_existing_node_threshold" qualifiers="const">
+			<return type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="set_max_beziers_for_solver">
+			<return type="void" />
+			<param index="0" name="value" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="set_project_on_surface">
+			<return type="void" />
+			<param index="0" name="value" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="set_project_to_mirror_distance_threshold">
+			<return type="void" />
+			<param index="0" name="value" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="set_project_to_surface_distance_threshold">
+			<return type="void" />
+			<param index="0" name="value" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="set_snap_to_existing_node_threshold">
+			<return type="void" />
+			<param index="0" name="value" type="float" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="angular_proximity_threshold" type="float" setter="set_angular_proximity_threshold" getter="get_angular_proximity_threshold" default="0.5">
+		</member>
+		<member name="bezier_fitting_error" type="float" setter="set_bezier_fitting_error" getter="get_bezier_fitting_error" default="0.01">
+		</member>
+		<member name="discontinuity_angular_threshold" type="float" setter="set_discontinuity_angular_threshold" getter="get_discontinuity_angular_threshold" default="0.7">
+		</member>
+		<member name="hook_discontinuity_angular_threshold" type="float" setter="set_hook_discontinuity_angular_threshold" getter="get_hook_discontinuity_angular_threshold" default="0.6">
+		</member>
+		<member name="max_hook_length" type="float" setter="set_max_hook_length" getter="get_max_hook_length" default="0.06">
+		</member>
+		<member name="max_hook_stroke_ratio" type="float" setter="set_max_hook_stroke_ratio" getter="get_max_hook_stroke_ratio" default="0.15">
+		</member>
+		<member name="min_distance_between_anchors" type="float" setter="set_min_distance_between_anchors" getter="get_min_distance_between_anchors" default="0.01">
+		</member>
+		<member name="min_section_length" type="float" setter="set_min_section_length" getter="get_min_section_length" default="0.05">
+		</member>
+		<member name="min_sketching_time" type="float" setter="set_min_sketching_time" getter="get_min_sketching_time" default="0.02">
+		</member>
+		<member name="min_stroke_size" type="float" setter="set_min_stroke_size" getter="get_min_stroke_size" default="0.005">
+		</member>
+		<member name="mu_fidelity" type="float" setter="set_mu_fidelity" getter="get_mu_fidelity" default="0.7">
+		</member>
+		<member name="on_surface_weight" type="float" setter="set_on_surface_weight" getter="get_on_surface_weight" default="0.0">
+		</member>
+		<member name="planarity_allowed" type="bool" setter="set_planarity_allowed" getter="get_planarity_allowed" default="true">
+		</member>
+		<member name="proximity_threshold" type="float" setter="set_proximity_threshold" getter="get_proximity_threshold" default="0.02">
+		</member>
+		<member name="rdp_error" type="float" setter="set_rdp_error" getter="get_rdp_error" default="0.002">
+		</member>
+		<member name="samples_ablation_duration" type="float" setter="set_samples_ablation_duration" getter="get_samples_ablation_duration" default="0.01">
+		</member>
+		<member name="small_angle" type="float" setter="set_small_angle" getter="get_small_angle" default="0.5">
+		</member>
+		<member name="small_distance" type="float" setter="set_small_distance" getter="get_small_distance" default="0.02">
+		</member>
+	</members>
+</class>

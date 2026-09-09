@@ -1,0 +1,12 @@
+diff --git a/thirdparty/geogram/src/lib/geogram/basic/memory.h b/thirdparty/geogram/src/lib/geogram/basic/memory.h
+index eafaadd5ee..b7098f6698 100644
+--- a/thirdparty/geogram/src/lib/geogram/basic/memory.h
++++ b/thirdparty/geogram/src/lib/geogram/basic/memory.h
+@@ -45,6 +45,7 @@
+ #include <geogram/basic/numeric.h>
+ #include <geogram/basic/argused.h>
+ #include <vector>
++#include <new>  // Android libc++ patch: std::new_handler / std::get_new_handler
+ #include <string.h>
+ #include <stdlib.h>
+ 

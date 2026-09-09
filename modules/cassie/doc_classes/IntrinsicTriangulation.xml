@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="IntrinsicTriangulation" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Improves an existing triangle mesh by flipping edges toward the Delaunay criterion.
+	</brief_description>
+	<description>
+		Takes a triangle mesh and improves its quality by flipping edges and optionally inserting vertices, without changing the vertex positions during the flip stage. This is the [i]intrinsic[/i] approach: topology changes, geometry stays.
+
+		Load a mesh, run [method flip_to_delaunay], then retrieve the improved connectivity with [method get_mesh]:
+
+		[codeblock]
+		var it := IntrinsicTriangulation.new()
+		it.set_mesh(my_array_mesh)
+		it.flip_to_delaunay()
+		it.smooth_intrinsic_positions(3)
+		$MeshInstance3D.mesh = it.get_mesh()
+		[/codeblock]
+
+		[method get_statistics] returns a [Dictionary] with [code]"triangles"[/code], [code]"edges"[/code], [code]"vertices"[/code], and [code]"flips_performed"[/code] keys.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="flip_to_delaunay">
+			<return type="bool" />
+			<description>
+				Flips edges until every edge satisfies the Delaunay criterion or [member max_flip_iterations] is reached. Returns [code]true[/code] if the mesh reached a fully Delaunay state before the iteration limit. Vertex positions are not moved.
+			</description>
+		</method>
+		<method name="get_edge_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of edges in the current triangulation.
+			</description>
+		</method>
+		<method name="get_indices" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns triangle indices as a flat array of vertex index triples.
+			</description>
+		</method>
+		<method name="get_mesh" qualifiers="const">
+			<return type="ArrayMesh" />
+			<description>
+				Builds and returns an [ArrayMesh] from the current vertex positions and triangle connectivity.
+			</description>
+		</method>
+		<method name="get_normals" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+				Returns the current per-vertex normals.
+			</description>
+		</method>
+		<method name="get_statistics" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns mesh statistics with keys [code]"triangles"[/code] ([int]), [code]"edges"[/code] ([int]), [code]"vertices"[/code] ([int]), and [code]"flips_performed"[/code] ([int]).
+			</description>
+		</method>
+		<method name="get_triangle_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of triangles.
+			</description>
+		</method>
+		<method name="get_vertex_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of vertices.
+			</description>
+		</method>
+		<method name="get_vertices" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+				Returns the current vertex positions.
+			</description>
+		</method>
+		<method name="refine_intrinsic_triangulation">
+			<return type="bool" />
+			<param index="0" name="target_edge_length" type="float" default="-1.0" />
+			<description>
+				Inserts new vertices to shorten edges longer than [param target_edge_length], then runs another Delaunay flip pass. A value of [code]-1.0[/code] chooses the target automatically from the current mean edge length. Returns [code]true[/code] if any vertices were inserted.
+			</description>
+		</method>
+		<method name="set_mesh">
+			<return type="void" />
+			<param index="0" name="mesh" type="ArrayMesh" />
+			<param index="1" name="surface" type="int" default="0" />
+			<description>
+				Loads surface [param surface] from [param mesh] as the input triangulation. Extracts vertices, indices, and normals from the surface arrays.
+			</description>
+		</method>
+		<method name="set_mesh_data">
+			<return type="void" />
+			<param index="0" name="vertices" type="PackedVector3Array" />
+			<param index="1" name="indices" type="PackedInt32Array" />
+			<param index="2" name="normals" type="PackedVector3Array" default="PackedVector3Array()" />
+			<description>
+				Sets the triangulation directly from raw arrays. [param indices] must be a multiple of three (one triple per triangle). [param normals] may be empty; normals are recomputed from geometry if omitted.
+			</description>
+		</method>
+		<method name="smooth_intrinsic_positions">
+			<return type="void" />
+			<param index="0" name="iterations" type="int" default="5" />
+			<description>
+				Moves each interior vertex toward the average of its neighbors for [param iterations] Laplacian passes. Boundary vertices are not moved.
+			</description>
+		</method>
+		<method name="use_delaunay_flips">
+			<return type="void" />
+			<param index="0" name="enable" type="bool" />
+			<description>
+				Enables or disables Delaunay flipping in subsequent [method flip_to_delaunay] calls. Disabling this reduces [method flip_to_delaunay] to a no-op, useful when you want only the smoothing pass.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="angle_threshold" type="float" setter="set_angle_threshold" getter="get_angle_threshold" default="0.523599">
+			Minimum angle (in radians) below which a triangle is considered to need improvement. Default is 30° ([code]π/6[/code]). Triangles with all angles above this threshold satisfy the quality criterion.
+		</member>
+		<member name="max_flip_iterations" type="int" setter="set_max_flip_iterations" getter="get_max_flip_iterations" default="100">
+			Maximum number of edge-flip passes [method flip_to_delaunay] performs before stopping, regardless of whether the mesh has converged.
+		</member>
+	</members>
+</class>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieCurvenetKnot" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Per-knot animation primitive — Pixar's Curvenet Adjustment over a surface-aligned base.
+	</brief_description>
+	<description>
+		Holds the projection-pose and rest-pose transforms plus the tangent set used by [method CassieCurvenet.compute_orientations] (Step 1.3 of the curvenet shaping rig). The world-space basis returned by [method solve_world_transform] is the manipulator gizmo's basis after the orientation pass runs.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_needs_setup" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="get_projection_pose_tangents" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+			</description>
+		</method>
+		<method name="get_rest_pose_tangents" qualifiers="const">
+			<return type="PackedVector3Array" />
+			<description>
+			</description>
+		</method>
+		<method name="set_needs_setup">
+			<return type="void" />
+			<param index="0" name="value" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="set_projection_pose_tangents">
+			<return type="void" />
+			<param index="0" name="tangents" type="PackedVector3Array" />
+			<description>
+			</description>
+		</method>
+		<method name="set_rest_pose_tangents">
+			<return type="void" />
+			<param index="0" name="tangents" type="PackedVector3Array" />
+			<description>
+			</description>
+		</method>
+		<method name="solve_world_transform" qualifiers="const">
+			<return type="Transform3D" />
+			<description>
+				Returns the manipulator's world-space transform. Populated by [method CassieCurvenet.compute_orientations].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="exposes_rotate" type="bool" setter="set_exposes_rotate" getter="get_exposes_rotate" default="true">
+		</member>
+		<member name="exposes_scale" type="bool" setter="set_exposes_scale" getter="get_exposes_scale" default="false">
+		</member>
+		<member name="exposes_translate" type="bool" setter="set_exposes_translate" getter="get_exposes_translate" default="true">
+		</member>
+		<member name="graph_node_id" type="int" setter="set_graph_node_id" getter="get_graph_node_id" default="-1">
+		</member>
+		<member name="is_intersection" type="bool" setter="set_is_intersection" getter="get_is_intersection" default="false">
+		</member>
+		<member name="projection_pose_transform" type="Transform3D" setter="set_projection_pose_transform" getter="get_projection_pose_transform" default="Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)">
+		</member>
+		<member name="rest_pose_transform" type="Transform3D" setter="set_rest_pose_transform" getter="get_rest_pose_transform" default="Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)">
+		</member>
+	</members>
+</class>

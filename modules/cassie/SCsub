@@ -1,0 +1,328 @@
+#!/usr/bin/env python3
+"""
+SCsub for CASSIE native module.
+
+Dependencies:
+  - Godot built-in Delaunay2D / Delaunay3D (core/math/) for Delaunay backend
+  - MWT (thirdparty/multipolygon_triangulator) for DMWT optimal triangulation
+  - cassie_remesh.cpp (src/) for uniform remeshing
+  - spv_to_header.py — build-time embedder: thirdparty/avbd/*.spv →
+    thirdparty/avbd/*.spv.gen.h byte-array headers consumed by
+    cassie_slang_gpu.cpp via #include.
+  No external libraries required.
+"""
+
+from misc.utility.scons_hints import *
+
+import os
+
+from spv_to_header import spv_to_header_builder
+
+Import("env")
+
+env_cassie = env.Clone()
+
+# --- Quad-mesh toggle ---
+# Default OFF. When True:
+#   * adds Geogram's frame_field + mesh_remesh + parameterization sources
+#     to the compile set (each has its no-exceptions patches already
+#     applied — see thirdparty/geogram/patches/README.md)
+#   * defines CASSIE_QUAD_MESHING so CassieSurfaceManager runs the per-
+#     CASSIE-3D-patch tri→quad conversion (frame field + isotropic
+#     remesh on the small per-cycle patch)
+# Flip to True when the Blender quad export work begins. No runtime
+# property — the toggle is compile-time so the unused code doesn't ship.
+BUILD_QUAD_MESHING = False
+
+# --- Include paths ---
+# Track 5 — Eigen is no longer a dependency. The Jacobi-PCG path in
+# solver/cassie_pcg, the DenseMatrix scaffolding in solver/dense_matrix,
+# the QCP solver in sketch/cassie_qcp, and the symmetric Jacobi
+# eigensolver in solver/cassie_eigen all replace the prior
+# Eigen::SimplicialLDLT / FullPivLU / LDLT / JacobiSVD usages.
+env_cassie.Append(
+    CPPPATH=[
+        "#modules/cassie/src",
+        "#thirdparty/multipolygon_triangulator",
+        # ENG-88: Geogram (BSD-3) for the 3D Delaunay BDEL path.
+        "#thirdparty/geogram/src/lib",
+        # OpenNL's .c files use `#include <OpenNL/nl.h>` — relative to the
+        # geogram third_party root.
+        "#thirdparty/geogram/src/lib/geogram/third_party",
+        # PMP (MIT) for half-edge manifold mesh + uniform_remeshing in
+        # refine_patch. Mirrors upstream cassie-triangulation's libs/pmp-library
+        # pin (commit f2fb04f4). Uses our canonical thirdparty/eigen, not
+        # PMP's bundled external/eigen (we don't ship it).
+        "#thirdparty/pmp/src",
+        "#thirdparty/eigen",
+    ]
+)
+
+# --- Defines ---
+env_cassie.Append(
+    CPPDEFINES=[
+        "_USE_MATH_DEFINES",
+        # ENG-88 Geogram defines. Match upstream cassie-triangulation:
+        # PDEL = parallel Delaunay (works on Win + Unix per upstream notes).
+        # NL_WITH_AMGCL keeps OpenNL's AMG path compilable. Version string
+        # mirrors the subtree pin (1.9.9 / c40b4653).
+        # PDEL excluded — parallel_delaunay_3d.cpp not compiled. Single-thread
+        # BDEL is sufficient at the nB scale CASSIE produces.
+        # NL_WITH_AMGCL dropped — AMGCL is a multigrid solver OpenNL uses for
+        # large sparse systems; Delaunay doesn't go through it. Avoids pulling
+        # in nl_amgcl.cpp (which would need AMGCL headers + Boost).
+        ("GEOGRAM_VERSION", r"\"1.9.9\""),
+        # PMP scalar type — match upstream cassie-triangulation's
+        # PMP_SCALAR_TYPE 64 so pmp::Point is double and matches our
+        # cassie_remesh and Eigen::MatrixXd code paths. Without this
+        # define pmp defaults to float and Point layout differs ↔ ODR.
+        ("PMP_SCALAR_TYPE_64", 1),
+    ]
+)
+
+if BUILD_QUAD_MESHING:
+    env_cassie.Append(CPPDEFINES=["CASSIE_QUAD_MESHING"])
+
+# --- Bit-determinism flags ---
+# xr-grid runs Beautify independently on every peer that receives a raw
+# stroke sample packet. Bit-determinism of the beautify chain is the
+# property that lets us avoid broadcasting any post-beautify state. The
+# C++ side is clean (no Time::, no Math::random), the GDScript side
+# (sketch_tool.gd) uses a per-stroke monotonic sample index instead of
+# wall-clock time, and Godot's HashMap/HashSet iterate insertion-stable.
+# What remains is the floating-point compiler contract: no -ffast-math
+# anywhere in the chain, strict IEEE-754 evaluation. Geogram + PMP
+# subtrees compile under env_geogram (a separate clone), so this affects
+# only the CASSIE TUs; if a third-party subtree later starts leaking
+# fast-math through its headers, it must be excluded explicitly.
+_compiler = str(env_cassie.get("CC", "")).lower() + " " + str(env_cassie.get("CXX", "")).lower()
+if env_cassie.get("platform") == "windows" and "g++" not in _compiler:
+    # MSVC and clang-cl both take the MSVC-style flag (clang-cl rejects
+    # -ffp-model=strict as an unknown argument). /fp:strict disables
+    # fused-multiply-add reassociation and holds rounding mode constant.
+    # Excludes MinGW (g++), handled by the GCC branch below.
+    # /wd4724: under /fp:strict /O2, MSVC raises a false-positive
+    # "potential mod by 0" (C4724) inside core/templates/cowdata.h
+    # template instantiations; clang-cl ignores unknown /wd numbers.
+    # /wd4530: geogram's algorithm.cpp pulls in <concrt.h> via the MSVC
+    # parallel STL, whose try/catch raises C4530 ("exception handler used,
+    # but unwind semantics are not enabled") under Godot's _HAS_EXCEPTIONS=0
+    # build. disable_warnings() only lowers the level to /w; /WX still
+    # promotes it, so exclude this specific warning explicitly.
+    env_cassie.Append(CCFLAGS=["/fp:strict", "/wd4724", "/wd4530"])
+elif "clang" in _compiler:
+    # Non-Windows clang. -ffp-model=strict warns -Wunsupported-floating-point-opt
+    # on targets without full strict-FP support (x86 + sanitizers), which
+    # -Werror promotes to a failure; silence just that diagnostic.
+    env_cassie.Append(CCFLAGS=["-ffp-model=strict", "-Wno-unsupported-floating-point-opt"])
+elif "g++" in _compiler or "gcc" in _compiler:
+    # GCC: no -ffp-model. -frounding-math + -fsignaling-nans approximates
+    # the same constraint set.
+    env_cassie.Append(CCFLAGS=["-frounding-math", "-fsignaling-nans"])
+
+# --- SPIR-V → byte array headers ---
+# For each .spv under thirdparty/avbd/, emit a sibling .spv.gen.h with
+# the bytes baked into a `static constexpr uint8_t <name>_spv[]` array
+# under `namespace cassie_slang_spirv { ... }`. cassie_slang_gpu.cpp
+# #includes these headers and feeds the byte arrays to
+# RenderingDevice::shader_create_from_spirv. The .gen.h files are
+# regenerable build artifacts (gitignored via the global *.gen.* rule).
+spv_files = Glob("thirdparty/avbd/*.spv")
+spv_gen_headers = []
+for spv in spv_files:
+    spv_path = str(spv)
+    header_path = spv_path + ".gen.h"
+    gen = env_cassie.Command(header_path, spv_path, spv_to_header_builder)
+    spv_gen_headers.append(gen)
+# Force the codegen to run before any TU that may #include the headers.
+env_cassie.Depends(Glob("src/solver/slang_dispatch/*.cpp"), spv_gen_headers)
+
+# --- Source files ---
+# The `slang_dispatch/` subdir holds hand-written wrappers around the
+# slangc -target cpp kernel output under thirdparty/avbd/*.cpu.cpp.
+# Those .cpu.cpp files are NOT compiled directly — each wrapper TU
+# #includes the corresponding .cpu.cpp so the namespaced types are
+# visible only in that one TU (no duplicate-symbol risk).
+mwt_sources = Glob("#thirdparty/multipolygon_triangulator/*.cpp")
+
+# MWT is vendored upstream code (strcpy/strcat use trips clang-cl's
+# -Wdeprecated-declarations under -Werror, MSVC's C4996 likewise);
+# silence its warnings per the standard thirdparty policy. The clone
+# keeps env_cassie's strict-FP flags, so bit-determinism is unaffected.
+env_mwt = env_cassie.Clone()
+env_mwt.disable_warnings()
+
+# --- Geogram env clone ---
+# Godot's build is -fno-exceptions. Geogram has a handful of throw
+# sites (basic/string.h ConversionError x4, delaunay_3d.cpp
+# InvalidDimension when dim != 3, a few others in dead-for-us paths)
+# that block compilation but never fire in our usage. Next session:
+# patch those sites in the subtree to std::abort() so the no-exceptions
+# constraint holds.
+env_geogram = env_cassie.Clone()
+# Geogram is vendored upstream code we don't maintain; silence its warnings
+# rather than patching the subtree (same policy as Godot's other thirdparty).
+env_geogram.disable_warnings()
+if env_geogram.get("CXX") and "g++" in str(env_geogram["CXX"]).lower():
+    # Suppress noisy MSVC-only #pragma intrinsic warnings from
+    # geogram/basic/thread_sync.h that MinGW reports as unknown.
+    env_geogram.Append(CXXFLAGS=["-Wno-unknown-pragmas"])
+
+# --- Geogram sources (ENG-88) ---
+# Mirrors thirdparty/geogram/src/lib/geogram/CMakeLists.txt's
+# aux_source_directories() list. Excludes the optional pieces upstream
+# cassie-triangulation also turns off via CMake:
+#   GEOGRAM_WITH_TETGEN   - AGPL, license-incompatible
+#   GEOGRAM_WITH_TRIANGLE - non-commercial Shewchuk license
+#   GEOGRAM_WITH_HLBFGS   - non-permissive Yang Liu
+#   GEOGRAM_WITH_LUA      - not needed for Delaunay path
+#   GEOGRAM_WITH_GRAPHICS - not needed for headless triangulation
+#   GEOGRAM_WITH_LEGACY_NUMERICS - replaced by current numerics/
+# NL/ is excluded explicitly by upstream CMake (no OpenNL needed for
+# our subset). image/ and parameterization/ are kept for now because
+# Geogram's basic/api headers cross-reference symbols from them; the
+# next session may be able to trim further once the build is green.
+geogram_root = "#thirdparty/geogram/src/lib/geogram"
+
+
+def _without(globs, exclude_basenames):
+    keep = []
+    for f in globs:
+        if str(f).split(os.sep)[-1] not in exclude_basenames:
+            keep.append(f)
+    return keep
+
+
+# basic/geofile.cpp uses zlib macros that collide with our zlib headers
+# on MinGW (z_off_t macro expands inside ssize_t(...) cast). We don't
+# need GeoFile serialization for the Delaunay path — drop it.
+# Throw-heavy files in code paths we never reach are excluded entirely
+# rather than patched. See thirdparty/geogram/patches/README.md for
+# the full inventory.
+# line_stream.cpp and progress.cpp are compiled: process_unix.cpp's
+# os_max_used_memory() uses LineInput and its sigint_handler uses
+# Progress, so dropping them leaves undefined GEO::LineInput /
+# GEO::Progress symbols at link (macOS ld64, ld.lld with sanitizers).
+# Their throw sites carry the -fno-exceptions abort patches.
+basic_skip = {
+    "geofile.cpp",  # GeoFile bin serialization + zlib macro collision
+    "android_utils.cpp",  # JNI
+    "boolean_expression.cpp",  # CSG expression parser
+}
+delaunay_skip = {
+    "delaunay_2d.cpp",  # we use 3D only
+    "delaunay_tetgen.cpp",  # TetGen AGPL
+    "delaunay_triangle.cpp",  # Triangle non-commercial
+    "parallel_delaunay_3d.cpp",  # PDEL needs OpenMP — permanently excluded
+}
+# Mesh allow-list: Delaunay only pulls in mesh_reorder for spatial sort
+# plus the base Mesh class. Everything else (CSG, frame_field, io,
+# minkowski, surface_intersection, tetrahedralize, remesh, …) is dead
+# weight for our path AND brings throws. Re-enable frame_field for the
+# Blender quad-meshing path when that lands (see patches/README.md).
+mesh_keep = {
+    "mesh.cpp",
+    "mesh_reorder.cpp",
+}
+if BUILD_QUAD_MESHING:
+    # Quad path needs frame field (4-sym direction field) + remesh
+    # (Centroidal Voronoi tessellation for isotropic resampling).
+    mesh_keep |= {
+        "mesh_frame_field.cpp",
+        "mesh_remesh.cpp",
+        # mesh_remesh pulls in some helpers; add as build errors surface.
+    }
+
+geogram_sources = (
+    _without(Glob(geogram_root + "/basic/*.cpp"), basic_skip)
+    + Glob(geogram_root + "/numerics/*.cpp")
+    + [f for f in Glob(geogram_root + "/mesh/*.cpp") if str(f).split(os.sep)[-1] in mesh_keep]
+    + _without(Glob(geogram_root + "/delaunay/*.cpp"), delaunay_skip)
+    # voronoi/RVD.cpp has throws and we don't need Voronoi for Delaunay;
+    # drop the entire directory.
+    + _without(Glob(geogram_root + "/points/*.cpp"), {"co3ne.cpp"})
+    + Glob(geogram_root + "/api/*.cpp")
+    # parameterization/ is UV-atlas + PGP work — required for the quad
+    # path's frame field; otherwise unused.
+    + (Glob(geogram_root + "/parameterization/*.cpp") if BUILD_QUAD_MESHING else [])
+    + Glob(geogram_root + "/bibliography/*.cpp")
+    # third_party/ has its own CMakeLists with conditional pieces; the
+    # subset our delaunay path needs is the always-on bits (predicates,
+    # libMeshb). Add more here as ENG-88 build errors surface.
+    + Glob(geogram_root + "/third_party/predicate_generator/*.cpp")
+    + Glob(geogram_root + "/third_party/numerics/*.cpp")
+    # OpenNL provides nlInitialize / nlPrintfFuncs referenced from
+    # basic/command_line.cpp. Add the .c sources directly (note: SCons
+    # add_source_files takes Globs of .c too).
+    + Glob(geogram_root + "/third_party/OpenNL/*.c")
+)
+
+# ENG-88 follow-up: PMP sources. Allow-list — only the algorithms
+# uniform_remeshing needs. The rest (curvature, fairing, geodesics,
+# hole_filling, parameterization, numerics, laplace, subdivision,
+# shapes) carry throw inventories we'd have to patch and never reach
+# from the refine_patch path. Files we DO keep still need throw
+# patches — see thirdparty/pmp/patches/.
+pmp_root = "#thirdparty/pmp/src/pmp"
+pmp_keep_algos = {
+    "remeshing.cpp",
+    "decimation.cpp",  # collapse_edge used by remeshing
+    "differential_geometry.cpp",  # laplace-beltrami helpers
+    "normals.cpp",  # face/vertex normals
+    "features.cpp",  # boundary feature markup
+    "smoothing.cpp",  # implicit smoothing step
+    "utilities.cpp",  # misc helpers
+    "distance_point_triangle.cpp",  # projection
+    "triangulation.cpp",  # may be needed transitively
+    "curvature.cpp",  # referenced by remeshing's
+    # preprocessing for adaptive sizing
+    "laplace.cpp",  # curvature uses Laplace-Beltrami
+    "numerics.cpp",  # cholesky_solve used by laplace
+}
+pmp_sources = Glob(pmp_root + "/*.cpp") + [
+    f for f in Glob(pmp_root + "/algorithms/*.cpp") if str(f).split(os.sep)[-1] in pmp_keep_algos
+]
+
+# DelaunayFaces.cpp uses Geogram throw/catch, so it needs exceptions too.
+# Compile it as a Geogram TU instead of via env_cassie.
+delaunay_faces_src = ["#thirdparty/multipolygon_triangulator/DelaunayFaces.cpp"]
+mwt_sources = [f for f in mwt_sources if not str(f).endswith("DelaunayFaces.cpp")]
+geogram_sources += delaunay_faces_src
+
+sources = (
+    ["register_types.cpp"]
+    + [f for f in Glob("src/*.cpp") if not str(f).endswith("refine.cpp")]
+    + Glob("src/curves/*.cpp")
+    + Glob("src/sketch/*.cpp")
+    + Glob("src/constraints/*.cpp")
+    + Glob("src/solver/*.cpp")
+)
+
+env_cassie.add_source_files(env.modules_sources, sources)
+env_mwt.add_source_files(env.modules_sources, mwt_sources)
+
+# refine.cpp is the one CASSIE TU that includes PMP headers, which pull
+# in Eigen. Eigen's expression templates trip GCC's -Wduplicated-branches
+# and -Wctor-dtor-privacy under -Werror (the ReturnByValue guard class is
+# all-private by design); relax just those two diagnostics for this TU.
+env_refine = env_cassie.Clone()
+# "clang++" contains the substring "g++", so a bare substring test
+# matches every clang toolchain and feeds it the GCC-only
+# -Wno-duplicated-branches (clang errors with -Wunknown-warning-option);
+# require clang's absence like the determinism elif chain above does.
+if ("g++" in _compiler or "gcc" in _compiler) and "clang" not in _compiler:
+    env_refine.Append(CCFLAGS=["-Wno-duplicated-branches", "-Wno-ctor-dtor-privacy"])
+env_refine.add_source_files(env.modules_sources, ["src/refine.cpp"])
+
+# The slang_dispatch wrappers #include the vendored Slang CPU prelude, whose
+# COM-style interface structs (ISlangUnknown, ITexture, IRWTexture, ...) declare
+# virtual methods with non-virtual destructors. Compile them with a clone that
+# silences -Wnon-virtual-dtor on clang/clang-cl/gcc/mingw so -Werror doesn't
+# reject the vendored headers (plain MSVC has no such warning).
+env_slang = env_cassie.Clone()
+if "clang" in _compiler or "g++" in _compiler or "gcc" in _compiler or "em++" in _compiler or "emcc" in _compiler:
+    env_slang.Append(CCFLAGS=["-Wno-non-virtual-dtor"])
+env_slang.add_source_files(env.modules_sources, Glob("src/solver/slang_dispatch/*.cpp"))
+# Geogram sources use the exceptions-enabled env clone.
+env_geogram.add_source_files(env.modules_sources, geogram_sources)
+env_geogram.add_source_files(env.modules_sources, pmp_sources)

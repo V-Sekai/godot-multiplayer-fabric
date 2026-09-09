@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieEdgeCollider" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Discrete-proximity edge-edge collision between a stroke curve and a [CassieSurfacePatch] — ENG-55.
+	</brief_description>
+	<description>
+		Samples the input curve at fixed arc-length spacing, then for each stroke segment scans every mesh-edge candidate against [method Geometry3D.get_closest_points_between_segments]. When the closest distance is below [member proximity_threshold], emits a penetration record describing the push direction and depth. Per-frame discrete check (not CCD); the downstream solver path converts each record into a position constraint.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="find_penetrations" qualifiers="const">
+			<return type="Array" />
+			<param index="0" name="curve" type="Curve3D" />
+			<description>
+				Returns an Array of Dictionary records — one per penetrating sample — with [code]sample_t[/code] (parameter along [param curve]), [code]stroke_point[/code], [code]mesh_point[/code], [code]displacement[/code] (the push from mesh toward stroke), and [code]penetration_depth[/code].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="patch" type="CassieSurfacePatch" setter="set_patch" getter="get_patch">
+			The obstacle patch the collider tests against.
+		</member>
+		<member name="proximity_threshold" type="float" setter="set_proximity_threshold" getter="get_proximity_threshold" default="0.05">
+			Penetration is reported when the stroke-segment to mesh-edge distance falls below this value.
+		</member>
+		<member name="samples_per_segment" type="int" setter="set_samples_per_segment" getter="get_samples_per_segment" default="8">
+			Total stroke samples to test along the curve. Higher values catch tunneling between coarse samples; lower values are cheaper.
+		</member>
+	</members>
+</class>

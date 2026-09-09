@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+includedir=${prefix}/include/@VORPALINE_INCLUDE_SUBPATH@
+
+Name: geogram
+Description: fast, simple and easy-to-use primitives for geometric programming
+Version: @VORPALINE_VERSION@
+URL: https://github.com/BrunoLevy/geogram
+Libs: -lgeogram
+Cflags: -I${includedir}

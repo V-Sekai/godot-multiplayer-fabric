@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CassieConstraint" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Base class for sketch constraints emitted during beautification.
+	</brief_description>
+	<description>
+		Stores a world-space [member position] plus the "new curve data" triple (position, tangent, offset) populated by [method project_on] once a candidate curve has been fit. Subclassed by [CassieIntersectionConstraint] and [CassieMirrorPlaneConstraint]. The standalone [CassieSurfaceConstraint] is a separate Resource, not a Constraint subclass.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_new_curve_offset" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns the arc-length offset of the projected point along the curve last passed to [method project_on].
+			</description>
+		</method>
+		<method name="get_new_curve_position" qualifiers="const">
+			<return type="Vector3" />
+			<description>
+				Returns the closest point on the curve to [member position].
+			</description>
+		</method>
+		<method name="get_new_curve_tangent" qualifiers="const">
+			<return type="Vector3" />
+			<description>
+				Returns the curve tangent at the projected offset, or a zero vector when the curve is not baked.
+			</description>
+		</method>
+		<method name="project_on">
+			<return type="void" />
+			<param index="0" name="curve" type="Curve3D" />
+			<description>
+				Populates [method get_new_curve_position], [method get_new_curve_tangent], and [method get_new_curve_offset] by projecting [member position] onto [param curve]'s baked polyline.
+			</description>
+		</method>
+		<method name="project_on_anchor">
+			<return type="void" />
+			<param index="0" name="curve" type="Curve3D" />
+			<param index="1" name="anchor_index" type="int" />
+			<description>
+				Like [method project_on] but snaps the projection to the specified anchor of [param curve].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="position" type="Vector3" setter="set_position" getter="get_position" default="Vector3(0, 0, 0)">
+			World-space position of the constraint.
+		</member>
+	</members>
+</class>
