@@ -40,6 +40,7 @@ extend-safe-fixes = ["FA", "UP006", "UP007"]
 	"E402", # Module level import not at top of file.
 	"F403", # Undefined local with import star.
 	"F405", # Undefined local with import star usage.
+	"F821", # SCons injects Import/Export/Return as built-ins.
 ]
 
 [tool.ruff.lint.isort]
