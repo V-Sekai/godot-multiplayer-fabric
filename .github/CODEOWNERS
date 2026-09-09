@@ -298,3 +298,6 @@ SCsub                                         @godotengine/buildsystem
 # V-Sekai SQLite
 
 /modules/sqlite/                              @fire
+# V-Sekai Multiplayer Fabric
+
+/modules/multiplayer_fabric/                  @fire
