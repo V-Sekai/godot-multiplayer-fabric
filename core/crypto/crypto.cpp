@@ -48,6 +48,7 @@ void CryptoKey::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_public_only"), &CryptoKey::is_public_only);
 	ClassDB::bind_method(D_METHOD("save_to_string", "public_only"), &CryptoKey::save_to_string, DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("load_from_string", "string_key", "public_only"), &CryptoKey::load_from_string, DEFVAL(false));
+	ClassDB::bind_method(D_METHOD("get_der", "public_only"), &CryptoKey::get_der, DEFVAL(false));
 }
 
 X509Certificate *(*X509Certificate::_create)(bool p_notify_postinitialize) = nullptr;
@@ -63,6 +64,7 @@ void X509Certificate::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("load", "path"), &X509Certificate::load);
 	ClassDB::bind_method(D_METHOD("save_to_string"), &X509Certificate::save_to_string);
 	ClassDB::bind_method(D_METHOD("load_from_string", "string"), &X509Certificate::load_from_string);
+	ClassDB::bind_method(D_METHOD("get_der"), &X509Certificate::get_der);
 }
 
 /// TLSOptions
@@ -171,7 +173,9 @@ bool Crypto::constant_time_compare(const PackedByteArray &p_trusted, const Packe
 void Crypto::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("generate_random_bytes", "size"), &Crypto::generate_random_bytes);
 	ClassDB::bind_method(D_METHOD("generate_rsa", "size"), &Crypto::generate_rsa);
+	ClassDB::bind_method(D_METHOD("generate_ecdsa"), &Crypto::generate_ecdsa);
 	ClassDB::bind_method(D_METHOD("generate_self_signed_certificate", "key", "issuer_name", "not_before", "not_after"), &Crypto::generate_self_signed_certificate, DEFVAL("CN=myserver,O=myorganisation,C=IT"), DEFVAL("20140101000000"), DEFVAL("20340101000000"));
+	ClassDB::bind_method(D_METHOD("generate_self_signed_certificate_san", "key", "issuer_name", "not_before", "not_after", "san"), &Crypto::generate_self_signed_certificate_san, DEFVAL("CN=myserver,O=myorganisation,C=IT"), DEFVAL("20140101000000"), DEFVAL("20340101000000"), DEFVAL(PackedStringArray()));
 	ClassDB::bind_method(D_METHOD("sign", "hash_type", "hash", "key"), &Crypto::sign);
 	ClassDB::bind_method(D_METHOD("verify", "hash_type", "hash", "signature", "key"), &Crypto::verify);
 	ClassDB::bind_method(D_METHOD("encrypt", "key", "plaintext"), &Crypto::encrypt);

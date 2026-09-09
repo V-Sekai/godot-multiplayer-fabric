@@ -11,6 +11,12 @@
 		<link title="SSL certificates">$DOCS_URL/tutorials/networking/ssl_certificates.html</link>
 	</tutorials>
 	<methods>
+		<method name="get_der" qualifiers="const">
+			<return type="PackedByteArray" />
+			<description>
+				Returns the certificate encoded as DER bytes. Returns an empty array if the certificate is not loaded.
+			</description>
+		</method>
 		<method name="load">
 			<return type="int" enum="Error" />
 			<param index="0" name="path" type="String" />

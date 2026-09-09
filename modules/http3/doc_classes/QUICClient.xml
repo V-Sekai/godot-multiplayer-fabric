@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="QUICClient" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="close">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="connect_to_host">
+			<return type="int" enum="Error" />
+			<param index="0" name="host" type="String" />
+			<param index="1" name="port" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_alpn" qualifiers="const">
+			<return type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="get_connected_host" qualifiers="const">
+			<return type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="get_connected_port" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_read_chunk_size" qualifiers="const">
+			<return type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="get_status" qualifiers="const">
+			<return type="int" enum="QUICClient.Status" />
+			<description>
+			</description>
+		</method>
+		<method name="get_tls_options" qualifiers="const">
+			<return type="TLSOptions" />
+			<description>
+			</description>
+		</method>
+		<method name="is_blocking_mode_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="open_stream">
+			<return type="int" />
+			<param index="0" name="bidirectional" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="poll">
+			<return type="int" enum="Error" />
+			<description>
+			</description>
+		</method>
+		<method name="receive_datagram">
+			<return type="PackedByteArray" />
+			<description>
+			</description>
+		</method>
+		<method name="send_datagram">
+			<return type="int" enum="Error" />
+			<param index="0" name="payload" type="PackedByteArray" />
+			<description>
+			</description>
+		</method>
+		<method name="set_alpn">
+			<return type="void" />
+			<param index="0" name="alpn" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="set_blocking_mode">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="set_read_chunk_size">
+			<return type="void" />
+			<param index="0" name="size" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="set_tls_options">
+			<return type="void" />
+			<param index="0" name="options" type="TLSOptions" />
+			<description>
+			</description>
+		</method>
+		<method name="stream_close">
+			<return type="int" enum="Error" />
+			<param index="0" name="stream_id" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="stream_read">
+			<return type="PackedByteArray" />
+			<param index="0" name="stream_id" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="stream_send">
+			<return type="int" enum="Error" />
+			<param index="0" name="stream_id" type="int" />
+			<param index="1" name="payload" type="PackedByteArray" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="STATUS_DISCONNECTED" value="0" enum="Status">
+		</constant>
+		<constant name="STATUS_RESOLVING" value="1" enum="Status">
+		</constant>
+		<constant name="STATUS_CONNECTING" value="2" enum="Status">
+		</constant>
+		<constant name="STATUS_HANDSHAKING" value="3" enum="Status">
+		</constant>
+		<constant name="STATUS_CONNECTED" value="4" enum="Status">
+		</constant>
+		<constant name="STATUS_BUSY" value="5" enum="Status">
+		</constant>
+		<constant name="STATUS_CONNECTION_ERROR" value="6" enum="Status">
+		</constant>
+	</constants>
+</class>
