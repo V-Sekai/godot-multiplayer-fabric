@@ -30,7 +30,7 @@
 
 #ifdef METAL_ENABLED
 
-#include "metal_fx.h"
+#include "servers/rendering/renderer_rd/effects/metal_fx.h"
 
 #include "drivers/metal/pixel_formats.h"
 #include "drivers/metal/rendering_device_driver_metal3.h"
