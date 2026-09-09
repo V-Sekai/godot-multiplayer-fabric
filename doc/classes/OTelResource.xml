@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="OTelResource" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Service identity and environment attributes sent with every signal.
+	</brief_description>
+	<description>
+		Describes the entity producing telemetry (service name, version, instance ID, and arbitrary key/value attributes).
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_attribute">
+			<return type="void" />
+			<param index="0" name="key" type="String" />
+			<param index="1" name="value" type="Variant" />
+			<description>
+				Sets attribute [param key] to [param value].
+			</description>
+		</method>
+		<method name="get_attribute" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="key" type="String" />
+			<description>
+				Returns the value of attribute [param key], or null if absent.
+			</description>
+		</method>
+		<method name="get_service_instance_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the [code]service.instance.id[/code] attribute.
+			</description>
+		</method>
+		<method name="get_service_name" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the [code]service.name[/code] attribute.
+			</description>
+		</method>
+		<method name="get_service_version" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the [code]service.version[/code] attribute.
+			</description>
+		</method>
+		<method name="has_attribute" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="key" type="String" />
+			<description>
+				Returns [code]true[/code] if attribute [param key] is set.
+			</description>
+		</method>
+		<method name="set_service_instance_id">
+			<return type="void" />
+			<param index="0" name="id" type="String" />
+			<description>
+				Sets the [code]service.instance.id[/code] attribute.
+			</description>
+		</method>
+		<method name="set_service_name">
+			<return type="void" />
+			<param index="0" name="name" type="String" />
+			<description>
+				Sets the [code]service.name[/code] attribute.
+			</description>
+		</method>
+		<method name="set_service_version">
+			<return type="void" />
+			<param index="0" name="version" type="String" />
+			<description>
+				Sets the [code]service.version[/code] attribute.
+			</description>
+		</method>
+		<method name="to_otlp_dict" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns all attributes as an OTLP-format Dictionary.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="attributes" type="Dictionary" setter="set_attributes" getter="get_attributes" default="{}">
+		</member>
+	</members>
+</class>

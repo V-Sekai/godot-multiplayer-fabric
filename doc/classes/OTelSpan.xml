@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="OTelSpan" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		A single operation within a distributed trace.
+	</brief_description>
+	<description>
+		Represents one OpenTelemetry span: a named, timed operation identified by a trace ID and span ID, optionally parented to another span. Carries attributes, events, links, and a status, and serializes to the OTLP wire format.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_attribute">
+			<return type="void" />
+			<param index="0" name="key" type="String" />
+			<param index="1" name="value" type="Variant" />
+			<description>
+				Adds or replaces attribute [param key] with [param value].
+			</description>
+		</method>
+		<method name="add_event">
+			<return type="void" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="attributes" type="Dictionary" default="{}" />
+			<param index="2" name="timestamp" type="int" default="0" />
+			<description>
+				Records a timestamped event named [param name] with optional [param attributes]. If [param timestamp] is [code]0[/code], the current time is used.
+			</description>
+		</method>
+		<method name="add_link">
+			<return type="void" />
+			<param index="0" name="trace_id" type="String" />
+			<param index="1" name="span_id" type="String" />
+			<param index="2" name="attributes" type="Dictionary" default="{}" />
+			<description>
+				Adds a link to another span identified by [param trace_id] and [param span_id], with optional [param attributes].
+			</description>
+		</method>
+		<method name="generate_span_id" qualifiers="static">
+			<return type="String" />
+			<description>
+				Returns a new random 16-hex-character (64-bit) span ID.
+			</description>
+		</method>
+		<method name="generate_trace_id" qualifiers="static">
+			<return type="String" />
+			<description>
+				Returns a new random 32-hex-character (128-bit) trace ID.
+			</description>
+		</method>
+		<method name="is_ended" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if the span has been ended with [method mark_ended].
+			</description>
+		</method>
+		<method name="is_valid_span_id" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="id" type="String" />
+			<description>
+				Returns [code]true[/code] if [param id] is a valid 16-hex-character (64-bit) span ID.
+			</description>
+		</method>
+		<method name="is_valid_trace_id" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="id" type="String" />
+			<description>
+				Returns [code]true[/code] if [param id] is a valid 32-hex-character (128-bit) trace ID.
+			</description>
+		</method>
+		<method name="mark_ended">
+			<return type="void" />
+			<description>
+				Marks the span as ended. See [method is_ended].
+			</description>
+		</method>
+		<method name="to_otlp_dict" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the span as an OTLP-format Dictionary.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="attributes" type="Dictionary" setter="set_attributes" getter="get_attributes" default="{}">
+			Key-value attributes attached to the span.
+		</member>
+		<member name="end_time_unix_nano" type="int" setter="set_end_time_unix_nano" getter="get_end_time_unix_nano" default="0">
+			Span end time, in nanoseconds since the Unix epoch.
+		</member>
+		<member name="events" type="Array" setter="set_events" getter="get_events" default="[]">
+			Timestamped events recorded during the span. See [method add_event].
+		</member>
+		<member name="kind" type="int" setter="set_kind" getter="get_kind" enum="OTelSpan.SpanKind" default="1">
+			The span's [enum SpanKind].
+		</member>
+		<member name="links" type="Array" setter="set_links" getter="get_links" default="[]">
+			Links to other spans. See [method add_link].
+		</member>
+		<member name="parent_span_id" type="String" setter="set_parent_span_id" getter="get_parent_span_id" default="&quot;&quot;">
+			Span ID of the parent span, or empty for a root span.
+		</member>
+		<member name="span_id" type="String" setter="set_span_id" getter="get_span_id" default="&quot;&quot;">
+			This span's 16-hex-character (64-bit) span ID.
+		</member>
+		<member name="start_time_unix_nano" type="int" setter="set_start_time_unix_nano" getter="get_start_time_unix_nano" default="0">
+			Span start time, in nanoseconds since the Unix epoch.
+		</member>
+		<member name="status_code" type="int" setter="set_status_code" getter="get_status_code" enum="OTelSpan.StatusCode" default="0">
+			The span's [enum StatusCode].
+		</member>
+		<member name="status_message" type="String" setter="set_status_message" getter="get_status_message" default="&quot;&quot;">
+			Optional human-readable status description.
+		</member>
+		<member name="trace_id" type="String" setter="set_trace_id" getter="get_trace_id" default="&quot;&quot;">
+			The 32-hex-character (128-bit) trace ID this span belongs to.
+		</member>
+	</members>
+	<constants>
+		<constant name="SPAN_KIND_UNSPECIFIED" value="0" enum="SpanKind">
+			Span kind was not specified.
+		</constant>
+		<constant name="SPAN_KIND_INTERNAL" value="1" enum="SpanKind">
+			Internal operation within an application.
+		</constant>
+		<constant name="SPAN_KIND_SERVER" value="2" enum="SpanKind">
+			Server-side handling of a remote request.
+		</constant>
+		<constant name="SPAN_KIND_CLIENT" value="3" enum="SpanKind">
+			Client-side request to a remote service.
+		</constant>
+		<constant name="SPAN_KIND_PRODUCER" value="4" enum="SpanKind">
+			Producer sending a message to a broker.
+		</constant>
+		<constant name="SPAN_KIND_CONSUMER" value="5" enum="SpanKind">
+			Consumer receiving a message from a broker.
+		</constant>
+		<constant name="STATUS_CODE_UNSET" value="0" enum="StatusCode">
+			Status is unset (default).
+		</constant>
+		<constant name="STATUS_CODE_OK" value="1" enum="StatusCode">
+			The operation completed successfully.
+		</constant>
+		<constant name="STATUS_CODE_ERROR" value="2" enum="StatusCode">
+			The operation failed.
+		</constant>
+	</constants>
+</class>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="OTelState" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Snapshot container for one export batch of spans, metrics, and logs.
+	</brief_description>
+	<description>
+		Groups [OTelSpan], [OTelMetric], and [OTelLog] arrays together with a shared [OTelResource] and [OTelScope] for serialization.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_log">
+			<return type="void" />
+			<param index="0" name="log" type="OTelLog" />
+			<description>
+				Appends [param log] to [member logs].
+			</description>
+		</method>
+		<method name="add_metric">
+			<return type="void" />
+			<param index="0" name="metric" type="OTelMetric" />
+			<description>
+				Appends [param metric] to [member metrics].
+			</description>
+		</method>
+		<method name="add_span">
+			<return type="void" />
+			<param index="0" name="span" type="OTelSpan" />
+			<description>
+				Appends [param span] to [member spans].
+			</description>
+		</method>
+		<method name="clear_all">
+			<return type="void" />
+			<description>
+				Clears spans, metrics, and logs.
+			</description>
+		</method>
+		<method name="clear_logs">
+			<return type="void" />
+			<description>
+				Clears [member logs].
+			</description>
+		</method>
+		<method name="clear_metrics">
+			<return type="void" />
+			<description>
+				Clears [member metrics].
+			</description>
+		</method>
+		<method name="clear_spans">
+			<return type="void" />
+			<description>
+				Clears [member spans].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="logs" type="OTelLog[]" setter="set_logs" getter="get_logs" default="[]">
+		</member>
+		<member name="metrics" type="OTelMetric[]" setter="set_metrics" getter="get_metrics" default="[]">
+		</member>
+		<member name="resource" type="OTelResource" setter="set_resource" getter="get_resource">
+		</member>
+		<member name="scope" type="OTelScope" setter="set_scope" getter="get_scope">
+		</member>
+		<member name="spans" type="OTelSpan[]" setter="set_spans" getter="get_spans" default="[]">
+		</member>
+	</members>
+</class>

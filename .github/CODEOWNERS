@@ -304,3 +304,6 @@ SCsub                                         @godotengine/buildsystem
 # V-Sekai Multiplayer Fabric Asset
 
 /modules/multiplayer_fabric_asset/            @fire
+# V-Sekai Open Telemetry
+
+/modules/open_telemetry/                      @fire

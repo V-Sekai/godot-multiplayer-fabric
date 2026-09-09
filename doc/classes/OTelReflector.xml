@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="OTelReflector" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Loads and merges OTLP JSON files from disk into [OTelState].
+	</brief_description>
+	<description>
+		Utility for reading back exported OTLP files; supports glob discovery and multi-file merging.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="find_otlp_files">
+			<return type="PackedStringArray" />
+			<param index="0" name="directory" type="String" />
+			<param index="1" name="pattern" type="String" default="&quot;*.json&quot;" />
+			<description>
+				Returns all files matching [param pattern] under [param directory].
+			</description>
+		</method>
+		<method name="get_document" qualifiers="const">
+			<return type="OTelDocument" />
+			<description>
+				Returns the shared [OTelDocument] used for deserialization.
+			</description>
+		</method>
+		<method name="load_and_merge_logs">
+			<return type="OTelState" />
+			<param index="0" name="paths" type="PackedStringArray" />
+			<description>
+				Loads and merges all log files at [param paths] into a single [OTelState].
+			</description>
+		</method>
+		<method name="load_and_merge_metrics">
+			<return type="OTelState" />
+			<param index="0" name="paths" type="PackedStringArray" />
+			<description>
+				Loads and merges all metrics files at [param paths] into a single [OTelState].
+			</description>
+		</method>
+		<method name="load_and_merge_traces">
+			<return type="OTelState" />
+			<param index="0" name="paths" type="PackedStringArray" />
+			<description>
+				Loads and merges all trace files at [param paths] into a single [OTelState].
+			</description>
+		</method>
+		<method name="load_logs_from_file">
+			<return type="OTelState" />
+			<param index="0" name="path" type="String" />
+			<description>
+				Reads the OTLP log JSON file at [param path] and returns an [OTelState].
+			</description>
+		</method>
+		<method name="load_logs_from_json">
+			<return type="OTelState" />
+			<param index="0" name="json" type="String" />
+			<description>
+				Parses the OTLP log JSON string and returns an [OTelState].
+			</description>
+		</method>
+		<method name="load_metrics_from_file">
+			<return type="OTelState" />
+			<param index="0" name="path" type="String" />
+			<description>
+				Reads the OTLP metrics JSON file at [param path] and returns an [OTelState].
+			</description>
+		</method>
+		<method name="load_metrics_from_json">
+			<return type="OTelState" />
+			<param index="0" name="json" type="String" />
+			<description>
+				Parses the OTLP metrics JSON string and returns an [OTelState].
+			</description>
+		</method>
+		<method name="load_traces_from_file">
+			<return type="OTelState" />
+			<param index="0" name="path" type="String" />
+			<description>
+				Reads the OTLP trace JSON file at [param path] and returns an [OTelState].
+			</description>
+		</method>
+		<method name="load_traces_from_json">
+			<return type="OTelState" />
+			<param index="0" name="json" type="String" />
+			<description>
+				Parses the OTLP trace JSON string and returns an [OTelState].
+			</description>
+		</method>
+	</methods>
+</class>
