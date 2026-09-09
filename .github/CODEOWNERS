@@ -320,3 +320,6 @@ SCsub                                         @godotengine/buildsystem
 /modules/cassie/                              @v-sekai-multiplayer-fabric/multiplayer-fabric
 /modules/cassie/doc_classes/                  @v-sekai-multiplayer-fabric/multiplayer-fabric @godotengine/documentation
 /modules/http3/                               @v-sekai-multiplayer-fabric/multiplayer-fabric
+# V-Sekai Speech
+
+/modules/speech/                              @fire

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="PlaybackStats" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Tracks jitter buffer and playback ring buffer metrics for a voice chat player.
+	</brief_description>
+	<description>
+		PlaybackStats collects runtime statistics for a single remote player's voice playback pipeline. It tracks the playback ring buffer fill level, pushed and discarded frame counts, jitter buffer size, and playback position. These metrics are used by [Speech] for adaptive jitter buffer tuning and can be queried via [method get_playback_stats] for debugging or display.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_playback_stats">
+			<return type="Dictionary" />
+			<description>
+				Returns a [Dictionary] containing all collected playback statistics, including sample rates, ring buffer fill levels, pushed and discarded frame counts, jitter buffer size averages, playback position, and skip counts.
+			</description>
+		</method>
+	</methods>
+</class>
