@@ -33,3 +33,4 @@ clangd:
   - "!modules/multiplayer_fabric/**"
   - "!platform/{android,ios,macos,visionos,web,windows}/**"
   - "platform/{android,ios,macos,visionos,web,windows}/{api,export}/*.{h,hpp,hxx,hh,c,cpp,cxx,cc}"
+  - "!**/shaders/*_cpu.cpp" # slang `-target cpp` reference output; not built, includes a host-specific prelude.

@@ -106,6 +106,7 @@
 #include "editor/scene/3d/path_3d_editor_plugin.h"
 #include "editor/scene/3d/physics/physical_bone_3d_editor_plugin.h"
 #include "editor/scene/3d/polygon_3d_editor_plugin.h"
+#include "editor/scene/3d/reverb_probe_gi_editor_plugin.h"
 #include "editor/scene/3d/skeleton_3d_editor_plugin.h"
 #include "editor/scene/3d/voxel_gi_editor_plugin.h"
 #include "editor/scene/curve_editor_plugin.h"
@@ -242,6 +243,7 @@ void register_editor_types() {
 	EditorPlugins::add_by_type<GradientTexture2DEditorPlugin>();
 	EditorPlugins::add_by_type<InputEventEditorPlugin>();
 	EditorPlugins::add_by_type<LightmapGIEditorPlugin>();
+	EditorPlugins::add_by_type<ReverbProbeGIEditorPlugin>();
 	EditorPlugins::add_by_type<MarginContainerEditorPlugin>();
 	EditorPlugins::add_by_type<MaterialEditorPlugin>();
 	EditorPlugins::add_by_type<MeshEditorPlugin>();

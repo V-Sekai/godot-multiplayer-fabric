@@ -35,6 +35,7 @@
 #include "core/variant/variant.h"
 #include "servers/audio/audio_effect.h"
 #include "servers/audio/audio_filter_sw.h"
+#include "servers/audio/spatial_audio_server.h"
 
 #include <atomic>
 
@@ -196,6 +197,11 @@ public:
 		PLAYBACK_TYPE_MAX
 	};
 
+	enum BusType {
+		BUS_TYPE_CONVENTIONAL = 0,
+		BUS_TYPE_SPATIAL_3D = 1,
+	};
+
 	enum {
 		AUDIO_DATA_INVALID_ID = -1,
 		MAX_CHANNELS_PER_BUS = 4,
@@ -238,6 +244,7 @@ private:
 		bool solo = false;
 		bool mute = false;
 		bool bypass = false;
+		BusType type = BUS_TYPE_CONVENTIONAL;
 
 		bool soloed = false;
 
@@ -272,6 +279,8 @@ private:
 		bool bus_active[MAX_BUSES_PER_PLAYBACK] = {};
 		StringName bus[MAX_BUSES_PER_PLAYBACK];
 		AudioFrame volume[MAX_BUSES_PER_PLAYBACK][MAX_CHANNELS_PER_BUS];
+		AudioSourceId audio_source_id = AudioSourceId(-1);
+		Vector<Ref<AudioEffectInstance>> pre_mix_effect_instances[MAX_BUSES_PER_PLAYBACK][MAX_CHANNELS_PER_BUS];
 	};
 
 	struct AudioStreamPlaybackListNode {
@@ -295,6 +304,7 @@ private:
 		SafeNumeric<float> pitch_scale;
 		SafeNumeric<float> highshelf_gain;
 		SafeNumeric<float> attenuation_filter_cutoff_hz; // This isn't used unless highshelf_gain is nonzero.
+		AudioSourceId source_id = AudioSourceId(-1);
 		AudioFilterSW::Processor filter_process[8];
 		// Updating this ref after the list node is created breaks consistency guarantees, don't do it!
 		Ref<AudioStreamPlayback> stream_playback;
@@ -320,17 +330,21 @@ private:
 
 	Vector<Vector<AudioFrame>> temp_buffer; //temp_buffer for each level
 	Vector<AudioFrame> mix_buffer;
+	Vector<AudioFrame> spatial_pull_buffer;
+	Vector<AudioFrame> resonance_mix_buffer;
+	Vector<AudioFrame> premix_effect_buffer;
 	Vector<Bus *> buses;
 	HashMap<StringName, Bus *> bus_map;
 
 	void _update_bus_effects(int p_bus);
+	void _populate_pre_mix_effects(AudioStreamPlaybackBusDetails *p_details);
 
 	static AudioServer *singleton;
 
 	void init_channels_and_buffers();
 
 	void _mix_step();
-	void _mix_step_for_channel(AudioFrame *p_out_buf, AudioFrame *p_source_buf, AudioFrame p_vol_start, AudioFrame p_vol_final, float p_attenuation_filter_cutoff_hz, float p_highshelf_gain, AudioFilterSW::Processor *p_processor_l, AudioFilterSW::Processor *p_processor_r);
+	void _mix_step_for_channel(AudioFrame *p_out_buf, AudioFrame *p_source_buf, AudioFrame p_vol_start, AudioFrame p_vol_final, float p_attenuation_filter_cutoff_hz, float p_highshelf_gain, AudioSourceId p_audio_source_id, AudioFilterSW::Processor *p_processor_l, AudioFilterSW::Processor *p_processor_r, int p_channel_idx = 0, BusType p_bus_type = BUS_TYPE_CONVENTIONAL, const Vector<Ref<AudioEffectInstance>> &p_pre_mix_effects = Vector<Ref<AudioEffectInstance>>(), const Vector<Bus::Effect> *p_bus_effects = nullptr);
 
 	// Should only be called on the main thread.
 	AudioStreamPlaybackListNode *_find_playback_list_node(Ref<AudioStreamPlayback> p_playback);
@@ -410,6 +424,9 @@ public:
 	void set_bus_bypass_effects(int p_bus, bool p_enable);
 	bool is_bus_bypassing_effects(int p_bus) const;
 
+	void set_bus_type(int p_bus, BusType p_type);
+	BusType get_bus_type(int p_bus) const;
+
 	void add_bus_effect(int p_bus, const Ref<AudioEffect> &p_effect, int p_at_pos = -1);
 	void remove_bus_effect(int p_bus, int p_effect);
 
@@ -433,15 +450,15 @@ public:
 	// Convenience method.
 	void start_playback_stream(Ref<AudioStreamPlayback> p_playback, const StringName &p_bus, Vector<AudioFrame> p_volume_db_vector, float p_start_time = 0, float p_pitch_scale = 1);
 	// Expose all parameters.
-	void start_playback_stream(Ref<AudioStreamPlayback> p_playback, const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes, float p_start_time = 0, float p_pitch_scale = 1, float p_highshelf_gain = 0, float p_attenuation_cutoff_hz = 0);
+	void start_playback_stream(Ref<AudioStreamPlayback> p_playback, const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes, float p_start_time = 0, float p_pitch_scale = 1, float p_highshelf_gain = 0, float p_attenuation_cutoff_hz = 0, AudioSourceId p_source_id = AudioSourceId(-1));
 	void stop_playback_stream(Ref<AudioStreamPlayback> p_playback);
 
-	void set_playback_bus_exclusive(Ref<AudioStreamPlayback> p_playback, const StringName &p_bus, Vector<AudioFrame> p_volumes);
-	void set_playback_bus_volumes_linear(Ref<AudioStreamPlayback> p_playback, const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes);
-	void set_playback_all_bus_volumes_linear(Ref<AudioStreamPlayback> p_playback, Vector<AudioFrame> p_volumes);
+	void set_playback_bus_exclusive(Ref<AudioStreamPlayback> p_playback, const StringName &p_bus, Vector<AudioFrame> p_volumes, AudioSourceId p_source_id = AudioSourceId(-1));
+	void set_playback_bus_volumes_linear(Ref<AudioStreamPlayback> p_playback, const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes, AudioSourceId p_source_id = AudioSourceId(-1));
+	void set_playback_all_bus_volumes_linear(Ref<AudioStreamPlayback> p_playback, Vector<AudioFrame> p_volumes, AudioSourceId p_source_id = AudioSourceId(-1));
 	void set_playback_pitch_scale(Ref<AudioStreamPlayback> p_playback, float p_pitch_scale);
 	void set_playback_paused(Ref<AudioStreamPlayback> p_playback, bool p_paused);
-	void set_playback_highshelf_params(Ref<AudioStreamPlayback> p_playback, float p_gain, float p_attenuation_cutoff_hz);
+	void set_playback_highshelf_params(Ref<AudioStreamPlayback> p_playback, float p_gain, float p_attenuation_cutoff_hz, AudioSourceId p_source_id = AudioSourceId(-1));
 
 	bool is_playback_active(Ref<AudioStreamPlayback> p_playback);
 	float get_playback_position(Ref<AudioStreamPlayback> p_playback);
@@ -526,6 +543,7 @@ public:
 
 VARIANT_ENUM_CAST(AudioServer::SpeakerMode)
 VARIANT_ENUM_CAST(AudioServer::PlaybackType)
+VARIANT_ENUM_CAST(AudioServer::BusType)
 
 class AudioBusLayout : public Resource {
 	GDCLASS(AudioBusLayout, Resource);
@@ -537,6 +555,7 @@ class AudioBusLayout : public Resource {
 		bool solo = false;
 		bool mute = false;
 		bool bypass = false;
+		AudioServer::BusType type = AudioServer::BUS_TYPE_CONVENTIONAL;
 
 		struct Effect {
 			Ref<AudioEffect> effect;

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ResonanceAudioMaterialMap" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear_mappings">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="get_material_mapping" qualifiers="const">
+			<return type="int" enum="ReverbProbeGI.WallMaterial" />
+			<param index="0" name="material_path" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="get_material_mappings" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+			</description>
+		</method>
+		<method name="has_material_mapping" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="material_path" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="remove_material_mapping">
+			<return type="void" />
+			<param index="0" name="material_path" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="scan_scene">
+			<return type="void" />
+			<param index="0" name="root" type="Node" />
+			<description>
+			</description>
+		</method>
+		<method name="set_material_mapping">
+			<return type="void" />
+			<param index="0" name="material_path" type="String" />
+			<param index="1" name="acoustic_material" type="int" enum="ReverbProbeGI.WallMaterial" />
+			<description>
+			</description>
+		</method>
+		<method name="set_material_mappings">
+			<return type="void" />
+			<param index="0" name="mappings" type="Dictionary" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="default_material" type="int" setter="set_default_material" getter="get_default_material" enum="ReverbProbeGI.WallMaterial" default="16">
+		</member>
+	</members>
+</class>

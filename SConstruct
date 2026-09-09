@@ -297,6 +297,7 @@ opts.Add(BoolVariable("scu_build", "Use single compilation unit build", False))
 opts.Add("scu_limit", "Max includes per SCU file when using scu_build (determines RAM use)", "0")
 opts.Add(BoolVariable("engine_update_check", "Enable engine update checks in the Project Manager", True))
 opts.Add(BoolVariable("steamapi", "Enable minimal SteamAPI integration for usage time tracking (editor only)", False))
+opts.Add(BoolVariable("use_resonance_audio", "Use Resonance Audio for 3D audio spatialization.", True))
 opts.Add("cache_path", "Path to a directory where SCons cache files will be stored. No value disables the cache.", "")
 opts.Add("cache_limit", "Max size (in GiB) for the SCons cache. 0 means no limit.", "0")
 opts.Add(
@@ -552,6 +553,8 @@ if env.debug_features:
     # DEBUG_ENABLED enables debugging *features* and debug-only code, which is intended
     # to give *users* extra debugging information for their game development.
     env.Append(CPPDEFINES=["DEBUG_ENABLED"])
+
+env.Append(CPPDEFINES=["EIGEN_MPL2_ONLY"])
 
 if env.dev_build:
     # DEV_ENABLED enables *engine developer* code which should only be compiled for those

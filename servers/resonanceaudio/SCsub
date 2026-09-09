@@ -1,0 +1,190 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+
+env_resonance = env.Clone()
+
+# Thirdparty source files
+thirdparty_dir = "#thirdparty/"
+thirdparty_resonanceaudio_dir = "#thirdparty/resonanceaudio/resonance_audio"
+thirdparty_resonanceaudio_root_dir = "#thirdparty/resonanceaudio"
+thirdparty_pffft_dir = "#thirdparty/pffft/"
+thirdparty_eigen_dir = "#thirdparty/eigen/"
+thirdparty_libogg_dir = "#thirdparty/libogg/"
+thirdparty_libvorbis_dir = "#thirdparty/libvorbis/"
+thirdparty_sources = [
+    "resonanceaudio/resonance_audio/ambisonics/ambisonic_binaural_decoder.cc",
+    "resonanceaudio/resonance_audio/ambisonics/ambisonic_lookup_table.cc",
+    "resonanceaudio/resonance_audio/ambisonics/associated_legendre_polynomials_generator.cc",
+    "resonanceaudio/resonance_audio/ambisonics/foa_rotator.cc",
+    "resonanceaudio/resonance_audio/ambisonics/hoa_rotator.cc",
+    "resonanceaudio/resonance_audio/ambisonics/stereo_from_soundfield_converter.cc",
+    "resonanceaudio/resonance_audio/api/binaural_surround_renderer.cc",
+    "resonanceaudio/resonance_audio/api/resonance_audio_api.cc",
+    "resonanceaudio/resonance_audio/base/audio_buffer.cc",
+    "resonanceaudio/resonance_audio/base/channel_view.cc",
+    "resonanceaudio/resonance_audio/base/misc_math.cc",
+    "resonanceaudio/resonance_audio/base/simd_utils.cc",
+    "resonanceaudio/resonance_audio/base/spherical_angle.cc",
+    "resonanceaudio/resonance_audio/config/source_config.cc",
+    "resonanceaudio/resonance_audio/dsp/biquad_filter.cc",
+    "resonanceaudio/resonance_audio/dsp/channel_converter.cc",
+    "resonanceaudio/resonance_audio/dsp/circular_buffer.cc",
+    "resonanceaudio/resonance_audio/dsp/delay_filter.cc",
+    "resonanceaudio/resonance_audio/dsp/distance_attenuation.cc",
+    "resonanceaudio/resonance_audio/dsp/fft_manager.cc",
+    "resonanceaudio/resonance_audio/dsp/filter_coefficient_generators.cc",
+    "resonanceaudio/resonance_audio/dsp/fir_filter.cc",
+    "resonanceaudio/resonance_audio/dsp/gain.cc",
+    "resonanceaudio/resonance_audio/dsp/gain_mixer.cc",
+    "resonanceaudio/resonance_audio/dsp/gain_processor.cc",
+    "resonanceaudio/resonance_audio/dsp/mixer.cc",
+    "resonanceaudio/resonance_audio/dsp/mono_pole_filter.cc",
+    "resonanceaudio/resonance_audio/dsp/multi_channel_iir.cc",
+    "resonanceaudio/resonance_audio/dsp/near_field_processor.cc",
+    "resonanceaudio/resonance_audio/dsp/occlusion_calculator.cc",
+    "resonanceaudio/resonance_audio/dsp/partitioned_fft_filter.cc",
+    "resonanceaudio/resonance_audio/dsp/reflections_processor.cc",
+    "resonanceaudio/resonance_audio/dsp/resampler.cc",
+    "resonanceaudio/resonance_audio/dsp/reverb_onset_compensator.cc",
+    "resonanceaudio/resonance_audio/dsp/reverb_onset_update_processor.cc",
+    "resonanceaudio/resonance_audio/dsp/sh_hrir_creator.cc",
+    "resonanceaudio/resonance_audio/dsp/shoe_box_room.cc",
+    "resonanceaudio/resonance_audio/dsp/spectral_reverb.cc",
+    "resonanceaudio/resonance_audio/dsp/stereo_panner.cc",
+    "resonanceaudio/resonance_audio/dsp/utils.cc",
+    "resonanceaudio/resonance_audio/graph/ambisonic_binaural_decoder_node.cc",
+    "resonanceaudio/resonance_audio/graph/ambisonic_mixing_encoder_node.cc",
+    "resonanceaudio/resonance_audio/graph/binaural_surround_renderer_impl.cc",
+    "resonanceaudio/resonance_audio/graph/buffered_source_node.cc",
+    "resonanceaudio/resonance_audio/graph/foa_rotator_node.cc",
+    "resonanceaudio/resonance_audio/graph/gain_mixer_node.cc",
+    "resonanceaudio/resonance_audio/graph/gain_node.cc",
+    "resonanceaudio/resonance_audio/graph/graph_manager.cc",
+    "resonanceaudio/resonance_audio/graph/hoa_rotator_node.cc",
+    "resonanceaudio/resonance_audio/graph/mixer_node.cc",
+    "resonanceaudio/resonance_audio/graph/mono_from_soundfield_node.cc",
+    "resonanceaudio/resonance_audio/graph/near_field_effect_node.cc",
+    "resonanceaudio/resonance_audio/graph/occlusion_node.cc",
+    "resonanceaudio/resonance_audio/graph/reflections_node.cc",
+    "resonanceaudio/resonance_audio/graph/resonance_audio_api_impl.cc",
+    "resonanceaudio/resonance_audio/graph/reverb_node.cc",
+    "resonanceaudio/resonance_audio/graph/source_parameters_manager.cc",
+    "resonanceaudio/resonance_audio/graph/stereo_mixing_panner_node.cc",
+    "resonanceaudio/resonance_audio/node/processing_node.cc",
+    "resonanceaudio/resonance_audio/node/sink_node.cc",
+    "resonanceaudio/resonance_audio/node/source_node.cc",
+    "resonanceaudio/resonance_audio/utils/buffer_crossfader.cc",
+    "resonanceaudio/resonance_audio/utils/buffer_partitioner.cc",
+    "resonanceaudio/resonance_audio/utils/buffer_unpartitioner.cc",
+    "resonanceaudio/resonance_audio/utils/lockless_task_queue.cc",
+    "resonanceaudio/resonance_audio/utils/ogg_vorbis_recorder.cc",
+    "resonanceaudio/resonance_audio/utils/planar_interleaved_conversion.cc",
+    "resonanceaudio/resonance_audio/utils/sample_type_conversion.cc",
+    "resonanceaudio/resonance_audio/utils/sum_and_difference_processor.cc",
+    "resonanceaudio/resonance_audio/utils/task_thread_pool.cc",
+    "resonanceaudio/resonance_audio/utils/vorbis_stream_encoder.cc",
+    "resonanceaudio/resonance_audio/utils/wav.cc",
+    "resonanceaudio/resonance_audio/utils/wav_reader.cc",
+    "resonanceaudio/third_party/SADIE_hrtf_database/generated/hrtf_assets.cc",
+    "pffft/fftpack.c",
+    "pffft/pffft.c",
+    "resonanceaudio/platforms/common/room_effects_utils.cc",
+    "resonanceaudio/platforms/common/utils.cc",
+]
+
+thirdparty_sources = [thirdparty_dir + src for src in thirdparty_sources]
+
+env_resonance.Prepend(
+    CPPPATH=[
+        thirdparty_resonanceaudio_dir,
+        thirdparty_resonanceaudio_root_dir,
+        thirdparty_resonanceaudio_root_dir + "/platforms/common",
+        thirdparty_eigen_dir,
+        thirdparty_pffft_dir,
+        thirdparty_libogg_dir,
+        thirdparty_libvorbis_dir,
+    ]
+)
+env_resonance.disable_warnings()
+env_resonance.Append(CPPDEFINES=["_USE_MATH_DEFINES"])
+env_thirdparty = env_resonance.Clone()
+
+env_thirdparty.Append(CPPDEFINES=["TASKING_INTERNAL"])
+env_thirdparty.Append(CPPDEFINES=["_USE_MATH_DEFINES"])
+env_thirdparty.add_source_files(env.servers_sources, thirdparty_sources)
+
+# Generate .gen.h from Slang-compiled GLSL shaders.
+import os
+
+
+def glsl_to_gen_h(target, source, env):
+    src_path = str(source[0])
+    dst_path = str(target[0])
+    var_name = os.path.basename(src_path).replace(".", "_")
+    with open(src_path, "r") as f:
+        glsl = f.read()
+    with open(dst_path, "w") as f:
+        f.write("// Generated from %s - do not edit.\n" % os.path.basename(src_path))
+        f.write('static const char %s[] = R"GLSL(\n' % var_name)
+        f.write(glsl)
+        f.write(')GLSL";\n')
+    return 0
+
+
+env_resonance.Append(
+    BUILDERS={
+        "GlslGenH": env_resonance.Builder(
+            action=env_resonance.Action(glsl_to_gen_h, "Generating $TARGET from $SOURCE"),
+            suffix=".gen.h",
+            src_suffix=".glsl",
+        )
+    }
+)
+env_resonance.GlslGenH("shaders/reverb_bake.glsl.gen.h", "shaders/reverb_bake.glsl")
+
+
+def spv_to_gen_h(target, source, env):
+    src_path = str(source[0])
+    dst_path = str(target[0])
+    var_name = os.path.basename(src_path).replace(".", "_")
+    with open(src_path, "rb") as f:
+        data = f.read()
+    with open(dst_path, "w") as f:
+        f.write("// Generated from %s - do not edit.\n" % os.path.basename(src_path))
+        f.write("static const unsigned char %s[] = {\n" % var_name)
+        for i in range(0, len(data), 16):
+            chunk = data[i : i + 16]
+            f.write("\t" + ", ".join("0x%02x" % b for b in chunk) + ",\n")
+        f.write("};\n")
+        f.write("static const unsigned int %s_size = %d;\n" % (var_name, len(data)))
+    return 0
+
+
+env_resonance.Append(
+    BUILDERS={
+        "SpvGenH": env_resonance.Builder(
+            action=env_resonance.Action(spv_to_gen_h, "Generating $TARGET from $SOURCE"),
+            suffix=".gen.h",
+            src_suffix=".spv",
+        )
+    }
+)
+env_resonance.SpvGenH("shaders/reverb_bake.spv.gen.h", "shaders/reverb_bake.spv")
+
+# Godot source files. The wrapper (ResonanceAudioServer) and bake data are
+# scene-independent and always built — main.cpp instantiates the server
+# unconditionally. The Node3D-derived helpers can't build with disable_3d
+# (scene/3d is excluded entirely there), so they're gated.
+godot_sources = [
+    "resonance_audio_wrapper.cpp",
+    "reverb_bake_data.cpp",
+]
+if not env["disable_3d"]:
+    godot_sources += [
+        "resonance_audio_material_map.cpp",
+        "resonance_audio_room.cpp",
+        "reverb_probe_gi.cpp",
+    ]
+env_resonance.add_source_files(env.servers_sources, godot_sources)

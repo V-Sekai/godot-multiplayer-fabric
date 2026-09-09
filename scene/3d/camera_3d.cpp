@@ -31,11 +31,13 @@
 #include "camera_3d.h"
 
 #include "core/config/engine.h"
+#include "core/config/project_settings.h"
 #include "core/math/projection.h"
 #include "core/math/transform_interpolator.h"
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "scene/main/viewport.h"
+#include "servers/audio/spatial_audio_server.h"
 #include "servers/rendering/rendering_server.h"
 
 void Camera3D::_update_audio_listener_state() {
@@ -204,6 +206,10 @@ void Camera3D::_notification(int p_what) {
 				viewport->_camera_3d_set(this);
 			}
 
+			if (SpatialAudioServer::get_singleton() && viewport->is_audio_listener_3d()) {
+				SpatialAudioServer::get_singleton()->set_head_transform(get_global_transform());
+			}
+
 #ifdef TOOLS_ENABLED
 			if (Engine::get_singleton()->is_editor_hint()) {
 				viewport->connect(SNAME("size_changed"), callable_mp((Node3D *)this, &Camera3D::update_gizmos));
@@ -219,6 +225,12 @@ void Camera3D::_notification(int p_what) {
 				}
 			}
 #endif
+			if (SpatialAudioServer::get_singleton()) {
+				Viewport *vp = get_viewport();
+				if (vp && vp->is_audio_listener_3d()) {
+					SpatialAudioServer::get_singleton()->set_head_transform(get_global_transform());
+				}
+			}
 			_request_camera_update();
 			if (doppler_tracking != DOPPLER_TRACKING_DISABLED) {
 				velocity_tracker->update_position(get_global_transform().origin);

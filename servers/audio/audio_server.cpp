@@ -226,6 +226,7 @@ int AudioDriverManager::get_driver_count() {
 
 void AudioDriverManager::initialize(int p_driver) {
 	GLOBAL_DEF_RST("audio/driver/enable_input", false);
+	GLOBAL_DEF_RST("audio/enable_spatial_audio", true);
 	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "audio/driver/mix_rate", PROPERTY_HINT_RANGE, "11025,192000,1,or_greater,suffix:Hz"), DEFAULT_MIX_RATE);
 	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "audio/driver/mix_rate.web", PROPERTY_HINT_RANGE, "0,192000,1,or_greater,suffix:Hz"), 0); // Safer default output_latency for web (use browser default).
 
@@ -488,7 +489,14 @@ void AudioServer::_mix_step() {
 				if (prev_bus_idx != -1) {
 					prev_channel_vol = playback->prev_bus_details->volume[prev_bus_idx][channel_idx];
 				}
-				_mix_step_for_channel(channel_buf, buf, prev_channel_vol, channel_vol, playback->attenuation_filter_cutoff_hz.get(), playback->highshelf_gain.get(), &playback->filter_process[channel_idx * 2], &playback->filter_process[channel_idx * 2 + 1]);
+				BusType bus_type = (bus_idx >= 0 && bus_idx < buses.size()) ? buses[bus_idx]->type : BUS_TYPE_CONVENTIONAL;
+				Vector<Ref<AudioEffectInstance>> pre_mix_fx;
+				const Vector<Bus::Effect> *bus_fx = nullptr;
+				if (bus_type == BUS_TYPE_SPATIAL_3D) {
+					pre_mix_fx = bus_details.pre_mix_effect_instances[idx][channel_idx];
+					bus_fx = &buses[bus_idx]->effects;
+				}
+				_mix_step_for_channel(channel_buf, buf, prev_channel_vol, channel_vol, playback->attenuation_filter_cutoff_hz.get(), playback->highshelf_gain.get(), playback->source_id, &playback->filter_process[channel_idx * 2], &playback->filter_process[channel_idx * 2 + 1], channel_idx, bus_type, pre_mix_fx, bus_fx);
 			}
 		}
 
@@ -513,8 +521,8 @@ void AudioServer::_mix_step() {
 			for (int channel_idx = 0; channel_idx < channel_count; channel_idx++) {
 				AudioFrame *channel_buf = thread_get_channel_mix_buffer(bus_idx, channel_idx);
 				AudioFrame prev_channel_vol = playback->prev_bus_details->volume[idx][channel_idx];
-				// Fade out to silence. This could be replaced with an exponential fadeout of the samples from the lookahead buffer for more punchy results.
-				_mix_step_for_channel(channel_buf, buf, prev_channel_vol, AudioFrame(0, 0), playback->attenuation_filter_cutoff_hz.get(), playback->highshelf_gain.get(), &playback->filter_process[channel_idx * 2], &playback->filter_process[channel_idx * 2 + 1]);
+				// Fade out to silence.
+				_mix_step_for_channel(channel_buf, buf, prev_channel_vol, AudioFrame(0, 0), playback->attenuation_filter_cutoff_hz.get(), playback->highshelf_gain.get(), playback->source_id, &playback->filter_process[channel_idx * 2], &playback->filter_process[channel_idx * 2 + 1]);
 			}
 		}
 
@@ -563,8 +571,20 @@ void AudioServer::_mix_step() {
 			}
 		}
 
-		// Process effects.
-		if (!bus->bypass) {
+		// Spatial buses: pull spatialized output from SpatialAudioServer into bus buffer.
+		// The bus send mechanism then routes it to the parent bus automatically.
+		if (bus->type == BUS_TYPE_SPATIAL_3D && SpatialAudioServer::get_singleton()) {
+			for (int k = 0; k < bus->channels.size(); k++) {
+				AudioFrame *buf = thread_get_channel_mix_buffer(i, k);
+				if (buf && SpatialAudioServer::get_singleton()->pull_listener_buffer(k, buffer_size, buf)) {
+					bus->channels.write[k].active = true;
+					bus->channels.write[k].used = true;
+				}
+			}
+		}
+
+		// Process effects (only for conventional buses — spatial buses apply effects per-source before mixing).
+		if (!bus->bypass && bus->type == BUS_TYPE_CONVENTIONAL) {
 			for (int j = 0; j < bus->effects.size(); j++) {
 				if (!bus->effects[j].enabled) {
 					continue;
@@ -675,8 +695,27 @@ void AudioServer::_mix_step() {
 	to_mix = buffer_size;
 }
 
-void AudioServer::_mix_step_for_channel(AudioFrame *p_out_buf, AudioFrame *p_source_buf, AudioFrame p_vol_start, AudioFrame p_vol_final, float p_attenuation_filter_cutoff_hz, float p_highshelf_gain, AudioFilterSW::Processor *p_processor_l, AudioFilterSW::Processor *p_processor_r) {
-	// TODO: In the future it could be nice to replace all of these hardcoded effects with something a bit cleaner and more flexible, but for now this is what we do to support 3D audio players.
+void AudioServer::_mix_step_for_channel(AudioFrame *p_out_buf, AudioFrame *p_source_buf, AudioFrame p_vol_start, AudioFrame p_vol_final, float p_attenuation_filter_cutoff_hz, float p_highshelf_gain, AudioSourceId p_audio_source_id, AudioFilterSW::Processor *p_processor_l, AudioFilterSW::Processor *p_processor_r, int p_channel_idx, BusType p_bus_type, const Vector<Ref<AudioEffectInstance>> &p_pre_mix_effects, const Vector<Bus::Effect> *p_bus_effects) {
+	if (p_bus_type == BUS_TYPE_SPATIAL_3D && SpatialAudioServer::get_singleton() && p_audio_source_id.get_id() != -1) {
+		SpatialAudioServer::get_singleton()->push_source_buffer(p_audio_source_id, p_channel_idx, buffer_size, p_source_buf);
+		return;
+	}
+
+	// Per-source pre-mix effect chain (spatial bus).
+	AudioFrame *src = p_source_buf;
+	if (p_pre_mix_effects.size() > 0 && p_bus_effects != nullptr) {
+		AudioFrame *ping = p_source_buf;
+		AudioFrame *pong = premix_effect_buffer.ptrw();
+		for (int j = 0; j < p_pre_mix_effects.size(); j++) {
+			if (j >= p_bus_effects->size() || !(*p_bus_effects)[j].enabled || p_pre_mix_effects[j].is_null()) {
+				continue;
+			}
+			p_pre_mix_effects[j]->process(ping, pong, buffer_size);
+			SWAP(ping, pong);
+		}
+		src = ping;
+	}
+
 	if (p_highshelf_gain != 0) {
 		AudioFilterSW filter;
 		filter.set_mode(AudioFilterSW::HIGHSHELF);
@@ -696,10 +735,9 @@ void AudioServer::_mix_step_for_channel(AudioFrame *p_out_buf, AudioFrame *p_sou
 		p_processor_r->update_coeffs(buffer_size);
 
 		for (unsigned int frame_idx = 0; frame_idx < buffer_size; frame_idx++) {
-			// TODO: Make lerp speed buffer-size-invariant if buffer_size ever becomes a project setting to avoid very small buffer sizes causing pops due to too-fast lerps.
 			float lerp_param = (float)frame_idx / buffer_size;
 			AudioFrame vol = p_vol_final * lerp_param + (1 - lerp_param) * p_vol_start;
-			AudioFrame mixed = vol * p_source_buf[frame_idx];
+			AudioFrame mixed = vol * src[frame_idx];
 			p_processor_l->process_one_interp(mixed.left);
 			p_processor_r->process_one_interp(mixed.right);
 			p_out_buf[frame_idx] += mixed;
@@ -707,9 +745,8 @@ void AudioServer::_mix_step_for_channel(AudioFrame *p_out_buf, AudioFrame *p_sou
 
 	} else {
 		for (unsigned int frame_idx = 0; frame_idx < buffer_size; frame_idx++) {
-			// TODO: Make lerp speed buffer-size-invariant if buffer_size ever becomes a project setting to avoid very small buffer sizes causing pops due to too-fast lerps.
 			float lerp_param = (float)frame_idx / buffer_size;
-			p_out_buf[frame_idx] += (p_vol_final * lerp_param + (1 - lerp_param) * p_vol_start) * p_source_buf[frame_idx];
+			p_out_buf[frame_idx] += (p_vol_final * lerp_param + (1 - lerp_param) * p_vol_start) * src[frame_idx];
 		}
 	}
 }
@@ -1116,6 +1153,50 @@ void AudioServer::_update_bus_effects(int p_bus) {
 	}
 }
 
+void AudioServer::_populate_pre_mix_effects(AudioStreamPlaybackBusDetails *p_details) {
+	for (int idx = 0; idx < MAX_BUSES_PER_PLAYBACK; idx++) {
+		for (int ch = 0; ch < MAX_CHANNELS_PER_BUS; ch++) {
+			p_details->pre_mix_effect_instances[idx][ch].clear();
+		}
+		if (!p_details->bus_active[idx]) {
+			continue;
+		}
+		int bus_idx = 0;
+		if (bus_map.has(p_details->bus[idx])) {
+			bus_idx = bus_map[p_details->bus[idx]]->index_cache;
+		}
+		ERR_CONTINUE(bus_idx < 0 || bus_idx >= buses.size());
+		Bus *bus = buses[bus_idx];
+		if (bus->type != BUS_TYPE_SPATIAL_3D) {
+			continue;
+		}
+		for (int ch = 0; ch < channel_count; ch++) {
+			p_details->pre_mix_effect_instances[idx][ch].resize(bus->effects.size());
+			for (int j = 0; j < bus->effects.size(); j++) {
+				Ref<AudioEffectInstance> fx = bus->effects[j].effect->instantiate();
+				if (Object::cast_to<AudioEffectCompressorInstance>(*fx)) {
+					Object::cast_to<AudioEffectCompressorInstance>(*fx)->set_current_channel(ch);
+				}
+				p_details->pre_mix_effect_instances[idx][ch].write[j] = fx;
+			}
+		}
+	}
+}
+
+void AudioServer::set_bus_type(int p_bus, BusType p_type) {
+	ERR_FAIL_INDEX(p_bus, buses.size());
+	MARK_EDITED
+	lock();
+	buses[p_bus]->type = p_type;
+	_update_bus_effects(p_bus);
+	unlock();
+}
+
+AudioServer::BusType AudioServer::get_bus_type(int p_bus) const {
+	ERR_FAIL_INDEX_V(p_bus, buses.size(), BUS_TYPE_CONVENTIONAL);
+	return buses[p_bus]->type;
+}
+
 void AudioServer::add_bus_effect(int p_bus, const Ref<AudioEffect> &p_effect, int p_at_pos) {
 	ERR_FAIL_COND(p_effect.is_null());
 	ERR_FAIL_INDEX(p_bus, buses.size());
@@ -1245,7 +1326,7 @@ void AudioServer::start_playback_stream(Ref<AudioStreamPlayback> p_playback, con
 	start_playback_stream(p_playback, map, p_start_time, p_pitch_scale);
 }
 
-void AudioServer::start_playback_stream(Ref<AudioStreamPlayback> p_playback, const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes, float p_start_time, float p_pitch_scale, float p_highshelf_gain, float p_attenuation_cutoff_hz) {
+void AudioServer::start_playback_stream(Ref<AudioStreamPlayback> p_playback, const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes, float p_start_time, float p_pitch_scale, float p_highshelf_gain, float p_attenuation_cutoff_hz, AudioSourceId p_source_id) {
 	ERR_FAIL_COND(p_playback.is_null());
 
 	AudioStreamPlaybackListNode *playback_node = new AudioStreamPlaybackListNode();
@@ -1268,9 +1349,11 @@ void AudioServer::start_playback_stream(Ref<AudioStreamPlayback> p_playback, con
 		}
 		idx++;
 	}
+	_populate_pre_mix_effects(new_bus_details);
 	playback_node->bus_details.store(new_bus_details);
 	playback_node->prev_bus_details = new AudioStreamPlaybackBusDetails();
 
+	playback_node->source_id = p_source_id;
 	playback_node->pitch_scale.set(p_pitch_scale);
 	playback_node->highshelf_gain.set(p_highshelf_gain);
 	playback_node->attenuation_filter_cutoff_hz.set(p_attenuation_cutoff_hz);
@@ -1319,7 +1402,7 @@ void AudioServer::stop_playback_stream(Ref<AudioStreamPlayback> p_playback) {
 	} while (!playback_node->state.compare_exchange_strong(old_state, new_state));
 }
 
-void AudioServer::set_playback_bus_exclusive(Ref<AudioStreamPlayback> p_playback, const StringName &p_bus, Vector<AudioFrame> p_volumes) {
+void AudioServer::set_playback_bus_exclusive(Ref<AudioStreamPlayback> p_playback, const StringName &p_bus, Vector<AudioFrame> p_volumes, AudioSourceId p_source_id) {
 	ERR_FAIL_COND(p_volumes.size() != MAX_CHANNELS_PER_BUS);
 
 	HashMap<StringName, Vector<AudioFrame>> map;
@@ -1328,7 +1411,7 @@ void AudioServer::set_playback_bus_exclusive(Ref<AudioStreamPlayback> p_playback
 	set_playback_bus_volumes_linear(p_playback, map);
 }
 
-void AudioServer::set_playback_bus_volumes_linear(Ref<AudioStreamPlayback> p_playback, const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes) {
+void AudioServer::set_playback_bus_volumes_linear(Ref<AudioStreamPlayback> p_playback, const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes, AudioSourceId p_source_id) {
 	ERR_FAIL_COND(p_bus_volumes.size() > MAX_BUSES_PER_PLAYBACK);
 
 	// Samples.
@@ -1361,6 +1444,7 @@ void AudioServer::set_playback_bus_volumes_linear(Ref<AudioStreamPlayback> p_pla
 		}
 		idx++;
 	}
+	_populate_pre_mix_effects(new_bus_details);
 
 	do {
 		old_bus_details = playback_node->bus_details.load();
@@ -1369,7 +1453,7 @@ void AudioServer::set_playback_bus_volumes_linear(Ref<AudioStreamPlayback> p_pla
 	bus_details_graveyard.insert(old_bus_details);
 }
 
-void AudioServer::set_playback_all_bus_volumes_linear(Ref<AudioStreamPlayback> p_playback, Vector<AudioFrame> p_volumes) {
+void AudioServer::set_playback_all_bus_volumes_linear(Ref<AudioStreamPlayback> p_playback, Vector<AudioFrame> p_volumes, AudioSourceId p_source_id) {
 	ERR_FAIL_COND(p_playback.is_null());
 	ERR_FAIL_COND(p_volumes.size() != MAX_CHANNELS_PER_BUS);
 
@@ -1428,7 +1512,7 @@ void AudioServer::set_playback_paused(Ref<AudioStreamPlayback> p_playback, bool 
 	} while (!playback_node->state.compare_exchange_strong(old_state, new_state));
 }
 
-void AudioServer::set_playback_highshelf_params(Ref<AudioStreamPlayback> p_playback, float p_gain, float p_attenuation_cutoff_hz) {
+void AudioServer::set_playback_highshelf_params(Ref<AudioStreamPlayback> p_playback, float p_gain, float p_attenuation_cutoff_hz, AudioSourceId p_source_id) {
 	ERR_FAIL_COND(p_playback.is_null());
 
 	AudioStreamPlaybackListNode *playback_node = _find_playback_list_node(p_playback);
@@ -1436,6 +1520,7 @@ void AudioServer::set_playback_highshelf_params(Ref<AudioStreamPlayback> p_playb
 		return;
 	}
 
+	playback_node->source_id = p_source_id;
 	playback_node->attenuation_filter_cutoff_hz.set(p_attenuation_cutoff_hz);
 	playback_node->highshelf_gain.set(p_gain);
 }
@@ -1509,6 +1594,8 @@ void AudioServer::init_channels_and_buffers() {
 	channel_count = get_channel_count();
 	temp_buffer.resize(channel_count);
 	mix_buffer.resize(buffer_size + LOOKAHEAD_BUFFER_SIZE);
+	spatial_pull_buffer.resize(buffer_size);
+	premix_effect_buffer.resize(buffer_size);
 
 	for (int i = 0; i < temp_buffer.size(); i++) {
 		temp_buffer.write[i].resize(buffer_size);
@@ -1776,6 +1863,7 @@ void AudioServer::set_bus_layout(const Ref<AudioBusLayout> &p_bus_layout) {
 		bus->solo = p_bus_layout->buses[i].solo;
 		bus->mute = p_bus_layout->buses[i].mute;
 		bus->bypass = p_bus_layout->buses[i].bypass;
+		bus->type = p_bus_layout->buses[i].type;
 		bus->volume_db = p_bus_layout->buses[i].volume_db;
 
 		AudioDriver::get_singleton()->set_sample_bus_solo(i, bus->solo);
@@ -1825,6 +1913,7 @@ Ref<AudioBusLayout> AudioServer::generate_bus_layout() const {
 		state->buses.write[i].mute = buses[i]->mute;
 		state->buses.write[i].solo = buses[i]->solo;
 		state->buses.write[i].bypass = buses[i]->bypass;
+		state->buses.write[i].type = buses[i]->type;
 		state->buses.write[i].volume_db = buses[i]->volume_db;
 		for (int j = 0; j < buses[i]->effects.size(); j++) {
 			AudioBusLayout::Bus::Effect fx;
@@ -2063,6 +2152,12 @@ void AudioServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_bus_bypass_effects", "bus_idx", "enable"), &AudioServer::set_bus_bypass_effects);
 	ClassDB::bind_method(D_METHOD("is_bus_bypassing_effects", "bus_idx"), &AudioServer::is_bus_bypassing_effects);
 
+	ClassDB::bind_method(D_METHOD("set_bus_type", "bus_idx", "type"), &AudioServer::set_bus_type);
+	ClassDB::bind_method(D_METHOD("get_bus_type", "bus_idx"), &AudioServer::get_bus_type);
+
+	BIND_ENUM_CONSTANT(BUS_TYPE_CONVENTIONAL);
+	BIND_ENUM_CONSTANT(BUS_TYPE_SPATIAL_3D);
+
 	ClassDB::bind_method(D_METHOD("add_bus_effect", "bus_idx", "effect", "at_position"), &AudioServer::add_bus_effect, DEFVAL(-1));
 	ClassDB::bind_method(D_METHOD("remove_bus_effect", "bus_idx", "effect_idx"), &AudioServer::remove_bus_effect);
 
@@ -2169,6 +2264,8 @@ bool AudioBusLayout::_set(const StringName &p_name, const Variant &p_value) {
 			bus.mute = p_value;
 		} else if (what == "bypass_fx") {
 			bus.bypass = p_value;
+		} else if (what == "type") {
+			bus.type = (AudioServer::BusType)(int)p_value;
 		} else if (what == "volume_db") {
 			bus.volume_db = p_value;
 		} else if (what == "send") {
@@ -2221,6 +2318,8 @@ bool AudioBusLayout::_get(const StringName &p_name, Variant &r_ret) const {
 			r_ret = bus.mute;
 		} else if (what == "bypass_fx") {
 			r_ret = bus.bypass;
+		} else if (what == "type") {
+			r_ret = (int)bus.type;
 		} else if (what == "volume_db") {
 			r_ret = bus.volume_db;
 		} else if (what == "send") {
@@ -2259,6 +2358,7 @@ void AudioBusLayout::_get_property_list(List<PropertyInfo> *p_list) const {
 		p_list->push_back(PropertyInfo(Variant::BOOL, "bus/" + itos(i) + "/solo", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
 		p_list->push_back(PropertyInfo(Variant::BOOL, "bus/" + itos(i) + "/mute", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
 		p_list->push_back(PropertyInfo(Variant::BOOL, "bus/" + itos(i) + "/bypass_fx", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
+		p_list->push_back(PropertyInfo(Variant::INT, "bus/" + itos(i) + "/type", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
 		p_list->push_back(PropertyInfo(Variant::FLOAT, "bus/" + itos(i) + "/volume_db", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
 		p_list->push_back(PropertyInfo(Variant::FLOAT, "bus/" + itos(i) + "/send", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
 
