@@ -1,0 +1,11 @@
+[package]
+name = "predictive_bvh"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "pbvh_test"
+path = "src/main.rs"
+
+[dependencies]
+fixed = "1"

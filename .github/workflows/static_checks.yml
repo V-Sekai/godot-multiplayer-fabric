@@ -41,7 +41,12 @@ jobs:
 
       - name: Style checks via prek
         uses: j178/prek-action@v2
-        env:
-          CHANGED_FILES: '"${{ steps.changed-files.outputs.everything_all_changed_files }}"' # Wrap with quotes to bookend internal quote separators.
         with:
-          extra-args: --files ${{ env.CHANGED_FILES }}
+          # `--files <list>` works on small PRs but the action's wrapper passes
+          # extra-args through the node runner CLI, which overruns ARG_MAX
+          # (~128KB on Linux) when the changed-files list is large — happens
+          # on first-push after a long-lived branch rebase or a merge that
+          # pulls in many upstream commits.
+          # `--all-files` sidesteps the limit entirely and is the correct
+          # semantic for a style gate: every committed file must conform.
+          extra-args: --all-files

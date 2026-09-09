@@ -25,5 +25,10 @@ clangd:
   - "!editor/shader/shader_baker/shader_baker_export_plugin_platform_{d3d12,metal}.{h,cpp}"
   - "!modules/camera/camera_{android,macos,win}.{h,cpp}"
   - "!modules/openxr/extensions/platform/openxr_{android,metal}_extension.{h,cpp}"
+  # multiplayer_fabric is gated by a SCsub-provided CPPPATH (#thirdparty/webtransportd,
+  # #modules/sqlite/thirdparty) that clangd-tidy does not pick up without a fresh
+  # compile_commands.json. The sandbox/ subtree additionally builds with the RISC-V
+  # toolchain (see demo/abyssal_vr/sandbox/build.sh) against api.hpp from godot-sandbox.
+  - "!modules/multiplayer_fabric/**"
   - "!platform/{android,ios,macos,visionos,web,windows}/**"
   - "platform/{android,ios,macos,visionos,web,windows}/{api,export}/*.{h,hpp,hxx,hh,c,cpp,cxx,cc}"
